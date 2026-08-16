@@ -11,7 +11,11 @@ export async function GET(request: NextRequest) {
     const supabase = await createClient();
     const { error } = await supabase.auth.exchangeCodeForSession(code);
     if (!error) {
-      return NextResponse.redirect(`${origin}${next}`);
+      const safeNext = next.startsWith('/') && !next.startsWith('//') ? next : '/';
+      if (safeNext.startsWith('/request-seat-screen')) {
+        return NextResponse.redirect(`${origin}/resume-seat-request`);
+      }
+      return NextResponse.redirect(`${origin}${safeNext}`);
     }
   }
 
