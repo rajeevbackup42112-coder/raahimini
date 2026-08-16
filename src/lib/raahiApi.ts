@@ -8,7 +8,7 @@ export type RequestStatus = 'HELD' | 'CONFIRMED' | 'WITHDRAWN' | 'EXPIRED' | 'MI
 export interface Location { id: string; name: string; state: string; is_active: boolean; }
 export interface RouteForLocation { route_id: string; route_code: string; from_location_name: string; to_location_name: string; direction_label: string; has_active_car: boolean; active_car_status: TripStatus | null; available_seats: number; }
 export interface DriverDepartingRoute { route_id: string; route_code: string; from_location_id: string; from_location_name: string; to_location_id: string; to_location_name: string; direction_label: string; has_active_car: boolean; available_seats: number; waiting_drivers: number; }
-export interface DriverHomeContext { driver_id?: string; vehicle_id?: string; has_live_queue?: boolean; queue_id?: string; queue_status?: 'WAITING'|'ACTIVE_COLLECTING'; queue_position?: number; queue_route_id?: string; queue_route_label?: string; suggested_location_id?: string; suggested_location_name?: string; error?: string; }
+export interface DriverHomeContext { driver_id?: string; vehicle_id?: string; has_active_trip?: boolean; active_trip_id?: string; active_trip_status?: 'ACTIVE_COLLECTING'|'IN_PROGRESS'; active_trip_route_id?: string; active_trip_route_label?: string; has_live_queue?: boolean; queue_id?: string; queue_status?: 'WAITING'|'ACTIVE_COLLECTING'; queue_position?: number; queue_route_id?: string; queue_route_label?: string; suggested_location_id?: string; suggested_location_name?: string; error?: string; }
 export interface StopWithEta { stop_id: string; stop_order: number; name: string; is_current: boolean; is_passed: boolean; eta_minutes: number | null; }
 export interface ActiveCarPublic { has_active_car: boolean; trip_id?: string; route_id?: string; status?: TripStatus; driver_display_name?: string; vehicle_type?: string; vehicle_model?: string; vehicle_number?: string; capacity?: number; confirmed_count?: number; held_count?: number; driver_closed_count?: number; available_count?: number; current_stop_order?: number; current_stop_name?: string; stops?: StopWithEta[]; }
 export interface PassengerRideStatus { has_active_request?: boolean; request_id: string; trip_id: string; status: RequestStatus; pickup_stop_name: string; pickup_stop_order: number; seat_count: number; driver_display_name: string; driver_phone: string; vehicle_number: string; current_stop_name: string; current_stop_order: number; eta_minutes: number; trip_status: TripStatus; stops?: StopWithEta[]; }
@@ -16,10 +16,7 @@ export interface PassengerRequest { request_id: string; passenger_display_name: 
 export interface DriverActiveTrip { has_active_trip: boolean; trip_id?: string; route_id?: string; route_code?: string; route_label?: string; from_location?: string; to_location?: string; status?: TripStatus; vehicle_type?: string; vehicle_model?: string; vehicle_number?: string; capacity?: number; confirmed_count?: number; held_count?: number; driver_closed_count?: number; available_count?: number; current_stop_order?: number; current_stop_name?: string; departure_eligible?: boolean; passenger_requests?: PassengerRequest[]; stops?: StopWithEta[]; }
 export interface RpcResult { success: boolean; error?: string; [key: string]: any; }
 
-const rpc = async (name: string, args: Record<string, any> = {}) => {
-  const supabase = createClient();
-  return supabase.rpc(name, args);
-};
+const rpc = async (name: string, args: Record<string, any> = {}) => { const supabase = createClient(); return supabase.rpc(name, args); };
 
 export async function getActiveLocations(): Promise<Location[]> { const {data,error}=await rpc('get_active_locations'); if(error){console.error(error.message);return [];} return data||[]; }
 export async function getRoutesForLocation(locationId:string):Promise<RouteForLocation[]>{const{data,error}=await rpc('get_routes_for_location',{p_location_id:locationId});if(error){console.error(error.message);return [];}return data||[];}
