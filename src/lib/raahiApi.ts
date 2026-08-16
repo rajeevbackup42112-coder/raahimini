@@ -3,12 +3,13 @@
 import { createClient } from '@/lib/supabase/client';
 
 export type TripStatus = 'ACTIVE_COLLECTING' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED';
-export type RequestStatus = 'HELD' | 'CONFIRMED' | 'WITHDRAWN' | 'EXPIRED' | 'MISSED';
+export type RequestStatus = 'HELD' | 'CONFIRMED' | 'WITHDRAWN' | 'EXPIRED' | 'MISSED' | 'DRIVER_CANCELLED';
 
 export interface Location { id: string; name: string; state: string; is_active: boolean; }
 export interface RouteForLocation { route_id: string; route_code: string; from_location_name: string; to_location_name: string; direction_label: string; has_active_car: boolean; active_car_status: TripStatus | null; available_seats: number; }
 export interface DriverDepartingRoute { route_id: string; route_code: string; from_location_id: string; from_location_name: string; to_location_id: string; to_location_name: string; direction_label: string; has_active_car: boolean; available_seats: number; waiting_drivers: number; }
 export interface DriverHomeContext { driver_id?: string; vehicle_id?: string; has_active_trip?: boolean; active_trip_id?: string; active_trip_status?: 'ACTIVE_COLLECTING'|'IN_PROGRESS'; active_trip_route_id?: string; active_trip_route_label?: string; has_live_queue?: boolean; queue_id?: string; queue_status?: 'WAITING'|'ACTIVE_COLLECTING'; queue_position?: number; queue_route_id?: string; queue_route_label?: string; suggested_location_id?: string; suggested_location_name?: string; error?: string; }
+export interface DriverCancelledRequest { has_driver_cancelled_request: boolean; request_id?: string; trip_id?: string; route_id?: string; route_label?: string; seat_count?: number; pickup_stop_name?: string; driver_display_name?: string; driver_phone?: string; vehicle_number?: string; cancelled_at?: string; error?: string; }
 export interface StopWithEta { stop_id: string; stop_order: number; name: string; is_current: boolean; is_passed: boolean; eta_minutes: number | null; }
 export interface ActiveCarPublic { has_active_car: boolean; trip_id?: string; route_id?: string; status?: TripStatus; driver_display_name?: string; vehicle_type?: string; vehicle_model?: string; vehicle_number?: string; capacity?: number; confirmed_count?: number; held_count?: number; driver_closed_count?: number; available_count?: number; current_stop_order?: number; current_stop_name?: string; stops?: StopWithEta[]; }
 export interface PassengerRideStatus { has_active_request?: boolean; request_id: string; trip_id: string; status: RequestStatus; pickup_stop_name: string; pickup_stop_order: number; seat_count: number; driver_display_name: string; driver_phone: string; vehicle_number: string; current_stop_name: string; current_stop_order: number; eta_minutes: number; trip_status: TripStatus; stops?: StopWithEta[]; }
@@ -24,6 +25,7 @@ export async function getPublicActiveCar(routeId:string):Promise<ActiveCarPublic
 export async function getDriverQueueStatus(routeId:string){const{data,error}=await rpc('get_driver_queue_status',{p_route_id:routeId});if(error){console.error(error.message);return [];}return data||[];}
 export async function getPassengerRideStatus(requestId:string):Promise<PassengerRideStatus|null>{const{data,error}=await rpc('get_passenger_ride_status',{p_request_id:requestId});if(error){console.error(error.message);return null;}return data as PassengerRideStatus;}
 export async function getMyActiveRequest():Promise<(PassengerRideStatus&{has_active_request:boolean})|null>{const{data,error}=await rpc('get_my_active_request');if(error){console.error(error.message);return null;}return data as any;}
+export async function getMyDriverCancelledRequest():Promise<DriverCancelledRequest>{const{data,error}=await rpc('get_my_driver_cancelled_request');if(error)return{has_driver_cancelled_request:false,error:error.message};return(data as DriverCancelledRequest)||{has_driver_cancelled_request:false};}
 export async function getDriverActiveCar():Promise<DriverActiveTrip>{const{data,error}=await rpc('get_driver_active_car');if(error){console.error(error.message);return{has_active_trip:false};}return(data as DriverActiveTrip)||{has_active_trip:false};}
 export async function getDriverHomeContext():Promise<DriverHomeContext>{const{data,error}=await rpc('get_driver_home_context');if(error)return{error:error.message};return(data as DriverHomeContext)||{};}
 export async function getDriverDepartingRoutes(locationId:string):Promise<DriverDepartingRoute[]>{const{data,error}=await rpc('get_driver_departing_routes',{p_location_id:locationId});if(error){console.error(error.message);return [];}return data||[];}
@@ -39,6 +41,7 @@ export async function completeTrip(tripId:string):Promise<RpcResult>{const{data,
 export async function driverCancelTrip(tripId:string):Promise<RpcResult>{const{data,error}=await rpc('driver_cancel_trip',{p_trip_id:tripId});return error?{success:false,error:error.message}:data as RpcResult;}
 export async function joinDriverQueue(routeId:string,currentLocationId:string):Promise<RpcResult>{const{data,error}=await rpc('join_driver_queue',{p_route_id:routeId,p_current_location_id:currentLocationId});return error?{success:false,error:error.message}:data as RpcResult;}
 export async function leaveDriverQueue(routeId:string):Promise<RpcResult>{const{data,error}=await rpc('leave_driver_queue',{p_route_id:routeId});return error?{success:false,error:error.message}:data as RpcResult;}
+export async function passengerReportRefundProblem(requestId:string):Promise<RpcResult>{const{data,error}=await rpc('passenger_report_refund_problem',{p_request_id:requestId});return error?{success:false,error:error.message}:data as RpcResult;}
 
 export async function adminRestrictUser(userId:string,reason:string):Promise<RpcResult>{const{data,error}=await rpc('admin_restrict_user',{p_user_id:userId,p_reason:reason});return error?{success:false,error:error.message}:data as RpcResult;}
 export async function adminUnrestrictUser(userId:string):Promise<RpcResult>{const{data,error}=await rpc('admin_unrestrict_user',{p_user_id:userId});return error?{success:false,error:error.message}:data as RpcResult;}
