@@ -1,0 +1,208 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #F8F7F4;
+  --foreground: #1C1917;
+  --primary: #E8650A;
+  --primary-foreground: #FFFFFF;
+  --secondary: #FFF3E8;
+  --secondary-foreground: #9A3412;
+  --accent: #0F766E;
+  --accent-foreground: #FFFFFF;
+  --muted: #F5F4F1;
+  --muted-foreground: #78716C;
+  --card: #FFFFFF;
+  --card-foreground: #1C1917;
+  --border: #E7E5E4;
+  --input: #F5F4F1;
+  --ring: #E8650A;
+  --radius: 12px;
+  --font-sans: var(--font-dm-sans), sans-serif;
+
+  --status-held: #D97706;
+  --status-held-bg: #FFFBEB;
+  --status-confirmed: #059669;
+  --status-confirmed-bg: #ECFDF5;
+  --status-available: #0F766E;
+  --status-available-bg: #F0FDFA;
+  --status-expired: #6B7280;
+  --status-expired-bg: #F3F4F6;
+  --status-cancelled: #DC2626;
+  --status-cancelled-bg: #FEF2F2;
+  --status-driver-closed: #7C3AED;
+  --status-driver-closed-bg: #F5F3FF;
+  --status-in-progress: #2563EB;
+  --status-in-progress-bg: #EFF6FF;
+}
+
+@layer base {
+  * {
+    box-sizing: border-box;
+    border-color: var(--border);
+  }
+
+  body {
+    background-color: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  h1, h2, h3, h4, h5, h6, p {
+    margin: 0;
+  }
+}
+
+@layer utilities {
+  .tabular-nums {
+    font-variant-numeric: tabular-nums;
+  }
+
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom, 16px);
+  }
+
+  .bottom-nav-height {
+    height: 64px;
+  }
+
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .status-held {
+    color: var(--status-held);
+    background-color: var(--status-held-bg);
+  }
+
+  .status-confirmed {
+    color: var(--status-confirmed);
+    background-color: var(--status-confirmed-bg);
+  }
+
+  .status-available {
+    color: var(--status-available);
+    background-color: var(--status-available-bg);
+  }
+
+  .status-expired {
+    color: var(--status-expired);
+    background-color: var(--status-expired-bg);
+  }
+
+  .status-cancelled {
+    color: var(--status-cancelled);
+    background-color: var(--status-cancelled-bg);
+  }
+
+  .status-driver-closed {
+    color: var(--status-driver-closed);
+    background-color: var(--status-driver-closed-bg);
+  }
+
+  .status-in-progress {
+    color: var(--status-in-progress);
+    background-color: var(--status-in-progress-bg);
+  }
+
+  .card-shadow {
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+  }
+
+  .card-shadow-md {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08), 0 2px 4px rgba(0,0,0,0.04);
+  }
+
+  .animate-fade-in {
+    animation: fadeIn 200ms ease-in-out;
+  }
+
+  .animate-slide-up {
+    animation: slideUp 250ms ease-out;
+  }
+
+  .animate-pulse-highlight {
+    animation: pulseHighlight 600ms ease-in-out;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  @keyframes slideUp {
+    from { transform: translateY(12px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+
+  @keyframes pulseHighlight {
+    0% { background-color: transparent; }
+    40% { background-color: #FFF3E8; }
+    100% { background-color: transparent; }
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 bg-primary text-primary-foreground font-semibold rounded-xl px-5 py-3 text-base transition-all duration-150 active:scale-95 hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-2 bg-secondary text-secondary-foreground font-semibold rounded-xl px-5 py-3 text-base transition-all duration-150 active:scale-95 hover:bg-orange-100 disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .btn-outline {
+    @apply inline-flex items-center justify-center gap-2 border border-border bg-card text-foreground font-semibold rounded-xl px-5 py-3 text-base transition-all duration-150 active:scale-95 hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .btn-danger {
+    @apply inline-flex items-center justify-center gap-2 bg-red-600 text-white font-semibold rounded-xl px-5 py-3 text-base transition-all duration-150 active:scale-95 hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .btn-accent {
+    @apply inline-flex items-center justify-center gap-2 bg-accent text-accent-foreground font-semibold rounded-xl px-5 py-3 text-base transition-all duration-150 active:scale-95 hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .input-field {
+    @apply w-full bg-input border border-border rounded-xl px-4 py-3 text-base text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-all duration-150;
+  }
+
+  .card {
+    @apply bg-card rounded-2xl border border-border card-shadow;
+  }
+
+  .section-label {
+    @apply text-xs font-semibold uppercase tracking-widest text-muted-foreground;
+  }
+
+  .stat-badge {
+    @apply inline-flex flex-col items-center justify-center rounded-xl px-3 py-2 tabular-nums;
+  }
+
+  .stop-dot-active {
+    @apply w-3 h-3 rounded-full bg-primary ring-4 ring-orange-200 flex-shrink-0;
+  }
+
+  .stop-dot-passed {
+    @apply w-3 h-3 rounded-full bg-accent flex-shrink-0;
+  }
+
+  .stop-dot-upcoming {
+    @apply w-3 h-3 rounded-full bg-border flex-shrink-0;
+  }
+
+  .stop-line {
+    @apply w-0.5 h-6 bg-border mx-auto;
+  }
+
+  .stop-line-passed {
+    @apply w-0.5 h-6 bg-accent mx-auto;
+  }
+}
