@@ -2,6 +2,12 @@
 node_modules/
 package-lock.json
 
+# Local environment files
+.env
+.env.local
+.env.*.local
+!.env.example
+
 # Next.js build output
 .next/
 out/
@@ -22,16 +28,9 @@ Thumbs.db
 # Vercel deployment
 .vercel/
 
-# Optional: if using TypeScript
 *.tsbuildinfo
-
-# Optional: if using testing tools
 coverage/
 jest-test-results.json
-
-# Optional: if using IDEs
 .vscode/
 .idea/
-
-# Optional: if using TurboRepo or monorepo
 turbo/

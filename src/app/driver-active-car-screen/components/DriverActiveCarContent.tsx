@@ -1,111 +1,107 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
 import {
   CheckCircle2, X, MapPin, Users, Phone, ChevronRight,
-  AlertTriangle, Loader2, Car, Lock, Navigation
+  AlertTriangle, Loader2, Car, Lock, Navigation, RefreshCw, ShieldCheck
 } from 'lucide-react';
-import { MOCK_DRIVER_TRIP, PassengerRequest } from '@/lib/mockData';
+import { getDriverActiveCar, driverConfirmPayment, driverMarkPassengerAbsent, driverAdvanceStop, driverCloseEmptySeats, startTrip, completeTrip, type DriverActiveTrip, type PassengerRequest } from '@/lib/raahiApi';
+import { createClient } from '@/lib/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 import SeatCountBadge from '@/components/ui/SeatCountBadge';
 import StatusBadge from '@/components/ui/StatusBadge';
 
-// BACKEND INTEGRATION POINT: All actions call canonical RPCs:
-// driver_arrive_at_stop(), driver_advance_stop(), driver_confirm_payment(request_id),
-// driver_mark_passenger_absent(request_id), driver_close_empty_seats(), start_trip(), complete_trip()
-
 export default function DriverActiveCarContent() {
-  const [trip, setTrip] = useState(MOCK_DRIVER_TRIP);
+  const { user, profile, loading: authLoading } = useAuth();
+  const [trip, setTrip] = useState<DriverActiveTrip | null>(null);
+  const [loading, setLoading] = useState(true);
   const [loadingAction, setLoadingAction] = useState<string | null>(null);
   const [showCloseSeatsModal, setShowCloseSeatsModal] = useState(false);
   const [showStartTripModal, setShowStartTripModal] = useState(false);
+  const [showCompleteTripModal, setShowCompleteTripModal] = useState(false);
 
-  const heldRequests = trip.passenger_requests.filter((r) => r.status === 'HELD');
-  const confirmedRequests = trip.passenger_requests.filter((r) => r.status === 'CONFIRMED');
+  const fetchTrip = useCallback(async () => {
+    const data = await getDriverActiveCar();
+    setTrip(data);
+    setLoading(false);
+  }, []);
 
-  const canCloseSeats = trip.available_count > 0 && heldRequests.length === 0;
-  const canStartTrip = trip.departure_eligible;
+  useEffect(() => {
+    if (!authLoading && user) fetchTrip();
+    else if (!authLoading) setLoading(false);
+  }, [authLoading, user, fetchTrip]);
+
+  // Realtime subscription
+  useEffect(() => {
+    if (!user) return;
+    const supabase = createClient();
+    const channel = supabase
+      .channel('driver_trip_watch')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'trips' }, () => fetchTrip())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'seat_requests' }, () => fetchTrip())
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [user, fetchTrip]);
+
+  const handleAction = async (actionKey: string, fn: () => Promise<any>, successMsg: string) => {
+    setLoadingAction(actionKey);
+    const result = await fn();
+    setLoadingAction(null);
+    if (result?.success) {
+      toast.success(successMsg);
+      fetchTrip();
+    } else {
+      toast.error(result?.error || 'Action failed');
+    }
+  };
+
+  if (authLoading || loading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <Loader2 size={28} className="animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="max-w-screen-2xl mx-auto px-4 py-8 text-center space-y-3">
+        <ShieldCheck size={40} className="mx-auto text-muted-foreground opacity-40" />
+        <p className="text-base font-semibold text-foreground">Driver Sign In Required</p>
+        <p className="text-sm text-muted-foreground">Sign in with your driver account to access this screen.</p>
+      </div>
+    );
+  }
+
+  if (profile && profile.role !== 'driver' && profile.role !== 'admin') {
+    return (
+      <div className="max-w-screen-2xl mx-auto px-4 py-8 text-center space-y-3">
+        <ShieldCheck size={40} className="mx-auto text-muted-foreground opacity-40" />
+        <p className="text-base font-semibold text-foreground">Driver Access Only</p>
+        <p className="text-sm text-muted-foreground">This screen is only accessible to registered drivers.</p>
+      </div>
+    );
+  }
+
+  if (!trip?.has_active_trip) {
+    return (
+      <div className="max-w-screen-2xl mx-auto px-4 py-8 text-center space-y-4">
+        <Car size={40} className="mx-auto text-muted-foreground opacity-40" />
+        <p className="text-base font-semibold text-foreground">No Active Trip</p>
+        <p className="text-sm text-muted-foreground">Join the driver queue to start collecting passengers.</p>
+        <button onClick={fetchTrip} className="btn-outline mx-auto">
+          <RefreshCw size={16} />
+          Refresh
+        </button>
+      </div>
+    );
+  }
+
+  const heldRequests = (trip.passenger_requests ?? []).filter((r) => r.status === 'HELD');
+  const confirmedRequests = (trip.passenger_requests ?? []).filter((r) => r.status === 'CONFIRMED');
+  const canCloseSeats = (trip.available_count ?? 0) > 0 && heldRequests.length === 0;
+  const canStartTrip = trip.departure_eligible ?? false;
   const heldBlocking = heldRequests.length > 0;
-
-  const handleConfirmPayment = (requestId: string) => {
-    setLoadingAction(`confirm-${requestId}`);
-    // BACKEND: driver_confirm_payment(request_id) RPC
-    setTimeout(() => {
-      setTrip((prev) => ({
-        ...prev,
-        confirmed_count: prev.confirmed_count + 1,
-        held_count: prev.held_count - 1,
-        available_count: prev.available_count,
-        passenger_requests: prev.passenger_requests.map((r) =>
-          r.request_id === requestId ? { ...r, status: 'CONFIRMED' as const } : r
-        ),
-        departure_eligible: prev.confirmed_count + 1 + prev.driver_closed_count === prev.capacity && prev.held_count - 1 === 0,
-        held_count_blocking: Math.max(0, prev.held_count_blocking - 1),
-      }));
-      setLoadingAction(null);
-      toast.success('Payment confirmed — seat is now CONFIRMED');
-    }, 800);
-  };
-
-  const handleMarkAbsent = (requestId: string) => {
-    setLoadingAction(`absent-${requestId}`);
-    // BACKEND: driver_mark_passenger_absent(request_id) RPC
-    setTimeout(() => {
-      setTrip((prev) => ({
-        ...prev,
-        held_count: prev.held_count - 1,
-        available_count: prev.available_count + 1,
-        passenger_requests: prev.passenger_requests.filter((r) => r.request_id !== requestId),
-        held_count_blocking: Math.max(0, prev.held_count_blocking - 1),
-      }));
-      setLoadingAction(null);
-      toast.info('Passenger marked absent — seat released');
-    }, 800);
-  };
-
-  const handleAdvanceStop = () => {
-    setLoadingAction('advance-stop');
-    // BACKEND: driver_advance_stop(trip_id) RPC
-    setTimeout(() => {
-      setTrip((prev) => ({
-        ...prev,
-        current_stop_order: Math.min(prev.current_stop_order + 1, prev.stops.length),
-        current_stop_name: prev.stops[prev.current_stop_order]?.name ?? prev.current_stop_name,
-        stops: prev.stops.map((s, idx) => ({
-          ...s,
-          is_passed: s.stop_order < prev.current_stop_order + 1,
-          is_current: s.stop_order === prev.current_stop_order + 1,
-        })),
-      }));
-      setLoadingAction(null);
-      toast.success('Stop advanced');
-    }, 600);
-  };
-
-  const handleCloseSeats = () => {
-    setLoadingAction('close-seats');
-    // BACKEND: driver_close_empty_seats(trip_id) RPC
-    setTimeout(() => {
-      setTrip((prev) => ({
-        ...prev,
-        driver_closed_count: prev.driver_closed_count + prev.available_count,
-        available_count: 0,
-        departure_eligible: prev.confirmed_count + prev.driver_closed_count + prev.available_count === prev.capacity && prev.held_count === 0,
-      }));
-      setLoadingAction(null);
-      setShowCloseSeatsModal(false);
-      toast.success('Empty seats closed — ready to depart');
-    }, 800);
-  };
-
-  const handleStartTrip = () => {
-    setLoadingAction('start-trip');
-    // BACKEND: start_trip(trip_id) RPC — PostgreSQL validates departure invariant
-    setTimeout(() => {
-      setLoadingAction(null);
-      setShowStartTripModal(false);
-      toast.success('Trip started — next driver is now collecting');
-    }, 1000);
-  };
 
   return (
     <div className="max-w-screen-2xl mx-auto px-4 py-4 space-y-4 animate-fade-in">
@@ -130,29 +126,29 @@ export default function DriverActiveCarContent() {
       <div>
         <p className="section-label mb-2">Seat Accounting</p>
         <div className="grid grid-cols-5 gap-1.5">
-          <SeatCountBadge label="Total" count={trip.capacity} variant="capacity" />
-          <SeatCountBadge label="Confirmed" count={trip.confirmed_count} variant="confirmed" />
-          <SeatCountBadge label="Held" count={trip.held_count} variant="held" />
-          <SeatCountBadge label="Available" count={trip.available_count} variant="available" />
-          <SeatCountBadge label="Closed" count={trip.driver_closed_count} variant="closed" />
+          <SeatCountBadge label="Total" count={trip.capacity ?? 0} variant="capacity" />
+          <SeatCountBadge label="Confirmed" count={trip.confirmed_count ?? 0} variant="confirmed" />
+          <SeatCountBadge label="Held" count={trip.held_count ?? 0} variant="held" />
+          <SeatCountBadge label="Available" count={trip.available_count ?? 0} variant="available" />
+          <SeatCountBadge label="Closed" count={trip.driver_closed_count ?? 0} variant="closed" />
         </div>
       </div>
 
       {/* Departure Eligibility */}
-      {!canStartTrip && (
+      {!canStartTrip && trip.status === 'ACTIVE_COLLECTING' && (
         <div className="flex items-start gap-3 bg-amber-50 border border-amber-200 rounded-2xl px-4 py-3">
           <AlertTriangle size={18} className="text-amber-600 flex-shrink-0 mt-0.5" />
           <div>
             <p className="text-sm font-bold text-amber-800">Not Yet Ready to Depart</p>
             <ul className="text-xs text-amber-700 mt-1 space-y-0.5 list-disc list-inside">
               {heldBlocking && <li>{heldRequests.length} held request{heldRequests.length > 1 ? 's' : ''} must be confirmed, withdrawn, or expired</li>}
-              {trip.available_count > 0 && <li>{trip.available_count} seat{trip.available_count > 1 ? 's' : ''} still available — confirm passengers or close empty seats</li>}
+              {(trip.available_count ?? 0) > 0 && <li>{trip.available_count} seat{(trip.available_count ?? 0) > 1 ? 's' : ''} still available — confirm passengers or close empty seats</li>}
             </ul>
           </div>
         </div>
       )}
 
-      {canStartTrip && (
+      {canStartTrip && trip.status === 'ACTIVE_COLLECTING' && (
         <div className="flex items-start gap-3 bg-green-50 border border-green-200 rounded-2xl px-4 py-3">
           <CheckCircle2 size={18} className="text-green-600 flex-shrink-0 mt-0.5" />
           <p className="text-sm font-bold text-green-800">All seats accounted for — Ready to Start Trip</p>
@@ -161,71 +157,85 @@ export default function DriverActiveCarContent() {
 
       {/* Passenger Requests */}
       <div>
-        <p className="section-label mb-2">Passenger Requests ({trip.passenger_requests.length})</p>
+        <p className="section-label mb-2">Passenger Requests ({(trip.passenger_requests ?? []).length})</p>
         <div className="space-y-2">
-          {trip.passenger_requests.length === 0 && (
+          {(trip.passenger_requests ?? []).length === 0 && (
             <div className="card p-6 text-center">
               <Users size={32} className="mx-auto text-muted-foreground opacity-40 mb-2" />
               <p className="text-sm text-muted-foreground">No passenger requests yet</p>
             </div>
           )}
-          {trip.passenger_requests.map((req) => (
+          {(trip.passenger_requests ?? []).map((req) => (
             <PassengerRequestRow
               key={req.request_id}
               request={req}
               loadingAction={loadingAction}
-              onConfirm={handleConfirmPayment}
-              onAbsent={handleMarkAbsent}
+              onConfirm={(id) => handleAction(
+                `confirm-${id}`,
+                () => driverConfirmPayment(id),
+                'Payment confirmed — seat is now CONFIRMED'
+              )}
+              onAbsent={(id) => handleAction(
+                `absent-${id}`,
+                () => driverMarkPassengerAbsent(id),
+                'Passenger marked absent — seat released'
+              )}
             />
           ))}
         </div>
       </div>
 
       {/* Stop Progression */}
-      <div className="card p-4">
-        <div className="flex items-center justify-between mb-3">
-          <p className="section-label">Pickup Progress</p>
-          <span className="text-xs text-muted-foreground">
-            Stop {trip.current_stop_order} of {trip.stops.length}
-          </span>
+      {trip.status === 'ACTIVE_COLLECTING' && (
+        <div className="card p-4">
+          <div className="flex items-center justify-between mb-3">
+            <p className="section-label">Pickup Progress</p>
+            <span className="text-xs text-muted-foreground">
+              Stop {trip.current_stop_order} of {(trip.stops ?? []).length}
+            </span>
+          </div>
+          <div className="flex items-center gap-2 mb-4 bg-secondary rounded-xl px-3 py-2">
+            <Navigation size={14} className="text-primary" />
+            <p className="text-sm font-semibold text-secondary-foreground">
+              Currently at: <strong>{trip.current_stop_name}</strong>
+            </p>
+          </div>
+          <div className="flex gap-1 mb-2">
+            {(trip.stops ?? []).map((stop) => (
+              <div
+                key={stop.stop_id}
+                className={`flex-1 h-2.5 rounded-full ${
+                  stop.is_passed ? 'bg-accent' : stop.is_current ? 'bg-primary' : 'bg-border'
+                }`}
+                title={stop.name}
+              />
+            ))}
+          </div>
+          <div className="flex justify-between text-xs text-muted-foreground">
+            <span>{trip.stops?.[0]?.name}</span>
+            <span>{trip.stops?.[trip.stops.length - 1]?.name}</span>
+          </div>
+          <button
+            onClick={() => handleAction(
+              'advance-stop',
+              () => driverAdvanceStop(trip.trip_id!),
+              'Stop advanced'
+            )}
+            disabled={!!loadingAction || (trip.current_stop_order ?? 0) >= (trip.stops?.length ?? 0)}
+            className="btn-accent w-full mt-3"
+          >
+            {loadingAction === 'advance-stop' ? (
+              <Loader2 size={18} className="animate-spin" />
+            ) : (
+              <ChevronRight size={18} />
+            )}
+            {loadingAction === 'advance-stop' ? 'Advancing...' : 'Arrived at Next Stop'}
+          </button>
         </div>
-        <div className="flex items-center gap-2 mb-4 bg-secondary rounded-xl px-3 py-2">
-          <Navigation size={14} className="text-primary" />
-          <p className="text-sm font-semibold text-secondary-foreground">
-            Currently at: <strong>{trip.current_stop_name}</strong>
-          </p>
-        </div>
-        <div className="flex gap-1 mb-2">
-          {trip.stops.map((stop) => (
-            <div
-              key={stop.stop_id}
-              className={`flex-1 h-2.5 rounded-full ${
-                stop.is_passed ? 'bg-accent' : stop.is_current ?'bg-primary': 'bg-border'
-              }`}
-              title={stop.name}
-            />
-          ))}
-        </div>
-        <div className="flex justify-between text-xs text-muted-foreground">
-          <span>{trip.stops[0]?.name}</span>
-          <span>{trip.stops[trip.stops.length - 1]?.name}</span>
-        </div>
-        <button
-          onClick={handleAdvanceStop}
-          disabled={!!loadingAction || trip.current_stop_order >= trip.stops.length}
-          className="btn-accent w-full mt-3"
-        >
-          {loadingAction === 'advance-stop' ? (
-            <Loader2 size={18} className="animate-spin" />
-          ) : (
-            <ChevronRight size={18} />
-          )}
-          {loadingAction === 'advance-stop' ? 'Advancing...' : 'Arrived at Next Stop'}
-        </button>
-      </div>
+      )}
 
       {/* Close Empty Seats */}
-      {trip.available_count > 0 && (
+      {trip.status === 'ACTIVE_COLLECTING' && (trip.available_count ?? 0) > 0 && (
         <button
           onClick={() => setShowCloseSeatsModal(true)}
           disabled={heldBlocking || !!loadingAction}
@@ -236,24 +246,42 @@ export default function DriverActiveCarContent() {
           }`}
         >
           <Lock size={18} />
-          Close {trip.available_count} Empty Seat{trip.available_count > 1 ? 's' : ''} & Go
+          Close {trip.available_count} Empty Seat{(trip.available_count ?? 0) > 1 ? 's' : ''} & Go
           {heldBlocking && <span className="text-xs">(resolve held requests first)</span>}
         </button>
       )}
 
       {/* Start Trip */}
-      <button
-        onClick={() => setShowStartTripModal(true)}
-        disabled={!canStartTrip || !!loadingAction}
-        className="btn-primary w-full"
-      >
-        {loadingAction === 'start-trip' ? (
-          <Loader2 size={18} className="animate-spin" />
-        ) : (
-          <Car size={18} />
-        )}
-        {loadingAction === 'start-trip' ? 'Starting Trip...' : 'Start Trip to Dhanbad'}
-      </button>
+      {trip.status === 'ACTIVE_COLLECTING' && (
+        <button
+          onClick={() => setShowStartTripModal(true)}
+          disabled={!canStartTrip || !!loadingAction}
+          className="btn-primary w-full"
+        >
+          {loadingAction === 'start-trip' ? (
+            <Loader2 size={18} className="animate-spin" />
+          ) : (
+            <Car size={18} />
+          )}
+          {loadingAction === 'start-trip' ? 'Starting Trip...' : `Start Trip to ${trip.to_location}`}
+        </button>
+      )}
+
+      {/* Complete Trip */}
+      {trip.status === 'IN_PROGRESS' && (
+        <button
+          onClick={() => setShowCompleteTripModal(true)}
+          disabled={!!loadingAction}
+          className="btn-primary w-full"
+        >
+          {loadingAction === 'complete-trip' ? (
+            <Loader2 size={18} className="animate-spin" />
+          ) : (
+            <CheckCircle2 size={18} />
+          )}
+          {loadingAction === 'complete-trip' ? 'Completing...' : 'Complete Trip'}
+        </button>
+      )}
 
       {/* Close Seats Modal */}
       {showCloseSeatsModal && (
@@ -261,12 +289,15 @@ export default function DriverActiveCarContent() {
           <div className="w-full max-w-md bg-card rounded-t-3xl p-6 space-y-4 animate-slide-up">
             <h2 className="text-lg font-bold text-foreground">Close Empty Seats?</h2>
             <p className="text-sm text-muted-foreground">
-              You are about to close <strong>{trip.available_count} empty seat{trip.available_count > 1 ? 's' : ''}</strong>. This is irreversible for this trip. Actual occupancy will be recorded as {trip.confirmed_count} of {trip.capacity}.
+              You are about to close <strong>{trip.available_count} empty seat{(trip.available_count ?? 0) > 1 ? 's' : ''}</strong>. This is irreversible for this trip. Actual occupancy will be recorded as {trip.confirmed_count} of {trip.capacity}.
             </p>
             <div className="flex gap-3">
               <button onClick={() => setShowCloseSeatsModal(false)} className="btn-outline flex-1">Cancel</button>
               <button
-                onClick={handleCloseSeats}
+                onClick={() => {
+                  setShowCloseSeatsModal(false);
+                  handleAction('close-seats', () => driverCloseEmptySeats(trip.trip_id!), 'Empty seats closed — ready to depart');
+                }}
                 disabled={loadingAction === 'close-seats'}
                 className="btn-primary flex-1"
               >
@@ -289,12 +320,41 @@ export default function DriverActiveCarContent() {
             <div className="flex gap-3">
               <button onClick={() => setShowStartTripModal(false)} className="btn-outline flex-1">Not Yet</button>
               <button
-                onClick={handleStartTrip}
+                onClick={() => {
+                  setShowStartTripModal(false);
+                  handleAction('start-trip', () => startTrip(trip.trip_id!), 'Trip started — next driver is now collecting');
+                }}
                 disabled={loadingAction === 'start-trip'}
                 className="btn-primary flex-1"
               >
                 {loadingAction === 'start-trip' ? <Loader2 size={16} className="animate-spin" /> : <Car size={16} />}
                 Start Trip
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Complete Trip Modal */}
+      {showCompleteTripModal && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 animate-fade-in">
+          <div className="w-full max-w-md bg-card rounded-t-3xl p-6 space-y-4 animate-slide-up">
+            <h2 className="text-lg font-bold text-foreground">Complete Trip?</h2>
+            <p className="text-sm text-muted-foreground">
+              Confirm that you have arrived at the destination and the trip is complete.
+            </p>
+            <div className="flex gap-3">
+              <button onClick={() => setShowCompleteTripModal(false)} className="btn-outline flex-1">Not Yet</button>
+              <button
+                onClick={() => {
+                  setShowCompleteTripModal(false);
+                  handleAction('complete-trip', () => completeTrip(trip.trip_id!), 'Trip completed successfully!');
+                }}
+                disabled={loadingAction === 'complete-trip'}
+                className="btn-primary flex-1"
+              >
+                {loadingAction === 'complete-trip' ? <Loader2 size={16} className="animate-spin" /> : <CheckCircle2 size={16} />}
+                Complete Trip
               </button>
             </div>
           </div>
@@ -322,7 +382,7 @@ function PassengerRequestRow({
 
   return (
     <div className={`card p-4 border-l-4 ${
-      isConfirmed ? 'border-l-green-500' : isHeld ?'border-l-amber-500': 'border-l-border'
+      isConfirmed ? 'border-l-green-500' : isHeld ? 'border-l-amber-500' : 'border-l-border'
     }`}>
       <div className="flex items-start justify-between mb-3">
         <div>
@@ -341,13 +401,15 @@ function PassengerRequestRow({
             </div>
           </div>
         </div>
-        <a
-          href={`tel:${request.phone_masked.replace(/\s/g, '')}`}
-          className="flex items-center justify-center w-9 h-9 rounded-xl bg-accent/10 hover:bg-accent/20 transition-colors duration-150"
-          aria-label={`Call ${request.passenger_display_name}`}
-        >
-          <Phone size={16} className="text-accent" />
-        </a>
+        {request.phone_masked && (
+          <a
+            href={`tel:${request.phone_masked.replace(/\s/g, '')}`}
+            className="flex items-center justify-center w-9 h-9 rounded-xl bg-accent/10 hover:bg-accent/20 transition-colors duration-150"
+            aria-label={`Call ${request.passenger_display_name}`}
+          >
+            <Phone size={16} className="text-accent" />
+          </a>
+        )}
       </div>
 
       {isHeld && (

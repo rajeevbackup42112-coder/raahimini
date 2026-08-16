@@ -3,6 +3,7 @@ import type { Metadata, Viewport } from 'next';
 import { DM_Sans } from 'next/font/google';
 import '../styles/tailwind.css';
 import { Toaster } from 'sonner';
+import { AuthProvider } from '@/contexts/AuthContext';
 
 const dmSans = DM_Sans({
   subsets: ['latin'],
@@ -32,7 +33,9 @@ export default function RootLayout({
   return (
     <html lang="en" className={dmSans.variable}>
       <body className={dmSans.className}>
-        {children}
+        <AuthProvider>
+          {children}
+        </AuthProvider>
         <Toaster
           position="bottom-center"
           toastOptions={{
