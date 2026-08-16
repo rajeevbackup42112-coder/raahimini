@@ -36,7 +36,7 @@ RETURNS VOID
 LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path = public
-AS $
+AS $$
 DECLARE
   v_actor_id UUID := p_actor_id;
 BEGIN
@@ -55,7 +55,7 @@ BEGIN
   INSERT INTO public.behaviour_events (actor_id, actor_role, event_type, trip_id, request_id, metadata)
   VALUES (v_actor_id, p_actor_role, p_event_type, p_trip_id, p_request_id, p_metadata);
 END;
-$;
+$$;
 
 -- ─── join_driver_queue ────────────────────────────────────────────────────────
 CREATE OR REPLACE FUNCTION public.join_driver_queue(p_route_id UUID)
