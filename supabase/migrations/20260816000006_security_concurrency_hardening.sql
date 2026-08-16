@@ -263,3 +263,17 @@ TO authenticated;
 
 -- Keep future functions closed by default; migrations must opt into the public RPC surface.
 ALTER DEFAULT PRIVILEGES IN SCHEMA public REVOKE EXECUTE ON FUNCTIONS FROM PUBLIC, anon, authenticated;
+
+-- Realtime subscriptions are invalidation signals only. These SELECT grants are
+-- required for RLS-filtered change delivery; mutations remain RPC-only.
+GRANT SELECT ON public.trips, public.trip_progress TO anon, authenticated;
+GRANT SELECT ON public.seat_requests TO authenticated;
+GRANT EXECUTE ON FUNCTION public.get_my_driver_id(), public.is_trip_driver(UUID)
+TO authenticated;
+
+-- A confirmed booking is still active; prevent the same passenger from opening
+-- another held request on the same trip.
+DROP INDEX IF EXISTS public.idx_one_active_request_per_passenger;
+CREATE UNIQUE INDEX idx_one_active_request_per_passenger
+  ON public.seat_requests (trip_id, passenger_id)
+  WHERE status IN ('HELD', 'CONFIRMED');
