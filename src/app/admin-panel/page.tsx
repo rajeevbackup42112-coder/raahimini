@@ -1,10 +1,11 @@
 import React from 'react';
 import AdminPanelContent from './components/AdminPanelContent';
+import AdminQuickActions from './components/AdminQuickActions';
 
-// Admin panel uses its own minimal layout (no bottom nav)
 export default function AdminPanelPage() {
   return (
     <div className="min-h-screen bg-background">
+      <AdminQuickActions />
       <AdminPanelContent />
     </div>
   );
