@@ -44,10 +44,22 @@ export default function DriverRouteSelectionContent() {
     setLoading(false);
   }, [router]);
 
+  const refreshContext = useCallback(async () => {
+    const ctx = await getDriverHomeContext();
+    setContext(ctx);
+    if (ctx.has_active_trip) router.replace('/driver-active-car-screen');
+  }, [router]);
+
   useEffect(() => {
     if (!authLoading && user && (profile?.role === 'driver' || profile?.role === 'admin')) load();
     else if (!authLoading) setLoading(false);
   }, [authLoading, user, profile?.role, load]);
+
+  useEffect(() => {
+    if (context.queue_status !== 'WAITING') return;
+    const timer = window.setInterval(refreshContext, 7000);
+    return () => window.clearInterval(timer);
+  }, [context.queue_status, refreshContext]);
 
   useEffect(() => {
     if (!locationId || context.queue_status === 'WAITING') {
@@ -110,9 +122,9 @@ export default function DriverRouteSelectionContent() {
             <p className="text-xs text-muted-foreground">Queue position</p>
             <p className="text-3xl font-bold text-primary">#{context.queue_position ?? '—'}</p>
           </div>
-          <p className="text-sm text-muted-foreground">Raahi will move you to the active car automatically when your turn starts.</p>
+          <p className="text-sm text-muted-foreground">This updates automatically. When your turn starts, Raahi will open your active car.</p>
           <div className="flex gap-2">
-            <button className="btn-outline flex-1" onClick={load}><RefreshCw size={16}/>Refresh</button>
+            <button className="btn-outline flex-1" onClick={refreshContext}><RefreshCw size={16}/>Refresh</button>
             <button className="btn-outline flex-1" disabled={leaving} onClick={leaveQueue}>{leaving?<Loader2 size={16} className="animate-spin"/>:null}Leave Queue</button>
           </div>
         </div>
