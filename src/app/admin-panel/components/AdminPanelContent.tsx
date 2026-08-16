@@ -1,17 +1,16 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { toast } from 'sonner';
-import { MapPin, Route, Users, Car, List, Activity, ShieldAlert, ChevronLeft, CheckCircle2, ArrowUp, ArrowDown, Trash2, Plus, Edit2, AlertTriangle, Loader2, RefreshCw } from 'lucide-react';
+import { MapPin, Route, Users, Car, List, Activity, ShieldAlert, ChevronLeft, CheckCircle2, Plus, AlertTriangle, Loader2, RefreshCw } from 'lucide-react';
 import {
-  LOCATIONS, ROUTES, STOPS_GD01, STOPS_DG01,
-  ADMIN_DRIVERS, ADMIN_ACTIVE_TRIPS, ADMIN_BEHAVIOUR_EVENTS
-} from '@/lib/mockData';
+  adminGetLocations, adminGetRoutes, adminGetDrivers, adminGetActiveTrips,
+  adminGetBehaviourEvents, adminRestrictUser, adminUnrestrictUser,
+  getDriverQueueStatus
+} from '@/lib/raahiApi';
+import { useAuth } from '@/contexts/AuthContext';
 import StatusBadge from '@/components/ui/StatusBadge';
 import AppLogo from '@/components/ui/AppLogo';
-
-// BACKEND INTEGRATION POINT: All admin mutations call admin RPCs:
-// admin_restrict_user(), admin_unrestrict_user(), admin_reorder_queue(), admin_remove_from_queue()
 
 type AdminTab = 'locations' | 'routes' | 'drivers' | 'queue' | 'trips' | 'behaviour';
 
@@ -26,10 +25,28 @@ const TABS: { id: AdminTab; label: string; icon: React.ReactNode }[] = [
 
 export default function AdminPanelContent() {
   const [activeTab, setActiveTab] = useState<AdminTab>('trips');
+  const { profile, loading: authLoading } = useAuth();
+
+  if (authLoading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <Loader2 size={28} className="animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (!profile || profile.role !== 'admin') {
+    return (
+      <div className="max-w-screen-2xl mx-auto px-4 py-8 text-center space-y-3">
+        <ShieldAlert size={40} className="mx-auto text-muted-foreground opacity-40" />
+        <p className="text-base font-semibold text-foreground">Admin Access Required</p>
+        <p className="text-sm text-muted-foreground">Sign in with an admin account to access this panel.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-screen-2xl mx-auto">
-      {/* Admin Header */}
       <header className="sticky top-0 z-40 bg-card border-b border-border card-shadow">
         <div className="flex items-center gap-3 px-4 h-14">
           <Link href="/" className="flex items-center justify-center w-9 h-9 rounded-xl hover:bg-muted transition-colors duration-150">
@@ -45,8 +62,6 @@ export default function AdminPanelContent() {
             </span>
           </div>
         </div>
-
-        {/* Tab Bar */}
         <div className="flex overflow-x-auto border-t border-border px-2 gap-0 scrollbar-hide">
           {TABS.map((tab) => (
             <button
@@ -54,7 +69,7 @@ export default function AdminPanelContent() {
               onClick={() => setActiveTab(tab.id)}
               className={`flex items-center gap-1.5 px-3 py-3 text-xs font-semibold whitespace-nowrap border-b-2 transition-colors duration-150 ${
                 activeTab === tab.id
-                  ? 'border-primary text-primary' :'border-transparent text-muted-foreground hover:text-foreground'
+                  ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'
               }`}
             >
               {tab.icon}
@@ -76,62 +91,68 @@ export default function AdminPanelContent() {
   );
 }
 
-// ─── LOCATIONS TAB ─────────────────────────────────────────────────────────────
 function LocationsTab() {
+  const [locations, setLocations] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    adminGetLocations().then((data) => { setLocations(data); setLoading(false); });
+  }, []);
+
+  if (loading) return <div className="flex justify-center py-8"><Loader2 size={24} className="animate-spin text-primary" /></div>;
+
   return (
     <div className="space-y-4 animate-fade-in">
       <div className="flex items-center justify-between">
         <h2 className="text-base font-bold text-foreground">Locations</h2>
-        <button className="btn-primary py-2 px-3 text-sm">
+        <button className="btn-primary py-2 px-3 text-sm" onClick={() => toast.info('Add location via database migration')}>
           <Plus size={14} />
           Add Location
         </button>
       </div>
       <div className="space-y-2">
-        {LOCATIONS.map((loc) => (
+        {locations.map((loc) => (
           <div key={loc.id} className="card p-4 flex items-center justify-between">
             <div className="flex items-center gap-3">
               <MapPin size={18} className="text-primary" />
               <div>
                 <p className="text-sm font-bold text-foreground">{loc.name}</p>
-                <p className="text-xs text-muted-foreground">Jharkhand, India</p>
+                <p className="text-xs text-muted-foreground">{loc.state}, India</p>
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <StatusBadge status={loc.active ? 'confirmed' : 'expired'} label={loc.active ? 'Active' : 'Inactive'} />
-              <button className="w-8 h-8 flex items-center justify-center rounded-xl hover:bg-muted transition-colors">
-                <Edit2 size={14} className="text-muted-foreground" />
-              </button>
+              <StatusBadge status={loc.is_active ? 'confirmed' : 'expired'} label={loc.is_active ? 'Active' : 'Inactive'} />
             </div>
           </div>
         ))}
       </div>
-      <div className="card p-4 border-dashed border-2 border-border flex items-center justify-center gap-2 text-muted-foreground text-sm cursor-pointer hover:border-primary/40 hover:text-primary transition-colors duration-150">
+      <div className="card p-4 border-dashed border-2 border-border flex items-center justify-center gap-2 text-muted-foreground text-sm">
         <Plus size={16} />
-        Add Bokaro, Ranchi, or other locations
+        Add Bokaro, Ranchi, or other locations via Admin RPC
       </div>
     </div>
   );
 }
 
-// ─── ROUTES TAB ────────────────────────────────────────────────────────────────
 function RoutesTab() {
+  const [routes, setRoutes] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   const [selectedRoute, setSelectedRoute] = useState<string | null>(null);
-  const allStops = [...STOPS_GD01, ...STOPS_DG01];
+
+  useEffect(() => {
+    adminGetRoutes().then((data) => { setRoutes(data); setLoading(false); });
+  }, []);
+
+  if (loading) return <div className="flex justify-center py-8"><Loader2 size={24} className="animate-spin text-primary" /></div>;
 
   return (
     <div className="space-y-4 animate-fade-in">
       <div className="flex items-center justify-between">
         <h2 className="text-base font-bold text-foreground">Routes & Stops</h2>
-        <button className="btn-primary py-2 px-3 text-sm">
-          <Plus size={14} />
-          Add Route
-        </button>
       </div>
-
       <div className="space-y-2">
-        {ROUTES.map((route) => {
-          const routeStops = allStops.filter((s) => s.route_id === route.id);
+        {routes.map((route) => {
+          const stops = (route.route_stops || []).sort((a: any, b: any) => a.stop_order - b.stop_order);
           const isExpanded = selectedRoute === route.id;
           return (
             <div key={route.id} className="card overflow-hidden">
@@ -145,7 +166,7 @@ function RoutesTab() {
                   </div>
                   <div className="text-left">
                     <p className="text-sm font-bold text-foreground">{route.direction_label}</p>
-                    <p className="text-xs text-muted-foreground">{routeStops.length} stops configured</p>
+                    <p className="text-xs text-muted-foreground">{stops.length} stops configured</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
@@ -153,16 +174,10 @@ function RoutesTab() {
                   <ChevronLeft size={16} className={`text-muted-foreground transition-transform duration-200 ${isExpanded ? '-rotate-90' : 'rotate-180'}`} />
                 </div>
               </button>
-
               {isExpanded && (
                 <div className="border-t border-border px-4 py-3 space-y-2 animate-fade-in">
-                  <div className="flex items-center justify-between mb-2">
-                    <p className="section-label">Pickup Stops (ordered)</p>
-                    <button className="text-xs font-semibold text-primary flex items-center gap-1">
-                      <Plus size={12} /> Add Stop
-                    </button>
-                  </div>
-                  {routeStops.map((stop, idx) => (
+                  <p className="section-label">Pickup Stops (ordered)</p>
+                  {stops.map((stop: any) => (
                     <div key={stop.id} className="flex items-center gap-3 bg-muted rounded-xl px-3 py-2.5">
                       <span className="w-5 h-5 rounded-full bg-primary/20 text-primary text-xs font-bold flex items-center justify-center flex-shrink-0">
                         {stop.stop_order}
@@ -171,9 +186,6 @@ function RoutesTab() {
                       <span className="text-xs text-muted-foreground tabular-nums">
                         {stop.minutes_from_prev > 0 ? `+${stop.minutes_from_prev} min` : 'Start'}
                       </span>
-                      <button className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-border transition-colors">
-                        <Edit2 size={12} className="text-muted-foreground" />
-                      </button>
                     </div>
                   ))}
                 </div>
@@ -186,39 +198,43 @@ function RoutesTab() {
   );
 }
 
-// ─── DRIVERS TAB ───────────────────────────────────────────────────────────────
 function DriversTab() {
-  const [drivers, setDrivers] = useState(ADMIN_DRIVERS);
+  const [drivers, setDrivers] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   const [loadingAction, setLoadingAction] = useState<string | null>(null);
 
-  const handleToggleRestriction = (driverId: string, currentStatus: string) => {
+  const fetchDrivers = useCallback(async () => {
+    const data = await adminGetDrivers();
+    setDrivers(data);
+    setLoading(false);
+  }, []);
+
+  useEffect(() => { fetchDrivers(); }, [fetchDrivers]);
+
+  const handleToggleRestriction = async (driverId: string, profileId: string, isRestricted: boolean) => {
     setLoadingAction(`restrict-${driverId}`);
-    const isRestricting = currentStatus === 'active';
-    // BACKEND: admin_restrict_user(driverId) or admin_unrestrict_user(driverId) RPC
-    setTimeout(() => {
-      setDrivers((prev) =>
-        prev.map((d) =>
-          d.id === driverId ? { ...d, status: isRestricting ? 'restricted' : 'active' } : d
-        )
-      );
-      setLoadingAction(null);
-      toast.success(isRestricting ? 'Driver restricted' : 'Driver restriction lifted');
-    }, 800);
+    const result = isRestricted
+      ? await adminUnrestrictUser(profileId)
+      : await adminRestrictUser(profileId, 'Admin restriction');
+    setLoadingAction(null);
+    if (result.success) {
+      toast.success(isRestricted ? 'Driver restriction lifted' : 'Driver restricted');
+      fetchDrivers();
+    } else {
+      toast.error(result.error || 'Action failed');
+    }
   };
+
+  if (loading) return <div className="flex justify-center py-8"><Loader2 size={24} className="animate-spin text-primary" /></div>;
 
   return (
     <div className="space-y-4 animate-fade-in">
       <div className="flex items-center justify-between">
         <h2 className="text-base font-bold text-foreground">Drivers ({drivers.length})</h2>
-        <button className="btn-primary py-2 px-3 text-sm">
-          <Plus size={14} />
-          Add Driver
-        </button>
       </div>
-
       <div className="space-y-2">
         {drivers.map((driver) => {
-          const isRestricted = driver.status === 'restricted';
+          const isRestricted = driver.profiles?.is_restricted ?? false;
           const isLoading = loadingAction === `restrict-${driver.id}`;
           return (
             <div key={driver.id} className={`card p-4 ${isRestricted ? 'opacity-75' : ''}`}>
@@ -229,7 +245,7 @@ function DriversTab() {
                   </div>
                   <div>
                     <div className="flex items-center gap-2">
-                      <p className="text-sm font-bold text-foreground">{driver.name}</p>
+                      <p className="text-sm font-bold text-foreground">{driver.display_name}</p>
                       <StatusBadge
                         status={isRestricted ? 'cancelled' : 'confirmed'}
                         label={isRestricted ? 'Restricted' : 'Active'}
@@ -239,10 +255,10 @@ function DriversTab() {
                     <div className="flex items-center gap-3 mt-1">
                       <span className="text-xs text-muted-foreground">
                         <Car size={10} className="inline mr-0.5" />
-                        {driver.vehicle}
+                        {driver.vehicles?.registration_number ?? 'No vehicle'}
                       </span>
                       <span className="text-xs text-muted-foreground">
-                        Route: {driver.route}
+                        Route: {driver.routes?.code ?? 'N/A'}
                       </span>
                       <span className="text-xs text-muted-foreground">
                         {driver.trips_completed} trips
@@ -251,7 +267,7 @@ function DriversTab() {
                   </div>
                 </div>
                 <button
-                  onClick={() => handleToggleRestriction(driver.id, driver.status)}
+                  onClick={() => handleToggleRestriction(driver.id, driver.profile_id, isRestricted)}
                   disabled={!!loadingAction}
                   className={`flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all duration-150 active:scale-95 ${
                     isRestricted
@@ -276,149 +292,146 @@ function DriversTab() {
   );
 }
 
-// ─── QUEUE TAB ─────────────────────────────────────────────────────────────────
 function QueueTab() {
-  const [queue, setQueue] = useState(
-    ADMIN_DRIVERS.filter((d) => d.queue_position !== null && d.route === 'GD-01')
-      .sort((a, b) => (a.queue_position ?? 0) - (b.queue_position ?? 0))
-  );
+  const [routes, setRoutes] = useState<any[]>([]);
+  const [selectedRouteId, setSelectedRouteId] = useState<string | null>(null);
+  const [queue, setQueue] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const moveUp = (idx: number) => {
-    if (idx === 0) return;
-    const newQueue = [...queue];
-    [newQueue[idx - 1], newQueue[idx]] = [newQueue[idx], newQueue[idx - 1]];
-    setQueue(newQueue);
-    // BACKEND: admin_reorder_queue(route_id, new_order) RPC
-    toast.success('Queue reordered');
-  };
+  useEffect(() => {
+    adminGetRoutes().then((data) => {
+      setRoutes(data);
+      if (data.length > 0) setSelectedRouteId(data[0].id);
+      setLoading(false);
+    });
+  }, []);
 
-  const moveDown = (idx: number) => {
-    if (idx === queue.length - 1) return;
-    const newQueue = [...queue];
-    [newQueue[idx], newQueue[idx + 1]] = [newQueue[idx + 1], newQueue[idx]];
-    setQueue(newQueue);
-    toast.success('Queue reordered');
-  };
+  useEffect(() => {
+    if (selectedRouteId) {
+      getDriverQueueStatus(selectedRouteId).then(setQueue);
+    }
+  }, [selectedRouteId]);
 
-  const removeFromQueue = (driverId: string) => {
-    setQueue((prev) => prev.filter((d) => d.id !== driverId));
-    // BACKEND: admin_remove_from_queue(driver_id, route_id) RPC
-    toast.info('Driver removed from queue');
-  };
+  if (loading) return <div className="flex justify-center py-8"><Loader2 size={24} className="animate-spin text-primary" /></div>;
+
+  const selectedRoute = routes.find((r) => r.id === selectedRouteId);
 
   return (
     <div className="space-y-4 animate-fade-in">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-base font-bold text-foreground">Driver Queue — GD-01</h2>
-          <p className="text-xs text-muted-foreground">Gomoh → Dhanbad · FIFO order</p>
+          <h2 className="text-base font-bold text-foreground">Driver Queue</h2>
+          <p className="text-xs text-muted-foreground">FIFO order · One ACTIVE_COLLECTING per route</p>
         </div>
         <button
-          onClick={() => toast.info('Queue refreshed')}
+          onClick={() => selectedRouteId && getDriverQueueStatus(selectedRouteId).then(setQueue)}
           className="flex items-center justify-center w-9 h-9 rounded-xl bg-muted hover:bg-border transition-colors duration-150"
         >
           <RefreshCw size={16} className="text-muted-foreground" />
         </button>
       </div>
 
+      {/* Route selector */}
+      <div className="flex gap-2">
+        {routes.map((r) => (
+          <button
+            key={r.id}
+            onClick={() => setSelectedRouteId(r.id)}
+            className={`px-3 py-1.5 rounded-xl text-xs font-semibold border transition-colors ${
+              selectedRouteId === r.id ? 'border-primary bg-secondary text-primary' : 'border-border text-muted-foreground'
+            }`}
+          >
+            {r.code}
+          </button>
+        ))}
+      </div>
+
       <div className="space-y-2">
-        {queue.map((driver, idx) => (
+        {queue.map((entry: any, idx: number) => (
           <div
-            key={driver.id}
+            key={entry.queue_id}
             className={`card p-4 flex items-center gap-3 ${idx === 0 ? 'border-primary/40 bg-secondary/30' : ''}`}
           >
             <div className={`w-8 h-8 rounded-xl flex items-center justify-center font-bold text-sm flex-shrink-0 ${
               idx === 0 ? 'bg-primary text-primary-foreground' : 'bg-muted text-foreground'
             }`}>
-              {idx + 1}
+              {entry.queue_position}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-bold text-foreground truncate">{driver.name}</p>
-              <p className="text-xs text-muted-foreground">{driver.vehicle} · {driver.trips_completed} trips</p>
+              <p className="text-sm font-bold text-foreground truncate">{entry.driver_name}</p>
+              <p className="text-xs text-muted-foreground">{entry.vehicle_number}</p>
             </div>
-            {idx === 0 && (
-              <StatusBadge status="collecting" label="Active" />
-            )}
-            <div className="flex items-center gap-1">
-              <button
-                onClick={() => moveUp(idx)}
-                disabled={idx === 0}
-                className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-muted disabled:opacity-30 transition-colors"
-              >
-                <ArrowUp size={13} className="text-muted-foreground" />
-              </button>
-              <button
-                onClick={() => moveDown(idx)}
-                disabled={idx === queue.length - 1}
-                className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-muted disabled:opacity-30 transition-colors"
-              >
-                <ArrowDown size={13} className="text-muted-foreground" />
-              </button>
-              <button
-                onClick={() => removeFromQueue(driver.id)}
-                className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-red-50 transition-colors"
-              >
-                <Trash2 size={13} className="text-red-500" />
-              </button>
-            </div>
+            <StatusBadge
+              status={entry.status === 'ACTIVE_COLLECTING' ? 'collecting' : 'held'}
+              label={entry.status === 'ACTIVE_COLLECTING' ? 'Active' : 'Waiting'}
+            />
           </div>
         ))}
+        {queue.length === 0 && (
+          <div className="card p-8 text-center">
+            <List size={32} className="mx-auto text-muted-foreground opacity-40 mb-2" />
+            <p className="text-sm text-muted-foreground">No drivers in queue for {selectedRoute?.code}</p>
+          </div>
+        )}
       </div>
-
-      {queue.length === 0 && (
-        <div className="card p-8 text-center">
-          <List size={32} className="mx-auto text-muted-foreground opacity-40 mb-2" />
-          <p className="text-sm text-muted-foreground">No drivers in queue for GD-01</p>
-        </div>
-      )}
     </div>
   );
 }
 
-// ─── TRIPS TAB ─────────────────────────────────────────────────────────────────
 function TripsTab() {
+  const [trips, setTrips] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchTrips = useCallback(async () => {
+    const data = await adminGetActiveTrips();
+    setTrips(data);
+    setLoading(false);
+  }, []);
+
+  useEffect(() => { fetchTrips(); }, [fetchTrips]);
+
+  if (loading) return <div className="flex justify-center py-8"><Loader2 size={24} className="animate-spin text-primary" /></div>;
+
   return (
     <div className="space-y-4 animate-fade-in">
       <div className="flex items-center justify-between">
-        <h2 className="text-base font-bold text-foreground">Active Trips ({ADMIN_ACTIVE_TRIPS.length})</h2>
-        <button
-          onClick={() => toast.info('Trips refreshed')}
-          className="flex items-center justify-center w-9 h-9 rounded-xl bg-muted hover:bg-border transition-colors duration-150"
-        >
+        <h2 className="text-base font-bold text-foreground">Active Trips ({trips.length})</h2>
+        <button onClick={fetchTrips} className="flex items-center justify-center w-9 h-9 rounded-xl bg-muted hover:bg-border transition-colors duration-150">
           <RefreshCw size={16} className="text-muted-foreground" />
         </button>
       </div>
-
       <div className="space-y-3">
-        {ADMIN_ACTIVE_TRIPS.map((trip) => (
-          <div key={trip.id} className="card p-4">
+        {trips.map((trip) => (
+          <div key={trip.trip_id} className="card p-4">
             <div className="flex items-start justify-between mb-3">
               <div>
                 <div className="flex items-center gap-2">
-                  <span className="text-xs font-bold text-muted-foreground">{trip.route}</span>
+                  <span className="text-xs font-bold text-muted-foreground">{trip.route_code}</span>
                   <StatusBadge
                     status={trip.status === 'ACTIVE_COLLECTING' ? 'collecting' : 'in-progress'}
                     label={trip.status === 'ACTIVE_COLLECTING' ? 'Collecting' : 'In Progress'}
                   />
                 </div>
-                <p className="text-sm font-bold text-foreground mt-0.5">{trip.driver}</p>
-                <p className="text-xs text-muted-foreground font-mono">{trip.id}</p>
+                <p className="text-sm font-bold text-foreground mt-0.5">{trip.driver_name}</p>
+                <p className="text-xs text-muted-foreground">{trip.vehicle_number}</p>
               </div>
-              {trip.started && (
+              {trip.started_at && (
                 <div className="text-right">
                   <p className="text-xs text-muted-foreground">Started</p>
-                  <p className="text-sm font-bold text-foreground">{trip.started}</p>
+                  <p className="text-xs font-bold text-foreground">
+                    {new Date(trip.started_at).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
+                  </p>
                 </div>
               )}
             </div>
             <div className="grid grid-cols-4 gap-2">
               {[
-                { label: 'Capacity', value: trip.capacity, color: 'bg-muted' },
-                { label: 'Confirmed', value: trip.confirmed, color: 'bg-green-50 text-green-700' },
-                { label: 'Held', value: trip.held, color: 'bg-amber-50 text-amber-700' },
-                { label: 'Available', value: trip.available, color: 'status-available' },
+                { label: 'Capacity', value: trip.capacity, cls: 'bg-muted' },
+                { label: 'Confirmed', value: trip.confirmed, cls: 'bg-green-50 text-green-700' },
+                { label: 'Held', value: trip.held, cls: 'bg-amber-50 text-amber-700' },
+                { label: 'Available', value: trip.available, cls: 'bg-blue-50 text-blue-700' },
               ].map((stat) => (
-                <div key={`trip-stat-${trip.id}-${stat.label}`} className={`rounded-xl px-2 py-2 text-center ${stat.color}`}>
+                <div key={`${trip.trip_id}-${stat.label}`} className={`rounded-xl px-2 py-2 text-center ${stat.cls}`}>
                   <p className="text-lg font-bold tabular-nums">{stat.value}</p>
                   <p className="text-[10px] font-semibold uppercase tracking-wide opacity-70">{stat.label}</p>
                 </div>
@@ -426,26 +439,40 @@ function TripsTab() {
             </div>
           </div>
         ))}
+        {trips.length === 0 && (
+          <div className="card p-8 text-center">
+            <Car size={32} className="mx-auto text-muted-foreground opacity-40 mb-2" />
+            <p className="text-sm text-muted-foreground">No active trips right now</p>
+          </div>
+        )}
       </div>
     </div>
   );
 }
 
-// ─── BEHAVIOUR TAB ─────────────────────────────────────────────────────────────
 function BehaviourTab() {
-  const [events, setEvents] = useState(ADMIN_BEHAVIOUR_EVENTS);
+  const [events, setEvents] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   const [loadingAction, setLoadingAction] = useState<string | null>(null);
 
-  const handleRestrict = (actorId: string) => {
+  const fetchEvents = useCallback(async () => {
+    const data = await adminGetBehaviourEvents(50);
+    setEvents(data);
+    setLoading(false);
+  }, []);
+
+  useEffect(() => { fetchEvents(); }, [fetchEvents]);
+
+  const handleRestrict = async (actorId: string) => {
     setLoadingAction(`restrict-${actorId}`);
-    // BACKEND: admin_restrict_user(actor_id) RPC
-    setTimeout(() => {
-      setEvents((prev) =>
-        prev.map((e) => e.id === actorId ? { ...e, action: 'restricted' } : e)
-      );
-      setLoadingAction(null);
+    const result = await adminRestrictUser(actorId, 'Admin restriction via behaviour review');
+    setLoadingAction(null);
+    if (result.success) {
       toast.success('User restricted');
-    }, 700);
+      fetchEvents();
+    } else {
+      toast.error(result.error || 'Action failed');
+    }
   };
 
   const EVENT_LABELS: Record<string, string> = {
@@ -454,7 +481,13 @@ function BehaviourTab() {
     request_expired: 'Request Expired',
     confirmed_no_show: 'Confirmed No-show',
     passenger_complaint: 'Passenger Complaint',
+    booking_confirmed: 'Booking Confirmed',
+    trip_completed: 'Trip Completed',
+    request_created: 'Request Created',
+    request_withdrawn: 'Request Withdrawn',
   };
+
+  if (loading) return <div className="flex justify-center py-8"><Loader2 size={24} className="animate-spin text-primary" /></div>;
 
   return (
     <div className="space-y-4 animate-fade-in">
@@ -463,16 +496,16 @@ function BehaviourTab() {
           <h2 className="text-base font-bold text-foreground">Behaviour Events</h2>
           <p className="text-xs text-muted-foreground">Manual review — no automated penalties yet</p>
         </div>
+        <button onClick={fetchEvents} className="flex items-center justify-center w-9 h-9 rounded-xl bg-muted hover:bg-border transition-colors duration-150">
+          <RefreshCw size={16} className="text-muted-foreground" />
+        </button>
       </div>
-
       <div className="space-y-2">
         {events.map((event) => {
-          const isRestricted = event.action === 'restricted';
-          const isLoading = loadingAction === `restrict-${event.id}`;
-          const isCritical = event.event.includes('after_confirmation') || event.count >= 3;
-
+          const isCritical = event.event_type?.includes('after_confirmation') || event.event_type?.includes('complaint');
+          const isLoading = loadingAction === `restrict-${event.event_id}`;
           return (
-            <div key={event.id} className={`card p-4 ${isCritical ? 'border-red-200' : ''}`}>
+            <div key={event.event_id} className={`card p-4 ${isCritical ? 'border-red-200' : ''}`}>
               <div className="flex items-start justify-between">
                 <div className="flex items-start gap-3">
                   {isCritical ? (
@@ -482,44 +515,45 @@ function BehaviourTab() {
                   )}
                   <div>
                     <div className="flex items-center gap-2">
-                      <p className="text-sm font-bold text-foreground">{event.actor}</p>
+                      <p className="text-sm font-bold text-foreground">{event.actor_name}</p>
                       <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
-                        event.role === 'driver' ? 'bg-blue-50 text-blue-700' : 'bg-orange-50 text-orange-700'}`}>
-                              {event.role}
-                            </span>
-                          </div>
-                          <p className="text-xs text-muted-foreground mt-0.5">
-                            {EVENT_LABELS[event.event] ?? event.event} ·{' '}
-                            <strong className="text-foreground">{event.count}×</strong> · Last: {event.last_occurrence}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        {isRestricted ? (
-                          <StatusBadge status="cancelled" label="Restricted" />
-                        ) : (
-                          <button
-                            onClick={() => handleRestrict(event.id)}
-                            disabled={!!loadingAction}
-                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-red-50 text-red-700 hover:bg-red-100 transition-all duration-150 active:scale-95 disabled:opacity-50"
-                          >
-                            {isLoading ? <Loader2 size={11} className="animate-spin" /> : <ShieldAlert size={11} />}
-                            Restrict
-                          </button>
-                        )}
-                      </div>
+                        event.actor_role === 'driver' ? 'bg-blue-50 text-blue-700' : 'bg-orange-50 text-orange-700'
+                      }`}>
+                        {event.actor_role}
+                      </span>
                     </div>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {EVENT_LABELS[event.event_type] ?? event.event_type} ·{' '}
+                      {new Date(event.created_at).toLocaleDateString('en-IN')}
+                    </p>
                   </div>
-                );
-              })}
-            </div>
-
-            {events.length === 0 && (
-              <div className="card p-8 text-center">
-                <Activity size={32} className="mx-auto text-muted-foreground opacity-40 mb-2" />
-                <p className="text-sm text-muted-foreground">No behaviour events recorded</p>
+                </div>
+                {isCritical && (
+                  <button
+                    onClick={() => handleRestrict(event.actor_id ?? event.event_id)}
+                    disabled={!!loadingAction}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-red-50 text-red-700 hover:bg-red-100 transition-all duration-150 active:scale-95 disabled:opacity-50"
+                  >
+                    {isLoading ? <Loader2 size={11} className="animate-spin" /> : <ShieldAlert size={11} />}
+                    Restrict
+                  </button>
+                )}
               </div>
-            )}
+            </div>
+          );
+        })}
+        {events.length === 0 && (
+          <div className="card p-8 text-center">
+            <Activity size={32} className="mx-auto text-muted-foreground opacity-40 mb-2" />
+            <p className="text-sm text-muted-foreground">No behaviour events recorded</p>
           </div>
-        );
-      }
+        )}
+      </div>
+    </div>
+  );
+}
+
+// useCallback import fix
+function useCallback<T extends (...args: any[]) => any>(fn: T, deps: any[]): T {
+  return React.useCallback(fn, deps);
+}
