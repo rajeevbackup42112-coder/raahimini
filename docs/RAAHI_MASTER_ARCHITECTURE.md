@@ -1,0 +1,446 @@
+# Raahi Mini — Master Architecture Sheet
+
+**Status:** Canonical living architecture reference  
+**Authority:** This document defines intended system behaviour. Code, migrations, UI and operational procedures must conform to it.  
+**Governance:** Every architecture-affecting change must update this sheet in the same PR. If implementation and this sheet disagree, stop and reconcile before proceeding.
+
+## 1. Product Scope
+
+Raahi Mini is a shared-seat micro-transit coordination system. Public users may browse locations, routes, active cars and seat availability anonymously. Authentication is required only when a passenger requests seats or when a driver/admin uses protected functions.
+
+Passengers pay the driver directly after physically meeting the driver. Raahi does not collect fare in V1. Reliability is enforced through verified accounts, behaviour events, no-show/cancellation history, admin restrictions and later policy penalties.
+
+Drivers are not permanently assigned to routes. A driver chooses their current location, sees only routes departing from that location, selects one route and joins that route's FIFO queue. After trip completion, the destination is suggested as the driver's next current location.
+
+## 2. Architectural Principles
+
+1. PostgreSQL is authoritative state.
+2. All business transitions occur through canonical RPCs; UI must not directly mutate operational tables.
+3. Supabase Realtime is invalidation/refetch only, never an independent state authority.
+4. One public production command per business transition.
+5. Driver queue owns route FIFO and activation order.
+6. Trips own journey lifecycle.
+7. Seat requests own passenger demand lifecycle.
+8. `trip_seats` is the authoritative physical seat ledger.
+9. Admin exception actions must preserve the same invariants as normal flows.
+10. Public projections expose only bookable/appropriate state.
+
+## 3. Domain Model
+
+```mermaid
+erDiagram
+    PROFILES ||--o| DRIVERS : "may become"
+    DRIVERS ||--|| VEHICLES : "uses"
+    LOCATIONS ||--o{ ROUTES : "from"
+    LOCATIONS ||--o{ ROUTES : "to"
+    ROUTES ||--o{ ROUTE_STOPS : "contains"
+    DRIVERS ||--o{ DRIVER_QUEUE : "joins"
+    ROUTES ||--o{ DRIVER_QUEUE : "queues"
+    DRIVER_QUEUE ||--o| TRIPS : "activates"
+    ROUTES ||--o{ TRIPS : "runs"
+    DRIVERS ||--o{ TRIPS : "drives"
+    VEHICLES ||--o{ TRIPS : "serves"
+    TRIPS ||--o{ TRIP_SEATS : "contains"
+    TRIPS ||--o{ SEAT_REQUESTS : "receives"
+    PROFILES ||--o{ SEAT_REQUESTS : "passenger"
+    ROUTE_STOPS ||--o{ SEAT_REQUESTS : "pickup"
+    SEAT_REQUESTS ||--o{ TRIP_SEATS : "owns HELD/CONFIRMED"
+    TRIPS ||--o{ TRIP_PROGRESS : "progresses"
+    PROFILES ||--o{ BEHAVIOUR_EVENTS : "generates"
+    TRIPS ||--o{ AUDIT_LOGS : "audited"
+```
+
+### Core ownership rules
+
+- `profiles`: identity, role, restriction state.
+- `drivers`: driver-specific operational record; **no permanent route ownership**.
+- `vehicles`: real vehicle and seat capacity (4/6/8).
+- `routes`: directed route from one location to another.
+- `route_stops`: fixed ordered pickup path.
+- `driver_queue`: driver's route choice for a specific journey and FIFO position.
+- `trips`: active/started/completed journey instance.
+- `seat_requests`: passenger request lifecycle.
+- `trip_seats`: concrete seat ownership/state ledger.
+- `trip_progress`: ordered stop progression.
+- `behaviour_events`: cancellation/no-show/reliability evidence.
+- `audit_logs`: immutable operational audit trail.
+
+## 4. Passenger State Machine
+
+```mermaid
+stateDiagram-v2
+    [*] --> AnonymousBrowse
+    AnonymousBrowse --> AuthRequired : request seats
+    AuthRequired --> HELD : auth succeeds + request_seats
+    HELD --> CONFIRMED : driver confirms in-person payment
+    HELD --> WITHDRAWN : passenger withdraws request
+    HELD --> EXPIRED : pickup passed / driver marks absent at pickup
+    HELD --> DRIVER_CANCELLED : driver cancels active car
+    CONFIRMED --> DRIVER_CANCELLED : driver cancels active car
+    CONFIRMED --> COMPLETED : trip completes
+    DRIVER_CANCELLED --> [*] : refund/rebook handling
+    WITHDRAWN --> [*]
+    EXPIRED --> [*]
+    COMPLETED --> [*]
+```
+
+### Passenger rules
+
+- Anonymous browsing is allowed.
+- Authentication is required only at final seat request.
+- A passenger may not hold/confirm multiple active requests on the same trip.
+- Multi-seat request is all-or-nothing.
+- Passenger pays only after physically meeting driver.
+- Confirmed seat means driver acknowledged payment in person.
+- Passenger cannot be marked absent before the car has reached the selected pickup stop.
+- Driver cancellation after confirmation transitions request to `DRIVER_CANCELLED`, preserving passenger visibility and refund follow-up.
+
+## 5. Driver Lifecycle
+
+```mermaid
+stateDiagram-v2
+    [*] --> ChooseLocation
+    ChooseLocation --> ChooseRoute : only routes departing location
+    ChooseRoute --> WAITING : join_driver_queue
+    WAITING --> ACTIVE_COLLECTING : FIFO activation
+    WAITING --> LEFT_QUEUE : leave queue
+    ACTIVE_COLLECTING --> IN_PROGRESS : full OR stale seats closed, no HELD seats
+    ACTIVE_COLLECTING --> CANCELLED : driver cancels
+    IN_PROGRESS --> COMPLETED : complete trip
+    COMPLETED --> ChooseLocation : destination suggested
+    CANCELLED --> ChooseLocation
+    LEFT_QUEUE --> ChooseLocation
+```
+
+### Driver route rule
+
+A driver belongs to Raahi and a vehicle, not to a route. `driver_queue.route_id` is the authoritative route selection for that journey.
+
+The server validates `route.from_location_id == declared_current_location_id` when joining the queue. No GPS dependency is required.
+
+## 6. FIFO and Active-Car State Machine
+
+```mermaid
+flowchart TD
+    A[Driver selects route] --> B[join_driver_queue]
+    B --> C{ACTIVE_COLLECTING exists?}
+    C -- No --> D[Activate FIFO head]
+    C -- Yes --> E[Remain WAITING]
+    D --> F[Create trip + seat inventory atomically]
+    F --> G[ACTIVE_COLLECTING]
+    G --> H{Departure invariant satisfied?}
+    H -- No --> G
+    H -- Yes --> I[start_trip]
+    I --> J[IN_PROGRESS]
+    I --> K[Activate next WAITING driver]
+    K --> L[Next ACTIVE_COLLECTING car]
+```
+
+### FIFO invariants
+
+- At most one `ACTIVE_COLLECTING` queue entry per route.
+- At most one live queue entry (`WAITING` or `ACTIVE_COLLECTING`) per driver.
+- Queue activation is serialized per route.
+- Live queue rank is computed from current live entries, not historical `queue_position` alone.
+- Starting one trip may activate the next collecting car for the same route while the first trip is `IN_PROGRESS`.
+
+## 7. Trip Lifecycle
+
+```mermaid
+stateDiagram-v2
+    [*] --> ACTIVE_COLLECTING
+    ACTIVE_COLLECTING --> IN_PROGRESS : start_trip
+    ACTIVE_COLLECTING --> CANCELLED : driver_cancel_trip
+    IN_PROGRESS --> COMPLETED : complete_trip
+    COMPLETED --> [*]
+    CANCELLED --> [*]
+```
+
+### Departure invariant
+
+A trip may start only when:
+
+`held_count = 0`
+
+and
+
+`confirmed_count + driver_closed_count = capacity`
+
+This means the car either has paying confirmed passengers or the driver intentionally closes remaining seats as stale/empty seats.
+
+## 8. Seat Ledger State Machine
+
+```mermaid
+stateDiagram-v2
+    [*] --> AVAILABLE
+    AVAILABLE --> HELD : request_seats
+    HELD --> CONFIRMED : driver_confirm_payment
+    HELD --> AVAILABLE : withdraw / expiry / absent / driver cancellation
+    AVAILABLE --> DRIVER_CLOSED : driver_close_empty_seats
+    CONFIRMED --> [*] : trip terminal
+    DRIVER_CLOSED --> [*] : trip terminal
+```
+
+### Seat invariants
+
+- `AVAILABLE` and `DRIVER_CLOSED` seats have `request_id IS NULL`.
+- `HELD` and `CONFIRMED` seats have `request_id IS NOT NULL`.
+- Every HELD request owns exactly `seat_count` HELD `trip_seats` rows.
+- Every CONFIRMED request owns exactly `seat_count` CONFIRMED `trip_seats` rows.
+- Trip counters are fast projections and must mirror the seat ledger.
+- Cancellation/withdraw/expiry releases the exact seats owned by that request.
+
+## 9. Fixed Stop Progression
+
+```mermaid
+flowchart LR
+    S1[Stop 1] --> S2[Stop 2] --> S3[Stop 3] --> S4[Stop 4] --> D[Destination]
+```
+
+- Stops are deterministic and ordered.
+- Driver cannot skip stops through RPC.
+- Booking is allowed only for stops not already passed.
+- Reaching a later stop expires HELD requests for earlier missed stops.
+- Passenger absence may be recorded only when the car has reached that passenger's selected stop.
+
+Pilot timing assumption:
+
+- Gomoh pickup cluster: approximately 5 minutes total to cover local stops.
+- Dhanbad pickup cluster: approximately 15 minutes total to cover local stops.
+
+## 10. Driver Cancellation / Passenger Recovery
+
+```mermaid
+sequenceDiagram
+    participant D as Driver
+    participant API as Canonical RPC
+    participant DB as PostgreSQL
+    participant P as Passenger
+    participant N as Next Driver
+
+    D->>API: driver_cancel_trip(trip_id)
+    API->>DB: lock trip
+    API->>DB: cancel trip + queue entry
+    API->>DB: release HELD seats
+    API->>DB: CONFIRMED requests -> DRIVER_CANCELLED
+    API->>DB: record behaviour + audit
+    API->>DB: activate_next_driver(route)
+    DB-->>N: next car becomes ACTIVE_COLLECTING
+    DB-->>P: cancellation projection updated
+    P->>P: see cancelled driver / refund guidance / next car
+```
+
+V1 financial rule: Raahi does not process refunds because fare is paid directly to the driver. The passenger receives driver contact/refund guidance and may report a refund problem for admin follow-up.
+
+## 11. Passenger Booking Sequence
+
+```mermaid
+sequenceDiagram
+    participant P as Passenger
+    participant UI as PWA
+    participant A as Supabase Auth
+    participant RPC as Supabase RPC
+    participant DB as PostgreSQL
+    participant D as Driver
+
+    P->>UI: browse location/route/car anonymously
+    UI->>RPC: get_public_active_car
+    RPC->>DB: canonical projection
+    P->>UI: choose stop + seats
+    UI->>A: OTP or Google sign-in if needed
+    A-->>UI: authenticated session
+    UI->>RPC: request_seats
+    RPC->>DB: lock trip + allocate HELD seats
+    DB-->>UI: HELD request
+    P->>D: meet physically and pay driver
+    D->>RPC: driver_confirm_payment
+    RPC->>DB: HELD seats -> CONFIRMED
+    DB-->>UI: confirmed state via refetch
+```
+
+Google OAuth must resume the pending seat request context after callback rather than forcing the passenger to restart.
+
+## 12. Driver Route Selection Sequence
+
+```mermaid
+sequenceDiagram
+    participant D as Driver
+    participant UI as Driver PWA
+    participant RPC as Supabase RPC
+    participant DB as PostgreSQL
+
+    D->>UI: select current location
+    UI->>RPC: get_driver_departing_routes(location)
+    RPC->>DB: active routes where from_location = selected
+    DB-->>UI: available departing routes
+    D->>UI: choose route
+    UI->>RPC: join_driver_queue(route, current_location)
+    RPC->>DB: validate origin + single live queue + locks
+    DB-->>UI: WAITING or ACTIVE_COLLECTING
+    UI->>RPC: get_driver_home_context/refetch
+```
+
+## 13. Canonical Command Surface
+
+### Passenger commands
+
+- `request_seats(trip_id, pickup_stop_id, seat_count)`
+- `withdraw_seat_request(request_id)`
+- `passenger_report_refund_problem(request_id)`
+
+### Driver commands
+
+- `join_driver_queue(route_id, current_location_id)`
+- `leave_driver_queue(route_id)`
+- `driver_confirm_payment(request_id)`
+- `driver_mark_passenger_absent(request_id)`
+- `driver_arrive_at_stop(trip_id, stop_id)` / canonical ordered progression helper
+- `driver_close_empty_seats(trip_id)`
+- `start_trip(trip_id)`
+- `complete_trip(trip_id)`
+- `driver_cancel_trip(trip_id)`
+
+### Admin commands
+
+- restrict/unrestrict user
+- onboard/update trusted driver + vehicle
+- deactivate driver safely
+- queue reorder/remove functions
+- operational exception functions only where invariants are preserved
+
+### Internal-only helpers
+
+Functions such as FIFO activation, audit recording, behaviour recording and seat-release helpers must not be executable by ordinary anonymous/authenticated clients unless explicitly intended.
+
+## 14. Read Projections
+
+### Public
+
+- active locations
+- routes for selected location
+- **only ACTIVE_COLLECTING car is publicly bookable/displayed as active car**
+- public active-car seat availability and stop progress
+
+### Passenger-authenticated
+
+- my active request
+- passenger ride status
+- driver-cancelled request recovery projection
+
+### Driver-authenticated
+
+- driver home context
+- departing routes for selected location
+- live queue rank
+- active car + passenger requests
+
+### Admin-authenticated
+
+- active trips
+- behaviour events
+- driver/vehicle management
+- route queue state
+
+## 15. Realtime Rule
+
+```mermaid
+flowchart LR
+    DB[(PostgreSQL)] --> RT[Supabase Realtime event]
+    RT --> UI[UI invalidated]
+    UI --> RPC[Refetch canonical projection]
+    RPC --> DB
+```
+
+Realtime payloads are never treated as authoritative business state. They only trigger a canonical refetch.
+
+## 16. Authentication and Roles
+
+- New users default to passenger role.
+- Client metadata cannot self-promote a user to driver/admin.
+- Driver role is granted through trusted admin onboarding after the user has signed in once.
+- Admin manages the small known driver pool and vehicle details.
+- Restricted users cannot perform protected operational actions.
+
+## 17. Behaviour / Reliability Model
+
+V1 records evidence rather than forcing payment penalties immediately.
+
+Examples:
+
+- passenger request created
+- passenger request withdrawn
+- passenger missed/expired
+- booking confirmed
+- driver cancel before confirmation
+- driver cancel after confirmation
+- refund problem reported
+
+Future penalties may be derived from these events (for example repeated no-shows or repeated driver cancellations), without redesigning the core trip/seat engine.
+
+## 18. Critical Non-Negotiable Invariants
+
+1. One ACTIVE_COLLECTING car per route.
+2. One live queue entry per driver.
+3. Driver cannot join a route that does not depart from declared current location.
+4. Driver cannot join another route while already on an IN_PROGRESS trip.
+5. Public discovery never presents IN_PROGRESS car as bookable.
+6. Every HELD/CONFIRMED request owns concrete seat rows.
+7. No partial fulfilment of a multi-seat request.
+8. Start requires zero HELD seats and total capacity accounted for.
+9. Stop progression is ordered; no arbitrary skipping.
+10. Passenger cannot be marked absent before pickup stop is reached.
+11. All business mutations occur via canonical RPCs.
+12. Realtime invalidates/refetches only.
+13. Admin exceptions must preserve the same invariants.
+14. Driver route choice belongs to `driver_queue`, not `drivers`.
+15. Architecture-changing code and this Master Sheet must be updated together.
+
+## 19. Architecture Change Governance
+
+Every PR must state one of:
+
+- `Master Sheet impact: none` — implementation-only change with no architectural effect.
+- `Master Sheet impact: updated` — architecture/state/ownership/invariant changed and this document is updated in the same PR.
+
+Architecture-affecting examples include:
+
+- new/removed lifecycle state
+- new canonical command
+- ownership move between tables/domains
+- concurrency or uniqueness invariant change
+- public/private projection boundary change
+- authentication/role model change
+- route/queue/matching logic change
+- payment/cancellation/no-show policy encoded into state
+
+## 20. Current Architecture Changelog
+
+### 2026-08-16 — Dynamic driver routes
+- Removed permanent `drivers.route_id` operational model.
+- Driver chooses current location and route per journey.
+- `driver_queue.route_id` became authoritative route choice.
+
+### 2026-08-16 — Driver cancellation recovery
+- Added explicit `DRIVER_CANCELLED` passenger request state.
+- Added next-car/refund problem recovery flow.
+
+### 2026-08-16 — Concrete HELD seat ledger
+- HELD requests now own actual `trip_seats` rows.
+- Seat ledger and trip counters must remain consistent.
+
+### 2026-08-16 — Pickup progression guards
+- Enforced sequential stop progression.
+- Passenger absence allowed only at/after selected pickup stop.
+
+### 2026-08-16 — Trusted driver onboarding
+- Admin can promote an existing signed-in user into a verified driver and attach/update a 4/6/8-seat vehicle.
+
+### 2026-08-16 — Live FIFO ranks
+- Queue display uses current live rank rather than stale historical position.
+
+### 2026-08-16 — Independent build validation
+- GitHub Actions type-check and production-build validation established as an independent compile gate.
+
+---
+
+**Canonical rule:** Do not redesign Raahi from memory. Read this Master Architecture Sheet first, then inspect current migrations/code, then make the smallest architecture-consistent change.
