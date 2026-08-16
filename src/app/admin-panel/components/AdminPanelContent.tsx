@@ -552,8 +552,3 @@ function BehaviourTab() {
     </div>
   );
 }
-
-// useCallback import fix
-function useCallback<T extends (...args: any[]) => any>(fn: T, deps: any[]): T {
-  return React.useCallback(fn, deps);
-}
