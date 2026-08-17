@@ -318,14 +318,14 @@ export default function DriverActiveCarContent() {
           <div className="w-full max-w-md bg-card rounded-t-3xl p-6 space-y-4 animate-slide-up">
             <h2 className="text-lg font-bold text-foreground">Start Trip?</h2>
             <p className="text-sm text-muted-foreground">
-              This will mark the trip as IN_PROGRESS and the next queued driver will immediately become ACTIVE_COLLECTING.
+              This will mark the trip as in progress. If another driver is waiting, Raahi will activate that driver for passenger collection.
             </p>
             <div className="flex gap-3">
               <button onClick={() => setShowStartTripModal(false)} className="btn-outline flex-1">Not Yet</button>
               <button
                 onClick={() => {
                   setShowStartTripModal(false);
-                  handleAction('start-trip', () => startTrip(trip.trip_id!), 'Trip started — next driver is now collecting');
+                  handleAction('start-trip', () => startTrip(trip.trip_id!), 'Trip started successfully');
                 }}
                 disabled={loadingAction === 'start-trip'}
                 className="btn-primary flex-1"
