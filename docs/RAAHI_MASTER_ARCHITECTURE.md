@@ -356,8 +356,8 @@ Functions such as FIFO activation, audit recording, behaviour recording and seat
 - public active-car seat availability and stop progress
 
 ### Passenger-authenticated
-- my active request
-- passenger ride status
+- my active request, explicitly flagged active or completed
+- passenger ride status, including completed-arrival state
 - driver-cancelled request recovery projection
 
 ### Driver-authenticated
@@ -420,15 +420,16 @@ V1 records evidence rather than forcing payment penalties immediately. Examples 
 8. Start requires zero HELD seats and total capacity accounted for.
 9. Stop progression is ordered; no arbitrary skipping.
 10. `IN_PROGRESS` trips continue ordered stop progression and can complete only at the route's final stop.
-11. Passenger cannot be marked absent before pickup stop is reached.
-12. All business mutations occur via canonical RPCs.
-13. Realtime invalidates/refetches only.
-14. Admin exceptions must preserve the same invariants.
-15. Driver route choice belongs to `driver_queue`, not `drivers`.
-16. Unauthenticated passenger browsing must remain available.
-17. Driver authentication must not force passenger authentication.
-18. Admin authentication must be explicit and must never grant admin role by itself.
-19. Architecture-changing code and this Master Sheet must be updated together.
+11. Passenger projections must distinguish active journeys from completed journeys.
+12. Passenger cannot be marked absent before pickup stop is reached.
+13. All business mutations occur via canonical RPCs.
+14. Realtime invalidates/refetches only.
+15. Admin exceptions must preserve the same invariants.
+16. Driver route choice belongs to `driver_queue`, not `drivers`.
+17. Unauthenticated passenger browsing must remain available.
+18. Driver authentication must not force passenger authentication.
+19. Admin authentication must be explicit and must never grant admin role by itself.
+20. Architecture-changing code and this Master Sheet must be updated together.
 
 ## 19. Architecture Change Governance
 
@@ -481,6 +482,11 @@ Architecture-affecting examples include lifecycle states, canonical commands, do
 - Ordered stop progression continues after a trip enters `IN_PROGRESS`.
 - `complete_trip` is authorized only at the route's final stop.
 - Passenger status distinguishes an upcoming/current pickup from a pickup stop already passed.
+
+### 2026-08-17 — Passenger completed-journey projection
+- Active passenger requests are resolved only from collecting/in-progress trips.
+- The latest confirmed completed journey remains available to the status screen with an explicit non-active completion flag.
+- Completed journeys render an arrival state rather than active ETA/pickup messaging.
 
 ---
 
