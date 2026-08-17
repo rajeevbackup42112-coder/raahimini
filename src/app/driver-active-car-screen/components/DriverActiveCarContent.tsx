@@ -103,7 +103,8 @@ export default function DriverActiveCarContent() {
   const canStartTrip = trip.departure_eligible ?? false;
   const heldBlocking = heldRequests.length > 0;
   const stopCount = trip.stops?.length ?? 0;
-  const atFinalStop = stopCount > 0 && (trip.current_stop_order ?? 0) === stopCount;
+  const finalStopOrder = trip.stops?.[stopCount - 1]?.stop_order;
+  const atFinalStop = finalStopOrder != null && trip.current_stop_order === finalStopOrder;
 
   return (
     <div className="max-w-screen-2xl mx-auto px-4 py-4 space-y-4 animate-fade-in">
@@ -191,7 +192,7 @@ export default function DriverActiveCarContent() {
       {(trip.status === 'ACTIVE_COLLECTING' || trip.status === 'IN_PROGRESS') && (
         <div className="card p-4">
           <div className="flex items-center justify-between mb-3">
-            <p className="section-label">Pickup Progress</p>
+            <p className="section-label">{trip.status === 'IN_PROGRESS' ? 'Trip Progress' : 'Pickup Progress'}</p>
             <span className="text-xs text-muted-foreground">
               Stop {trip.current_stop_order} of {(trip.stops ?? []).length}
             </span>
