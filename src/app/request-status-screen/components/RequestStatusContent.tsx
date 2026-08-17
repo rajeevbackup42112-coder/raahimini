@@ -10,7 +10,7 @@ import StatusBadge from '@/components/ui/StatusBadge';
 
 export default function RequestStatusContent() {
   const { user, loading: authLoading } = useAuth();
-  const [rideStatus, setRideStatus] = useState<(PassengerRideStatus & { has_active_request: boolean }) | null>(null);
+  const [rideStatus, setRideStatus] = useState<PassengerRideStatus | null>(null);
   const [loading, setLoading] = useState(true);
   const [withdrawing, setWithdrawing] = useState(false);
   const [showWithdrawConfirm, setShowWithdrawConfirm] = useState(false);
@@ -74,7 +74,7 @@ export default function RequestStatusContent() {
     );
   }
 
-  if (!rideStatus?.has_active_request) {
+  if (!rideStatus || (!rideStatus.has_active_request && !rideStatus.has_completed_trip)) {
     return (
       <div className="max-w-screen-2xl mx-auto px-4 py-8 text-center space-y-3">
         <Car size={40} className="mx-auto text-muted-foreground opacity-40" />
@@ -92,11 +92,14 @@ export default function RequestStatusContent() {
   const isHeld = req.status === 'HELD';
   const isConfirmed = req.status === 'CONFIRMED';
   const isExpired = req.status === 'EXPIRED' || req.status === 'WITHDRAWN';
+  const isTripCompleted = req.has_completed_trip || req.trip_status === 'COMPLETED';
   const pickupIsPassed = req.current_stop_order > req.pickup_stop_order;
   const pickupIsCurrent = req.current_stop_order === req.pickup_stop_order;
-  const pickupProgressText = pickupIsPassed
-    ? 'Pickup stop passed — trip is in progress'
-    : pickupIsCurrent
+  const pickupProgressText = isTripCompleted
+    ? 'Trip completed — you have arrived'
+    : pickupIsPassed
+      ? 'Pickup stop passed — trip is in progress'
+      : pickupIsCurrent
       ? 'Driver is here now'
       : `~${req.eta_minutes} min`;
 
@@ -130,14 +133,16 @@ export default function RequestStatusContent() {
       {/* Pay Warning — only when held */}
       {isHeld && <PayWarningBanner />}
 
-      {/* Confirmed Success Banner */}
+      {/* Confirmed / Completed Success Banner */}
       {isConfirmed && (
         <div className="flex items-start gap-3 bg-green-50 border border-green-200 rounded-2xl px-4 py-3">
           <CheckCircle2 size={20} className="text-green-600 flex-shrink-0 mt-0.5" />
           <div>
-            <p className="text-sm font-bold text-green-800">Booking Confirmed</p>
+            <p className="text-sm font-bold text-green-800">{isTripCompleted ? 'Trip Completed' : 'Booking Confirmed'}</p>
             <p className="text-xs text-green-700 mt-0.5">
-              Your seat is confirmed. The driver has received your payment. Enjoy your ride!
+              {isTripCompleted
+                ? 'You have arrived at the destination. Thank you for riding with Raahi!'
+                : 'Your seat is confirmed. The driver has received your payment. Enjoy your ride!'}
             </p>
           </div>
         </div>
@@ -178,7 +183,7 @@ export default function RequestStatusContent() {
         <div className="flex items-center gap-3">
           <Clock size={18} className="text-muted-foreground flex-shrink-0" />
           <div>
-            <p className="text-xs text-muted-foreground">{pickupIsPassed ? 'Pickup Progress' : 'ETA to Your Stop'}</p>
+            <p className="text-xs text-muted-foreground">{isTripCompleted ? 'Trip Status' : pickupIsPassed ? 'Pickup Progress' : 'ETA to Your Stop'}</p>
             <p className="text-sm font-bold text-foreground">{pickupProgressText}</p>
           </div>
         </div>
@@ -213,9 +218,11 @@ export default function RequestStatusContent() {
             <MapPin size={14} className="text-primary" />
             <p className="text-xs text-secondary-foreground font-medium">
               Your stop: <strong>{req.pickup_stop_name}</strong>
-              {pickupIsPassed
-                ? ' — Passed; trip is in progress'
-                : pickupIsCurrent
+              {isTripCompleted
+                ? ' — Journey completed'
+                : pickupIsPassed
+                  ? ' — Passed; trip is in progress'
+                  : pickupIsCurrent
                   ? ' — Driver is here!'
                   : ` — ~${req.eta_minutes} min`}
             </p>
@@ -225,7 +232,7 @@ export default function RequestStatusContent() {
 
       {/* Actions */}
       <div className="space-y-3">
-        {req.driver_phone && (
+        {req.driver_phone && !isTripCompleted && (
           <a
             href={`tel:+91${req.driver_phone.replace(/\D/g, '')}`}
             className="btn-accent w-full"
