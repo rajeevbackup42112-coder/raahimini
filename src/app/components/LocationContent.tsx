@@ -1,17 +1,30 @@
 'use client';
 import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { MapPin, Car, ChevronRight, ArrowRight, Navigation, CheckCircle2, Loader2 } from 'lucide-react';
 import { getActiveLocations, getRoutesForLocation, type Location, type RouteForLocation } from '@/lib/raahiApi';
 import { createClient } from '@/lib/supabase/client';
 import { RouteListSkeleton } from '@/components/ui/LoadingSkeleton';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function LocationContent() {
+  const router = useRouter();
+  const { user, profile, loading: authLoading } = useAuth();
   const [locations, setLocations] = useState<Location[]>([]);
   const [selectedLocationId, setSelectedLocationId] = useState<string | null>(null);
   const [routes, setRoutes] = useState<RouteForLocation[]>([]);
   const [loadingLocations, setLoadingLocations] = useState(true);
   const [loadingRoutes, setLoadingRoutes] = useState(false);
+
+  // OAuth callbacks can fall back to the landing page on some hosting
+  // redirects. Resume any authenticated passenger request saved before sign-in.
+  useEffect(() => {
+    if (authLoading || !user || profile?.role !== 'passenger') return;
+    const tripId = localStorage.getItem('raahi_pending_trip_id');
+    const stopId = localStorage.getItem('raahi_pending_stop_id');
+    if (tripId && stopId) router.replace('/resume-seat-request');
+  }, [authLoading, user, profile?.role, router]);
 
   // Load locations on mount
   useEffect(() => {
