@@ -1,4 +1,4 @@
-import { NextResponse, type NextRequest } from '@supabase/ssr';
+import { NextResponse, type NextRequest } from 'next/server';
 
 const PRODUCTION_ORIGIN = 'https://raahi-mini.netlify.app';
 
