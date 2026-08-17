@@ -12,6 +12,14 @@ export default function DriverLoginPage() {
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
+    // The server callback has already consumed this one-time OAuth code.
+    // Remove any query string retained by the hosting redirect.
+    if (window.location.search) {
+      window.history.replaceState({}, '', '/driver-login');
+    }
+  }, []);
+
+  useEffect(() => {
     if (!loading && user && profile?.role === 'driver') {
       router.replace('/driver-route-selection');
     }
