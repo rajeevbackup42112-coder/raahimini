@@ -102,6 +102,8 @@ export default function DriverActiveCarContent() {
   const canCloseSeats = (trip.available_count ?? 0) > 0 && heldRequests.length === 0;
   const canStartTrip = trip.departure_eligible ?? false;
   const heldBlocking = heldRequests.length > 0;
+  const stopCount = trip.stops?.length ?? 0;
+  const atFinalStop = stopCount > 0 && (trip.current_stop_order ?? 0) === stopCount;
 
   return (
     <div className="max-w-screen-2xl mx-auto px-4 py-4 space-y-4 animate-fade-in">
@@ -186,7 +188,7 @@ export default function DriverActiveCarContent() {
       </div>
 
       {/* Stop Progression */}
-      {trip.status === 'ACTIVE_COLLECTING' && (
+      {(trip.status === 'ACTIVE_COLLECTING' || trip.status === 'IN_PROGRESS') && (
         <div className="card p-4">
           <div className="flex items-center justify-between mb-3">
             <p className="section-label">Pickup Progress</p>
@@ -268,7 +270,7 @@ export default function DriverActiveCarContent() {
       )}
 
       {/* Complete Trip */}
-      {trip.status === 'IN_PROGRESS' && (
+      {trip.status === 'IN_PROGRESS' && atFinalStop && (
         <button
           onClick={() => setShowCompleteTripModal(true)}
           disabled={!!loadingAction}
