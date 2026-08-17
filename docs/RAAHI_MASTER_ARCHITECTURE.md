@@ -270,7 +270,7 @@ sequenceDiagram
     DB-->>UI: confirmed state via refetch
 ```
 
-Google OAuth must exchange its PKCE authorization code exactly once in the browser completion boundary, establish the cookie-backed session, and then resume the pending seat request context rather than forcing the passenger to restart. If phone enrollment is still required, the saved request resumes after phone verification.
+Google OAuth must exchange its PKCE authorization code exactly once in the server callback. The callback must return a non-cached completion response that commits the cookie-backed session before navigating to the validated destination and resuming the pending seat request context. If phone enrollment is still required, the saved request resumes after phone verification.
 
 ## 12. Driver Sign-in and Route Selection Sequence
 
@@ -484,8 +484,8 @@ Architecture-affecting examples include lifecycle states, canonical commands, do
 - Passenger status distinguishes an upcoming/current pickup from a pickup stop already passed.
 
 ### 2026-08-17 — Reliable OAuth request resumption
-- OAuth authorization codes are exchanged exactly once in the browser completion boundary.
-- The established cookie-backed session redirects to the validated destination and resumes saved passenger seat-request context.
+- OAuth authorization codes are exchanged exactly once in the server callback where the PKCE verifier cookie is available.
+- A non-cached completion response commits the session cookies before navigating to the validated destination and resuming saved passenger seat-request context.
 
 ### 2026-08-17 — Passenger completed-journey projection
 - Active passenger requests are resolved only from collecting/in-progress trips.
