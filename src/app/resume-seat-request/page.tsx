@@ -46,8 +46,12 @@ export default function ResumeSeatRequestPage() {
       router.replace('/');
       return;
     }
+    if (!user.phone || !user.phone_confirmed_at) {
+      router.replace('/profile?next=%2Fresume-seat-request');
+      return;
+    }
     run();
-  }, [authLoading, user]);
+  }, [authLoading, user, router]);
 
   if (error) {
     return (
@@ -71,7 +75,7 @@ export default function ResumeSeatRequestPage() {
         <p className="text-sm text-muted-foreground mt-1">Your pickup point and seat count were saved before sign-in.</p>
       </div>
       <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
-        <CheckCircle2 size={14} /> Signed in securely
+        <CheckCircle2 size={14} /> Signed in with a verified phone
       </div>
     </div>
   );
