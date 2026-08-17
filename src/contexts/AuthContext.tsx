@@ -12,6 +12,9 @@ interface AuthContextType {
   signIn: (email: string, password: string) => Promise<any>;
   signInWithOtp: (phone: string) => Promise<any>;
   verifyOtp: (phone: string, token: string) => Promise<any>;
+  requestPhoneVerification: (phone: string) => Promise<any>;
+  verifyPhoneChange: (phone: string, token: string) => Promise<any>;
+  removePhone: () => Promise<void>;
   signInWithGoogle: (redirectTo?: string) => Promise<any>;
   signOut: () => Promise<void>;
   getCurrentUser: () => Promise<any>;
@@ -120,6 +123,54 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     return data;
   };
 
+  // Add or change a phone on the current account. Supabase sends a verification OTP.
+  const requestPhoneVerification = async (phone: string) => {
+    const normalized = phone.startsWith('+') ? phone : `+91${phone.replace(/\D/g, '')}`;
+    const { data, error } = await supabase.auth.updateUser({ phone: normalized });
+    if (error) throw error;
+    return data;
+  };
+
+  const verifyPhoneChange = async (phone: string, token: string) => {
+    const normalized = phone.startsWith('+') ? phone : `+91${phone.replace(/\D/g, '')}`;
+    const { data, error } = await supabase.auth.verifyOtp({
+      phone: normalized,
+      token,
+      type: 'phone_change',
+    });
+    if (error) throw error;
+
+    const { data: userData, error: userError } = await supabase.auth.getUser();
+    if (userError) throw userError;
+    setUser(userData.user);
+    if (userData.user?.id) {
+      await supabase.from('profiles').update({ phone: userData.user.phone || '' }).eq('id', userData.user.id);
+      await loadProfile(userData.user.id);
+    }
+    return data;
+  };
+
+  const removePhone = async () => {
+    const { data, error } = await supabase.auth.getUserIdentities();
+    if (error) throw error;
+    const identities = data?.identities || [];
+    const phoneIdentity = identities.find((identity: any) => identity.provider === 'phone');
+    const hasAlternative = identities.some((identity: any) => identity.provider !== 'phone');
+    if (!phoneIdentity) throw new Error('No phone identity is linked to this account.');
+    if (!hasAlternative) throw new Error('Add another sign-in method before removing your phone.');
+
+    const { error: unlinkError } = await supabase.auth.unlinkIdentity(phoneIdentity);
+    if (unlinkError) throw unlinkError;
+
+    const { data: userData, error: userError } = await supabase.auth.getUser();
+    if (userError) throw userError;
+    setUser(userData.user);
+    if (userData.user?.id) {
+      await supabase.from('profiles').update({ phone: '' }).eq('id', userData.user.id);
+      await loadProfile(userData.user.id);
+    }
+  };
+
   // Google OAuth
   const signInWithGoogle = async (redirectTo?: string) => {
     const callbackUrl = `${window.location.origin}/auth/callback${redirectTo ? `?next=${encodeURIComponent(redirectTo)}` : ''}`;
@@ -169,6 +220,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     signIn,
     signInWithOtp,
     verifyOtp,
+    requestPhoneVerification,
+    verifyPhoneChange,
+    removePhone,
     signInWithGoogle,
     signOut,
     getCurrentUser,
