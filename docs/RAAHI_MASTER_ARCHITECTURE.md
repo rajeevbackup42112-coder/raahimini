@@ -343,6 +343,7 @@ sequenceDiagram
 - deactivate driver safely
 - queue reorder/remove functions
 - operational exception functions only where invariants are preserved
+- Admin configuration writes must use canonical audited RPCs or reviewed migrations; direct client writes to configuration/operational tables are forbidden
 
 ### Internal-only helpers
 Functions such as FIFO activation, audit recording, behaviour recording and seat-release helpers must not be executable by ordinary anonymous/authenticated clients unless explicitly intended.
@@ -428,6 +429,10 @@ V1 records evidence rather than forcing payment penalties immediately. Examples 
 16. Driver authentication must not force passenger authentication.
 17. Admin authentication must be explicit and must never grant admin role by itself.
 18. Architecture-changing code and this Master Sheet must be updated together.
+19. Restricted admin profiles have no Admin authority.
+20. Driver identity or vehicle assignment cannot change while that driver is queued or owns a live trip.
+21. Admin queue overrides serialize with normal route operations and preserve dense, positive live ordering.
+22. Public/authenticated table grants remain read-only where direct client mutation is not part of the canonical command surface.
 
 ## 19. Architecture Change Governance
 
@@ -475,6 +480,13 @@ Architecture-affecting examples include lifecycle states, canonical commands, do
 - Added explicit `Admin sign in` entry and `/admin-login` OAuth path.
 - Admin authentication only admits accounts already holding the trusted admin role.
 - Passenger public browsing and driver authentication remain unchanged.
+
+### 2026-08-17 — Admin safety hardening
+- Admin authority requires a trusted, unrestricted `profiles.role='admin'` row; client metadata remains non-authoritative.
+- Removed anonymous/authenticated write and non-row-scoped privileges from configuration tables.
+- Serialized Admin queue override/remove commands with normal route operations and validated live positions.
+- Blocked restriction and driver/vehicle reassignment actions that could disrupt queued or live-trip state.
+- Kept Auth-confirmed profile phone separate from the admin-verified driver contact field.
 
 ---
 
