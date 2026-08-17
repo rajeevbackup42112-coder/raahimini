@@ -24,7 +24,7 @@ Drivers are not permanently assigned to routes. A driver chooses their current l
 8. `trip_seats` is the authoritative physical seat ledger.
 9. Admin exception actions must preserve the same invariants as normal flows.
 10. Public projections expose only bookable/appropriate state.
-11. Passenger browsing stays public; driver access uses a dedicated authentication entry path.
+11. Passenger browsing stays public; driver and admin access use dedicated authentication entry paths.
 
 ## 3. Domain Model
 
@@ -300,6 +300,25 @@ sequenceDiagram
     DB-->>UI: WAITING or ACTIVE_COLLECTING
 ```
 
+### Admin sign-in sequence
+
+```mermaid
+sequenceDiagram
+    participant ADM as Admin
+    participant UI as PWA
+    participant A as Supabase Auth
+    participant DB as PostgreSQL
+    ADM->>UI: Admin sign in
+    UI->>A: Google OAuth, next=/admin-login
+    A-->>UI: authenticated session
+    UI->>DB: read trusted profile role
+    alt role = admin and not restricted
+        UI-->>ADM: redirect /admin-panel
+    else not admin
+        UI-->>ADM: deny admin access
+    end
+```
+
 ## 13. Canonical Command Surface
 
 ### Passenger commands
@@ -378,6 +397,9 @@ Realtime payloads are never treated as authoritative business state. They only t
 - First-time driver candidates remain passenger-role until trusted admin onboarding.
 - Driver role is granted only through trusted admin onboarding after the user has signed in once.
 - Active drivers are routed to `/driver-route-selection` after authentication.
+- Unauthenticated admins use a dedicated `Admin sign in` entry and `/admin-login` flow.
+- Google OAuth returns admin candidates to `/admin-login`; only an existing trusted `profiles.role='admin'` account is admitted to `/admin-panel`.
+- Admin role is never granted from client metadata or merely by selecting Admin sign in.
 - Client metadata cannot self-promote a user to driver/admin.
 - Admin manages the small known driver pool and vehicle details.
 - Restricted users cannot perform protected operational actions.
@@ -404,7 +426,8 @@ V1 records evidence rather than forcing payment penalties immediately. Examples 
 14. Driver route choice belongs to `driver_queue`, not `drivers`.
 15. Unauthenticated passenger browsing must remain available.
 16. Driver authentication must not force passenger authentication.
-17. Architecture-changing code and this Master Sheet must be updated together.
+17. Admin authentication must be explicit and must never grant admin role by itself.
+18. Architecture-changing code and this Master Sheet must be updated together.
 
 ## 19. Architecture Change Governance
 
@@ -447,6 +470,11 @@ Architecture-affecting examples include lifecycle states, canonical commands, do
 - Added explicit `Driver sign in` entry and `/driver-login` OAuth path.
 - First-time driver candidates remain passenger-role until admin onboarding.
 - Active drivers continue into dynamic route selection after authentication.
+
+### 2026-08-17 — Dedicated admin authentication entry
+- Added explicit `Admin sign in` entry and `/admin-login` OAuth path.
+- Admin authentication only admits accounts already holding the trusted admin role.
+- Passenger public browsing and driver authentication remain unchanged.
 
 ---
 
