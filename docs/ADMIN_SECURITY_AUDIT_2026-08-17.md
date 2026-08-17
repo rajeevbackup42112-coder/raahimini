@@ -146,9 +146,8 @@ transaction against the live schema and rolled back successfully.
 - Supabase security advisor baseline: run; it continues to report intentional
   authenticated SECURITY DEFINER RPC exposure plus platform warnings. A true post-fix
   advisor result requires deploying the migration to a database branch or production.
-- Type-check/build: delegated to the repository's GitHub Actions validation on the draft
-  PR because this workspace has no Git transport/runtime checkout. The PR must not merge
-  unless both checks pass.
+- Type-check: passed in GitHub Actions run 32003791787.
+- Production build: passed in GitHub Actions run 32003791787.
 
 Master Sheet impact: updated.
 
