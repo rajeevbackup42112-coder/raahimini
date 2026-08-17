@@ -131,7 +131,15 @@ export default function RequestStatusContent() {
       </div>
 
       {/* Pay Warning — only when held */}
-      {isHeld && <PayWarningBanner />}
+      {isHeld && (
+        <div className="space-y-2">
+          <PayWarningBanner />
+          <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
+            <p className="text-xs font-semibold text-amber-800">Your seat is held until the driver passes your pickup stop.</p>
+            <p className="text-xs text-amber-700 mt-1">Meet the driver and pay directly. If you no longer need the ride, withdraw before your stop so the seat can be offered to someone else.</p>
+          </div>
+        </div>
+      )}
 
       {/* Confirmed / Completed Success Banner */}
       {isConfirmed && (
@@ -259,7 +267,7 @@ export default function RequestStatusContent() {
           <div className="w-full max-w-md bg-card rounded-t-3xl p-6 space-y-4 animate-slide-up">
             <h2 className="text-lg font-bold text-foreground">Withdraw Request?</h2>
             <p className="text-sm text-muted-foreground">
-              Your held seat will be released and become available for other passengers. You can request again if seats remain.
+              Your {rideStatus?.seat_count === 1 ? 'held seat will' : `${rideStatus?.seat_count ?? 0} held seats will`} be released and become available for other passengers. You can request again if seats remain.
             </p>
             <div className="flex gap-3">
               <button
