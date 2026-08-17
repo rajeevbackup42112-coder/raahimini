@@ -419,15 +419,16 @@ V1 records evidence rather than forcing payment penalties immediately. Examples 
 7. No partial fulfilment of a multi-seat request.
 8. Start requires zero HELD seats and total capacity accounted for.
 9. Stop progression is ordered; no arbitrary skipping.
-10. Passenger cannot be marked absent before pickup stop is reached.
-11. All business mutations occur via canonical RPCs.
-12. Realtime invalidates/refetches only.
-13. Admin exceptions must preserve the same invariants.
-14. Driver route choice belongs to `driver_queue`, not `drivers`.
-15. Unauthenticated passenger browsing must remain available.
-16. Driver authentication must not force passenger authentication.
-17. Admin authentication must be explicit and must never grant admin role by itself.
-18. Architecture-changing code and this Master Sheet must be updated together.
+10. `IN_PROGRESS` trips continue ordered stop progression and can complete only at the route's final stop.
+11. Passenger cannot be marked absent before pickup stop is reached.
+12. All business mutations occur via canonical RPCs.
+13. Realtime invalidates/refetches only.
+14. Admin exceptions must preserve the same invariants.
+15. Driver route choice belongs to `driver_queue`, not `drivers`.
+16. Unauthenticated passenger browsing must remain available.
+17. Driver authentication must not force passenger authentication.
+18. Admin authentication must be explicit and must never grant admin role by itself.
+19. Architecture-changing code and this Master Sheet must be updated together.
 
 ## 19. Architecture Change Governance
 
@@ -475,6 +476,11 @@ Architecture-affecting examples include lifecycle states, canonical commands, do
 - Added explicit `Admin sign in` entry and `/admin-login` OAuth path.
 - Admin authentication only admits accounts already holding the trusted admin role.
 - Passenger public browsing and driver authentication remain unchanged.
+
+### 2026-08-17 — In-progress route completion guard
+- Ordered stop progression continues after a trip enters `IN_PROGRESS`.
+- `complete_trip` is authorized only at the route's final stop.
+- Passenger status distinguishes an upcoming/current pickup from a pickup stop already passed.
 
 ---
 

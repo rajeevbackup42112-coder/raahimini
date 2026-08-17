@@ -92,6 +92,13 @@ export default function RequestStatusContent() {
   const isHeld = req.status === 'HELD';
   const isConfirmed = req.status === 'CONFIRMED';
   const isExpired = req.status === 'EXPIRED' || req.status === 'WITHDRAWN';
+  const pickupIsPassed = req.current_stop_order > req.pickup_stop_order;
+  const pickupIsCurrent = req.current_stop_order === req.pickup_stop_order;
+  const pickupProgressText = pickupIsPassed
+    ? 'Pickup stop passed — trip is in progress'
+    : pickupIsCurrent
+      ? 'Driver is here now'
+      : `~${req.eta_minutes} min`;
 
   return (
     <div className="max-w-screen-2xl mx-auto px-4 py-4 space-y-4 animate-fade-in">
@@ -171,10 +178,8 @@ export default function RequestStatusContent() {
         <div className="flex items-center gap-3">
           <Clock size={18} className="text-muted-foreground flex-shrink-0" />
           <div>
-            <p className="text-xs text-muted-foreground">ETA to Your Stop</p>
-            <p className="text-sm font-bold text-foreground">
-              {req.eta_minutes === 0 ? 'Driver is here now' : `~${req.eta_minutes} min`}
-            </p>
+            <p className="text-xs text-muted-foreground">{pickupIsPassed ? 'Pickup Progress' : 'ETA to Your Stop'}</p>
+            <p className="text-sm font-bold text-foreground">{pickupProgressText}</p>
           </div>
         </div>
       </div>
@@ -208,7 +213,11 @@ export default function RequestStatusContent() {
             <MapPin size={14} className="text-primary" />
             <p className="text-xs text-secondary-foreground font-medium">
               Your stop: <strong>{req.pickup_stop_name}</strong>
-              {req.eta_minutes === 0 ? ' — Driver is here!' : ` — ~${req.eta_minutes} min`}
+              {pickupIsPassed
+                ? ' — Passed; trip is in progress'
+                : pickupIsCurrent
+                  ? ' — Driver is here!'
+                  : ` — ~${req.eta_minutes} min`}
             </p>
           </div>
         </div>
