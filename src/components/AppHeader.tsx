@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { ChevronLeft, User, MapPin, LogOut, ShieldCheck, Car } from 'lucide-react';
+import { ChevronLeft, User, MapPin, LogOut, ShieldCheck, Car, Phone } from 'lucide-react';
 import AppLogo from '@/components/ui/AppLogo';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -31,6 +31,7 @@ export default function AppHeader({ title, showBack = false }: AppHeaderProps) {
             {showUserMenu && <div className="absolute right-0 top-11 w-56 bg-card border border-border rounded-2xl shadow-lg z-50 overflow-hidden">
               {user ? <>
                 <div className="px-4 py-3 border-b"><p className="text-xs font-semibold truncate">{profile?.display_name||user.email||user.phone||'User'}</p><p className="text-xs text-muted-foreground capitalize">{profile?.role||'passenger'}</p></div>
+                <Link href="/profile" onClick={()=>setShowUserMenu(false)} className="flex items-center gap-2 px-4 py-3 text-sm hover:bg-muted"><Phone size={14}/>Phone & profile</Link>
                 {profile?.role === 'driver' && <Link href="/driver-route-selection" onClick={()=>setShowUserMenu(false)} className="flex items-center gap-2 px-4 py-3 text-sm hover:bg-muted"><Car size={14}/>Driver panel</Link>}
                 <button onClick={handleSignOut} className="w-full flex items-center gap-2 px-4 py-3 text-sm text-red-600 hover:bg-red-50"><LogOut size={14}/>Sign Out</button>
               </> : <>
