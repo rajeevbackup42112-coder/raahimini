@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { ChevronLeft, User, MapPin, LogOut, ShieldCheck } from 'lucide-react';
+import { ChevronLeft, User, MapPin, LogOut, ShieldCheck, Car } from 'lucide-react';
 import AppLogo from '@/components/ui/AppLogo';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -28,7 +28,16 @@ export default function AppHeader({ title, showBack = false }: AppHeaderProps) {
           {profile?.role === 'admin' && <Link href="/admin-panel" className="flex items-center justify-center w-9 h-9 rounded-xl bg-red-50 hover:bg-red-100" aria-label="Admin Panel"><ShieldCheck size={18} className="text-red-600"/></Link>}
           <div className="relative">
             <button onClick={() => setShowUserMenu(!showUserMenu)} className={`flex items-center justify-center w-9 h-9 rounded-xl ${user?'bg-primary/10':'bg-muted'}`} aria-label="Account"><User size={18} className={user?'text-primary':'text-muted-foreground'}/></button>
-            {showUserMenu && <div className="absolute right-0 top-11 w-48 bg-card border border-border rounded-2xl shadow-lg z-50 overflow-hidden">{user?<><div className="px-4 py-3 border-b"><p className="text-xs font-semibold truncate">{profile?.display_name||user.email||user.phone||'User'}</p><p className="text-xs text-muted-foreground capitalize">{profile?.role||'passenger'}</p></div><button onClick={handleSignOut} className="w-full flex items-center gap-2 px-4 py-3 text-sm text-red-600 hover:bg-red-50"><LogOut size={14}/>Sign Out</button></>:<div className="px-4 py-3"><p className="text-xs text-muted-foreground">Not signed in</p><p className="text-xs text-muted-foreground mt-0.5">Sign in when you request a seat</p></div>}</div>}
+            {showUserMenu && <div className="absolute right-0 top-11 w-56 bg-card border border-border rounded-2xl shadow-lg z-50 overflow-hidden">
+              {user ? <>
+                <div className="px-4 py-3 border-b"><p className="text-xs font-semibold truncate">{profile?.display_name||user.email||user.phone||'User'}</p><p className="text-xs text-muted-foreground capitalize">{profile?.role||'passenger'}</p></div>
+                {profile?.role === 'driver' && <Link href="/driver-route-selection" onClick={()=>setShowUserMenu(false)} className="flex items-center gap-2 px-4 py-3 text-sm hover:bg-muted"><Car size={14}/>Driver panel</Link>}
+                <button onClick={handleSignOut} className="w-full flex items-center gap-2 px-4 py-3 text-sm text-red-600 hover:bg-red-50"><LogOut size={14}/>Sign Out</button>
+              </> : <>
+                <div className="px-4 py-3 border-b"><p className="text-xs font-semibold">Passenger</p><p className="text-xs text-muted-foreground mt-0.5">No sign-in needed until you request a seat.</p></div>
+                <Link href="/driver-login" onClick={()=>setShowUserMenu(false)} className="flex items-center gap-2 px-4 py-3 text-sm font-medium hover:bg-muted"><Car size={14}/>Driver sign in</Link>
+              </>}
+            </div>}
           </div>
         </div>
       </div>
