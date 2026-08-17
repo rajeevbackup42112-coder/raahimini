@@ -10,6 +10,20 @@ REVOKE INSERT, UPDATE, DELETE, TRUNCATE, REFERENCES, TRIGGER
 GRANT SELECT ON TABLE public.locations, public.routes, public.route_stops, public.vehicles
   TO anon, authenticated;
 
+-- Public clients consume purpose-built projections, not authoritative operational rows.
+DROP POLICY IF EXISTS trips_public_read ON public.trips;
+DROP POLICY IF EXISTS trip_seats_public_read ON public.trip_seats;
+DROP POLICY IF EXISTS driver_queue_public_read ON public.driver_queue;
+DROP POLICY IF EXISTS vehicles_public_read ON public.vehicles;
+REVOKE SELECT ON TABLE public.trips, public.trip_seats, public.driver_queue FROM anon, authenticated;
+REVOKE SELECT ON TABLE public.vehicles FROM anon;
+CREATE POLICY vehicles_authorized_read ON public.vehicles FOR SELECT TO authenticated
+USING (
+  public.is_admin() OR EXISTS (
+    SELECT 1 FROM public.drivers d WHERE d.profile_id=auth.uid() AND d.vehicle_id=vehicles.id
+  )
+);
+
 CREATE OR REPLACE FUNCTION public.is_admin()
 RETURNS BOOLEAN
 LANGUAGE sql STABLE SECURITY DEFINER SET search_path=public
