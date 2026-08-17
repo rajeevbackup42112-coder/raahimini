@@ -33,10 +33,12 @@ export default function AppHeader({ title, showBack = false }: AppHeaderProps) {
                 <div className="px-4 py-3 border-b"><p className="text-xs font-semibold truncate">{profile?.display_name||user.email||user.phone||'User'}</p><p className="text-xs text-muted-foreground capitalize">{profile?.role||'passenger'}</p></div>
                 <Link href="/profile" onClick={()=>setShowUserMenu(false)} className="flex items-center gap-2 px-4 py-3 text-sm hover:bg-muted"><Phone size={14}/>Phone & profile</Link>
                 {profile?.role === 'driver' && <Link href="/driver-route-selection" onClick={()=>setShowUserMenu(false)} className="flex items-center gap-2 px-4 py-3 text-sm hover:bg-muted"><Car size={14}/>Driver panel</Link>}
+                {profile?.role === 'admin' && <Link href="/admin-panel" onClick={()=>setShowUserMenu(false)} className="flex items-center gap-2 px-4 py-3 text-sm hover:bg-muted"><ShieldCheck size={14}/>Admin panel</Link>}
                 <button onClick={handleSignOut} className="w-full flex items-center gap-2 px-4 py-3 text-sm text-red-600 hover:bg-red-50"><LogOut size={14}/>Sign Out</button>
               </> : <>
                 <div className="px-4 py-3 border-b"><p className="text-xs font-semibold">Passenger</p><p className="text-xs text-muted-foreground mt-0.5">No sign-in needed until you request a seat.</p></div>
                 <Link href="/driver-login" onClick={()=>setShowUserMenu(false)} className="flex items-center gap-2 px-4 py-3 text-sm font-medium hover:bg-muted"><Car size={14}/>Driver sign in</Link>
+                <Link href="/admin-login" onClick={()=>setShowUserMenu(false)} className="flex items-center gap-2 px-4 py-3 text-sm font-medium hover:bg-muted"><ShieldCheck size={14}/>Admin sign in</Link>
               </>}
             </div>}
           </div>
