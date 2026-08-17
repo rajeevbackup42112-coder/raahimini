@@ -25,13 +25,17 @@ export default function AuthCompletePage() {
     const code = params.get('code');
     const destination = safeRedirectPath(params.get('next'));
 
-    if (!code) {
+    if (!code && !window.__raahiOAuthExchange) {
       setError('Google sign-in could not be completed. Please try again.');
       return;
     }
 
-    const supabase = createClient();
-    window.__raahiOAuthExchange ??= supabase.auth.exchangeCodeForSession(code);
+    if (!window.__raahiOAuthExchange) {
+      const supabase = createClient();
+      window.__raahiOAuthExchange = supabase.auth.exchangeCodeForSession(code!);
+      // Remove the one-time authorization code from the address bar immediately.
+      window.history.replaceState(null, '', '/auth/complete');
+    }
 
     window.__raahiOAuthExchange.then(({ error: exchangeError }) => {
       if (exchangeError) {
