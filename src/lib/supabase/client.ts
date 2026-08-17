@@ -81,6 +81,12 @@ export function createClient() {
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
+      // OAuth codes are exchanged by /auth/callback. Netlify may retain the
+      // original query string on the destination page, so never exchange it a
+      // second time in the browser.
+      auth: {
+        detectSessionInUrl: false,
+      },
       cookies: {
         getAll: () => canUseCookies() ? fromCookies() : fromStorage(),
         setAll(cookiesToSet) {
