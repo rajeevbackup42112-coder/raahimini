@@ -6,7 +6,7 @@
 
 ## 1. Product Scope
 
-Raahi Mini is a shared-seat micro-transit coordination system. Public users may browse locations, routes, active cars, seat availability, pickup progress and ETA anonymously. Passenger authentication is required only when the user finally requests seats. Driver and admin functions always require authenticated protected access.
+Raahi Mini is a shared-seat micro-transit coordination system. Public users may browse locations, routes, active cars, seat availability, pickup progress and ETA anonymously. Passenger authentication is required only when the user finally requests seats. Google establishes the account identity; a Supabase Auth-confirmed phone must be enrolled before the first booking. Driver and admin functions always require authenticated protected access.
 
 Passengers pay the driver directly only after physically meeting the driver. Raahi does not collect fare in V1. Reliability is enforced through verified accounts, behaviour events, no-show/cancellation history, admin restrictions and later policy penalties.
 
@@ -72,7 +72,9 @@ erDiagram
 stateDiagram-v2
     [*] --> AnonymousBrowse
     AnonymousBrowse --> AuthRequired : request seats
-    AuthRequired --> HELD : auth succeeds + request_seats
+    AuthRequired --> PhoneVerification : Google auth succeeds, phone missing
+    PhoneVerification --> HELD : phone_change OTP verified + request_seats
+    AuthRequired --> HELD : auth succeeds + phone already verified + request_seats
     HELD --> CONFIRMED : driver confirms in-person payment
     HELD --> WITHDRAWN : passenger withdraws request
     HELD --> EXPIRED : pickup passed / driver marks absent at pickup
@@ -89,6 +91,11 @@ stateDiagram-v2
 
 - Anonymous browsing is allowed.
 - Authentication is required only at final seat request.
+- Google OAuth is the primary account-creation/sign-in path for passenger booking.
+- A Supabase Auth phone with non-null `phone_confirmed_at` is required before `request_seats`; the RPC enforces this invariant.
+- Adding or changing a phone uses authenticated `updateUser` plus `verifyOtp(type='phone_change')`.
+- Removing a phone is allowed only while another confirmed sign-in identity remains; booking is disabled until a replacement phone is verified.
+- Phone OTP login, when exposed, must set `shouldCreateUser=false` so unknown numbers cannot create parallel accounts.
 - A passenger may not hold/confirm multiple active requests on the same trip.
 - Multi-seat request is all-or-nothing.
 - Passenger pays only after physically meeting driver.
@@ -246,8 +253,14 @@ sequenceDiagram
     UI->>RPC: get_public_active_car
     RPC->>DB: canonical projection
     P->>UI: choose stop + seats
-    UI->>A: OTP or Google sign-in if needed
+    UI->>A: Google sign-in if needed
     A-->>UI: authenticated session
+    alt phone is not confirmed
+        UI->>A: updateUser(phone)
+        A-->>UI: phone-change OTP
+        UI->>A: verifyOtp(type=phone_change)
+        A-->>UI: confirmed phone on same account
+    end
     UI->>RPC: request_seats
     RPC->>DB: lock trip + allocate HELD seats
     DB-->>UI: HELD request
@@ -257,7 +270,7 @@ sequenceDiagram
     DB-->>UI: confirmed state via refetch
 ```
 
-Google OAuth must resume the pending seat request context after callback rather than forcing the passenger to restart.
+Google OAuth must resume the pending seat request context after callback rather than forcing the passenger to restart. If phone enrollment is still required, the saved request resumes after phone verification.
 
 ## 12. Driver Sign-in and Route Selection Sequence
 
@@ -357,6 +370,9 @@ Realtime payloads are never treated as authoritative business state. They only t
 - New users default to passenger role.
 - Anonymous passengers browse without authentication.
 - Passenger auth is requested only at final seat-request action.
+- Passenger accounts use Google as the primary identity and enroll a verified phone on the same Auth user.
+- Supabase Auth `phone_confirmed_at`, not editable profile metadata, is the phone-verification authority.
+- The canonical booking RPC rejects authenticated users without a confirmed phone.
 - Unauthenticated drivers use a dedicated `Driver sign in` entry and `/driver-login` flow.
 - Google OAuth returns driver candidates to `/driver-login`.
 - First-time driver candidates remain passenger-role until trusted admin onboarding.
