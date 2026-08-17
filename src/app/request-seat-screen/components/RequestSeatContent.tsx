@@ -286,7 +286,9 @@ function AuthModal({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const handleSendOtp = async () => {
+  const handleSendOtp = async (event: React.MouseEvent<HTMLButtonElement>) => {
+    event.preventDefault();
+    event.stopPropagation();
     if (!phone || phone.replace(/\D/g, '').length < 10) {
       setError('Enter a valid 10-digit mobile number');
       return;
@@ -303,7 +305,9 @@ function AuthModal({
     }
   };
 
-  const handleVerifyOtp = async () => {
+  const handleVerifyOtp = async (event: React.MouseEvent<HTMLButtonElement>) => {
+    event.preventDefault();
+    event.stopPropagation();
     if (!otp || otp.length < 4) {
       setError('Enter the OTP sent to your phone');
       return;
@@ -320,7 +324,9 @@ function AuthModal({
     }
   };
 
-  const handleGoogle = async () => {
+  const handleGoogle = async (event: React.MouseEvent<HTMLButtonElement>) => {
+    event.preventDefault();
+    event.stopPropagation();
     setLoading(true);
     setError('');
     try {
@@ -337,6 +343,7 @@ function AuthModal({
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-bold text-foreground">Sign In to Continue</h2>
           <button
+            type="button"
             onClick={onClose}
             className="w-8 h-8 flex items-center justify-center rounded-xl hover:bg-muted transition-colors duration-150"
           >
@@ -372,6 +379,7 @@ function AuthModal({
               </div>
             </div>
             <button
+              type="button"
               onClick={handleSendOtp}
               disabled={loading || phone.replace(/\D/g, '').length < 10}
               className="btn-primary w-full"
@@ -385,6 +393,7 @@ function AuthModal({
               <div className="flex-1 border-t border-border" />
             </div>
             <button
+              type="button"
               className="btn-outline w-full"
               onClick={handleGoogle}
               disabled={loading}
@@ -411,6 +420,7 @@ function AuthModal({
               />
             </div>
             <button
+              type="button"
               onClick={handleVerifyOtp}
               disabled={loading || otp.length < 4}
               className="btn-primary w-full"
@@ -419,6 +429,7 @@ function AuthModal({
               {loading ? 'Verifying...' : 'Verify & Request Seat'}
             </button>
             <button
+              type="button"
               onClick={() => { setStep('choose'); setOtp(''); setError(''); }}
               className="w-full text-sm text-muted-foreground text-center hover:text-foreground transition-colors"
             >
