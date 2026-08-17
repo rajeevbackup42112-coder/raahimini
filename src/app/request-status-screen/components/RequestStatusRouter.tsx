@@ -13,6 +13,7 @@ export default function RequestStatusRouter() {
   const [cancelled, setCancelled] = useState<DriverCancelledRequest | null>(null);
   const [loading, setLoading] = useState(true);
   const [reporting, setReporting] = useState(false);
+  const [refundReported, setRefundReported] = useState(false);
 
   const load = async () => {
     if (!user) {
@@ -41,7 +42,10 @@ export default function RequestStatusRouter() {
     setReporting(true);
     const result = await passengerReportRefundProblem(cancelled.request_id);
     setReporting(false);
-    if (result.success) toast.success(result.already_reported ? 'Refund problem already reported' : 'Refund problem reported to Raahi Admin');
+    if (result.success) {
+      setRefundReported(true);
+      toast.success(result.already_reported ? 'Refund problem already reported' : 'Refund problem reported to Raahi Admin');
+    }
     else toast.error(result.error || 'Could not report refund problem');
   };
 
@@ -52,7 +56,7 @@ export default function RequestStatusRouter() {
           <AlertTriangle size={22} className="text-red-600 flex-shrink-0 mt-0.5" />
           <div>
             <p className="text-base font-bold text-red-800">Driver cancelled this ride</p>
-            <p className="text-sm text-red-700 mt-1">Your confirmed seat is no longer active. Raahi has opened the route for the next queued driver.</p>
+            <p className="text-sm text-red-700 mt-1">Your confirmed seat is no longer active. Raahi has reopened the route so another driver can collect passengers.</p>
           </div>
         </div>
       </div>
@@ -72,9 +76,9 @@ export default function RequestStatusRouter() {
 
       <div className="space-y-2">
         {callNumber && <a href={`tel:+${callNumber.startsWith('91') ? callNumber : `91${callNumber}`}`} className="btn-accent w-full"><Phone size={18}/>Call Cancelled Driver</a>}
-        {cancelled.route_id && <Link href={`/active-car-screen?route_id=${encodeURIComponent(cancelled.route_id)}`} className="btn-primary w-full"><Car size={18}/>View Next Car</Link>}
-        <button onClick={reportRefund} disabled={reporting} className="btn-outline w-full border-red-200 text-red-700 hover:bg-red-50">
-          {reporting ? <Loader2 size={16} className="animate-spin"/> : <AlertTriangle size={16}/>} Report Refund Problem
+        {cancelled.route_id && <Link href={`/active-car-screen?route_id=${encodeURIComponent(cancelled.route_id)}`} className="btn-primary w-full"><Car size={18}/>Check for Another Car</Link>}
+        <button onClick={reportRefund} disabled={reporting || refundReported} className="btn-outline w-full border-red-200 text-red-700 hover:bg-red-50 disabled:opacity-60">
+          {reporting ? <Loader2 size={16} className="animate-spin"/> : <AlertTriangle size={16}/>} {refundReported ? 'Refund Problem Reported' : 'Report Refund Problem'}
         </button>
         <button onClick={load} className="btn-outline w-full"><RefreshCw size={16}/>Refresh</button>
       </div>
