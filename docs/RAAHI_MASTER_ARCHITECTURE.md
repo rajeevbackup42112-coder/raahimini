@@ -6,9 +6,9 @@
 
 ## 1. Product Scope
 
-Raahi Mini is a shared-seat micro-transit coordination system. Public users may browse locations, routes, active cars and seat availability anonymously. Authentication is required only when a passenger requests seats or when a driver/admin uses protected functions.
+Raahi Mini is a shared-seat micro-transit coordination system. Public users may browse locations, routes, active cars, seat availability, pickup progress and ETA anonymously. Passenger authentication is required only when the user finally requests seats. Driver and admin functions always require authenticated protected access.
 
-Passengers pay the driver directly after physically meeting the driver. Raahi does not collect fare in V1. Reliability is enforced through verified accounts, behaviour events, no-show/cancellation history, admin restrictions and later policy penalties.
+Passengers pay the driver directly only after physically meeting the driver. Raahi does not collect fare in V1. Reliability is enforced through verified accounts, behaviour events, no-show/cancellation history, admin restrictions and later policy penalties.
 
 Drivers are not permanently assigned to routes. A driver chooses their current location, sees only routes departing from that location, selects one route and joins that route's FIFO queue. After trip completion, the destination is suggested as the driver's next current location.
 
@@ -24,6 +24,7 @@ Drivers are not permanently assigned to routes. A driver chooses their current l
 8. `trip_seats` is the authoritative physical seat ledger.
 9. Admin exception actions must preserve the same invariants as normal flows.
 10. Public projections expose only bookable/appropriate state.
+11. Passenger browsing stays public; driver access uses a dedicated authentication entry path.
 
 ## 3. Domain Model
 
@@ -53,7 +54,7 @@ erDiagram
 ### Core ownership rules
 
 - `profiles`: identity, role, restriction state.
-- `drivers`: driver-specific operational record; **no permanent route ownership**.
+- `drivers`: driver-specific operational record; no permanent route ownership.
 - `vehicles`: real vehicle and seat capacity (4/6/8).
 - `routes`: directed route from one location to another.
 - `route_stops`: fixed ordered pickup path.
@@ -95,11 +96,15 @@ stateDiagram-v2
 - Passenger cannot be marked absent before the car has reached the selected pickup stop.
 - Driver cancellation after confirmation transitions request to `DRIVER_CANCELLED`, preserving passenger visibility and refund follow-up.
 
-## 5. Driver Lifecycle
+## 5. Driver Authentication and Lifecycle
 
 ```mermaid
 stateDiagram-v2
-    [*] --> ChooseLocation
+    [*] --> DriverEntry
+    DriverEntry --> GoogleAuth : Driver sign in
+    GoogleAuth --> AwaitingActivation : signed in, passenger role
+    AwaitingActivation --> ChooseLocation : admin activates driver + vehicle
+    GoogleAuth --> ChooseLocation : already active driver
     ChooseLocation --> ChooseRoute : only routes departing location
     ChooseRoute --> WAITING : join_driver_queue
     WAITING --> ACTIVE_COLLECTING : FIFO activation
@@ -112,11 +117,17 @@ stateDiagram-v2
     LEFT_QUEUE --> ChooseLocation
 ```
 
+### Driver authentication rule
+
+Passenger browsing must not be polluted by a global login requirement. Therefore the account menu exposes a distinct **Driver sign in** entry when unauthenticated. It launches Google OAuth and returns to `/driver-login`.
+
+A first-time signed-in driver candidate still has the default `passenger` role and sees an "awaiting activation" state. Admin then verifies the known person, assigns/updates the vehicle and promotes the profile to `driver`. On subsequent sign-in, an active driver is routed to `/driver-route-selection`.
+
+Client metadata can never self-promote a user into `driver` or `admin`.
+
 ### Driver route rule
 
-A driver belongs to Raahi and a vehicle, not to a route. `driver_queue.route_id` is the authoritative route selection for that journey.
-
-The server validates `route.from_location_id == declared_current_location_id` when joining the queue. No GPS dependency is required.
+A driver belongs to Raahi and a vehicle, not to a route. `driver_queue.route_id` is the authoritative route selection for that journey. The server validates `route.from_location_id == declared_current_location_id` when joining the queue. No GPS dependency is required.
 
 ## 6. FIFO and Active-Car State Machine
 
@@ -158,13 +169,7 @@ stateDiagram-v2
 
 ### Departure invariant
 
-A trip may start only when:
-
-`held_count = 0`
-
-and
-
-`confirmed_count + driver_closed_count = capacity`
+A trip may start only when `held_count = 0` and `confirmed_count + driver_closed_count = capacity`.
 
 This means the car either has paying confirmed passengers or the driver intentionally closes remaining seats as stale/empty seats.
 
@@ -202,11 +207,7 @@ flowchart LR
 - Booking is allowed only for stops not already passed.
 - Reaching a later stop expires HELD requests for earlier missed stops.
 - Passenger absence may be recorded only when the car has reached that passenger's selected stop.
-
-Pilot timing assumption:
-
-- Gomoh pickup cluster: approximately 5 minutes total to cover local stops.
-- Dhanbad pickup cluster: approximately 15 minutes total to cover local stops.
+- Pilot timing assumption: Gomoh pickup cluster ~5 minutes total; Dhanbad pickup cluster ~15 minutes total.
 
 ## 10. Driver Cancellation / Passenger Recovery
 
@@ -217,7 +218,6 @@ sequenceDiagram
     participant DB as PostgreSQL
     participant P as Passenger
     participant N as Next Driver
-
     D->>API: driver_cancel_trip(trip_id)
     API->>DB: lock trip
     API->>DB: cancel trip + queue entry
@@ -242,7 +242,6 @@ sequenceDiagram
     participant RPC as Supabase RPC
     participant DB as PostgreSQL
     participant D as Driver
-
     P->>UI: browse location/route/car anonymously
     UI->>RPC: get_public_active_car
     RPC->>DB: canonical projection
@@ -260,16 +259,25 @@ sequenceDiagram
 
 Google OAuth must resume the pending seat request context after callback rather than forcing the passenger to restart.
 
-## 12. Driver Route Selection Sequence
+## 12. Driver Sign-in and Route Selection Sequence
 
 ```mermaid
 sequenceDiagram
     participant D as Driver
     participant UI as Driver PWA
+    participant A as Supabase Auth
+    participant ADM as Admin
     participant RPC as Supabase RPC
     participant DB as PostgreSQL
-
-    D->>UI: select current location
+    D->>UI: Driver sign in
+    UI->>A: Google OAuth, next=/driver-login
+    A-->>UI: session
+    alt first sign-in / not activated
+        UI-->>D: awaiting admin activation
+        ADM->>RPC: onboard trusted driver + vehicle
+        RPC->>DB: profile role=driver + driver/vehicle records
+    end
+    UI->>D: choose current location
     UI->>RPC: get_driver_departing_routes(location)
     RPC->>DB: active routes where from_location = selected
     DB-->>UI: available departing routes
@@ -277,19 +285,16 @@ sequenceDiagram
     UI->>RPC: join_driver_queue(route, current_location)
     RPC->>DB: validate origin + single live queue + locks
     DB-->>UI: WAITING or ACTIVE_COLLECTING
-    UI->>RPC: get_driver_home_context/refetch
 ```
 
 ## 13. Canonical Command Surface
 
 ### Passenger commands
-
 - `request_seats(trip_id, pickup_stop_id, seat_count)`
 - `withdraw_seat_request(request_id)`
 - `passenger_report_refund_problem(request_id)`
 
 ### Driver commands
-
 - `join_driver_queue(route_id, current_location_id)`
 - `leave_driver_queue(route_id)`
 - `driver_confirm_payment(request_id)`
@@ -301,7 +306,6 @@ sequenceDiagram
 - `driver_cancel_trip(trip_id)`
 
 ### Admin commands
-
 - restrict/unrestrict user
 - onboard/update trusted driver + vehicle
 - deactivate driver safely
@@ -309,33 +313,28 @@ sequenceDiagram
 - operational exception functions only where invariants are preserved
 
 ### Internal-only helpers
-
 Functions such as FIFO activation, audit recording, behaviour recording and seat-release helpers must not be executable by ordinary anonymous/authenticated clients unless explicitly intended.
 
 ## 14. Read Projections
 
 ### Public
-
 - active locations
 - routes for selected location
-- **only ACTIVE_COLLECTING car is publicly bookable/displayed as active car**
+- only `ACTIVE_COLLECTING` car is publicly bookable/displayed as active car
 - public active-car seat availability and stop progress
 
 ### Passenger-authenticated
-
 - my active request
 - passenger ride status
 - driver-cancelled request recovery projection
 
 ### Driver-authenticated
-
 - driver home context
 - departing routes for selected location
 - live queue rank
 - active car + passenger requests
 
 ### Admin-authenticated
-
 - active trips
 - behaviour events
 - driver/vehicle management
@@ -356,26 +355,20 @@ Realtime payloads are never treated as authoritative business state. They only t
 ## 16. Authentication and Roles
 
 - New users default to passenger role.
+- Anonymous passengers browse without authentication.
+- Passenger auth is requested only at final seat-request action.
+- Unauthenticated drivers use a dedicated `Driver sign in` entry and `/driver-login` flow.
+- Google OAuth returns driver candidates to `/driver-login`.
+- First-time driver candidates remain passenger-role until trusted admin onboarding.
+- Driver role is granted only through trusted admin onboarding after the user has signed in once.
+- Active drivers are routed to `/driver-route-selection` after authentication.
 - Client metadata cannot self-promote a user to driver/admin.
-- Driver role is granted through trusted admin onboarding after the user has signed in once.
 - Admin manages the small known driver pool and vehicle details.
 - Restricted users cannot perform protected operational actions.
 
 ## 17. Behaviour / Reliability Model
 
-V1 records evidence rather than forcing payment penalties immediately.
-
-Examples:
-
-- passenger request created
-- passenger request withdrawn
-- passenger missed/expired
-- booking confirmed
-- driver cancel before confirmation
-- driver cancel after confirmation
-- refund problem reported
-
-Future penalties may be derived from these events (for example repeated no-shows or repeated driver cancellations), without redesigning the core trip/seat engine.
+V1 records evidence rather than forcing payment penalties immediately. Examples include passenger request creation/withdrawal/miss/expiry, booking confirmation, driver cancellation before/after confirmation and refund problems. Future penalties may be derived from these events without redesigning the core trip/seat engine.
 
 ## 18. Critical Non-Negotiable Invariants
 
@@ -393,25 +386,17 @@ Future penalties may be derived from these events (for example repeated no-shows
 12. Realtime invalidates/refetches only.
 13. Admin exceptions must preserve the same invariants.
 14. Driver route choice belongs to `driver_queue`, not `drivers`.
-15. Architecture-changing code and this Master Sheet must be updated together.
+15. Unauthenticated passenger browsing must remain available.
+16. Driver authentication must not force passenger authentication.
+17. Architecture-changing code and this Master Sheet must be updated together.
 
 ## 19. Architecture Change Governance
 
 Every PR must state one of:
-
 - `Master Sheet impact: none` — implementation-only change with no architectural effect.
 - `Master Sheet impact: updated` — architecture/state/ownership/invariant changed and this document is updated in the same PR.
 
-Architecture-affecting examples include:
-
-- new/removed lifecycle state
-- new canonical command
-- ownership move between tables/domains
-- concurrency or uniqueness invariant change
-- public/private projection boundary change
-- authentication/role model change
-- route/queue/matching logic change
-- payment/cancellation/no-show policy encoded into state
+Architecture-affecting examples include lifecycle states, canonical commands, domain ownership, concurrency/uniqueness, projection boundaries, authentication/roles, route/queue/matching logic and encoded cancellation/no-show policy.
 
 ## 20. Current Architecture Changelog
 
@@ -440,6 +425,12 @@ Architecture-affecting examples include:
 
 ### 2026-08-16 — Independent build validation
 - GitHub Actions type-check and production-build validation established as an independent compile gate.
+
+### 2026-08-17 — Dedicated driver authentication entry
+- Preserved public passenger browsing and passenger auth-at-request rule.
+- Added explicit `Driver sign in` entry and `/driver-login` OAuth path.
+- First-time driver candidates remain passenger-role until admin onboarding.
+- Active drivers continue into dynamic route selection after authentication.
 
 ---
 
