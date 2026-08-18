@@ -1,0 +1,52 @@
+name: Staging E2E
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - staging
+
+jobs:
+  playwright:
+    if: ${{ secrets.RAAHI_TEST_PASSWORD != '' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      RAAHI_STAGING_URL: https://raahimini-x1xy611.public.builtwithrocket.new
+      RAAHI_TEST_PASSWORD: ${{ secrets.RAAHI_TEST_PASSWORD }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install app dependencies
+        run: npm ci
+
+      - name: Install Playwright Chromium
+        run: npx --yes playwright@1.55.0 install --with-deps chromium
+
+      - name: Run staging E2E
+        run: npx --yes @playwright/test@1.55.0 test --config=playwright.staging.config.mjs
+
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report
+          if-no-files-found: ignore
+          retention-days: 7
+
+      - name: Upload failure evidence
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-test-results
+          path: test-results
+          if-no-files-found: ignore
+          retention-days: 7
