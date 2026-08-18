@@ -1,6 +1,7 @@
 'use client';
 
 import { FormEvent, useState } from 'react';
+import { createClient } from '@/lib/supabase/client';
 
 export default function TestLoginForm() {
   const [loginId, setLoginId] = useState('rajeev1');
@@ -19,10 +20,30 @@ export default function TestLoginForm() {
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ loginId, password }),
       });
-      const result = (await response.json()) as { error?: string; redirectTo?: string };
+      const result = (await response.json()) as {
+        error?: string;
+        redirectTo?: string;
+        accessToken?: string;
+        refreshToken?: string;
+      };
 
-      if (!response.ok || !result.redirectTo) {
+      if (
+        !response.ok ||
+        !result.redirectTo ||
+        !result.accessToken ||
+        !result.refreshToken
+      ) {
         setError(result.error || 'Login failed');
+        return;
+      }
+
+      const supabase = createClient();
+      const { error: sessionError } = await supabase.auth.setSession({
+        access_token: result.accessToken,
+        refresh_token: result.refreshToken,
+      });
+      if (sessionError) {
+        setError('Login failed');
         return;
       }
 

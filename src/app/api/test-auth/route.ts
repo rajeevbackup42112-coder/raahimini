@@ -72,9 +72,6 @@ export async function POST(request: NextRequest) {
 
   const hitsBlockedHost = candidateHosts.some((host) => HARD_BLOCKED_HOSTS.has(host));
 
-  // Staging-only switch remains mandatory. Production hostnames are explicitly
-  // denied even if environment variables are copied there accidentally. The
-  // shared staging secret below is still required for every request.
   if (
     process.env.RAAHI_TEST_AUTH_ENABLED !== 'true' ||
     candidateHosts.length === 0 ||
@@ -153,12 +150,13 @@ export async function POST(request: NextRequest) {
   }
 
   const supabase = await createServerClient();
-  const { error: verifyError } = await supabase.auth.verifyOtp({
+  const { data: verifyData, error: verifyError } = await supabase.auth.verifyOtp({
     token_hash: tokenHash,
     type: 'email',
   });
 
-  if (verifyError) {
+  const session = verifyData.session;
+  if (verifyError || !session?.access_token || !session.refresh_token) {
     return NextResponse.json({ error: 'Could not establish test session' }, { status: 500 });
   }
 
@@ -168,5 +166,16 @@ export async function POST(request: NextRequest) {
       ? '/driver-route-selection'
       : '/';
 
-  return NextResponse.json({ success: true, persona: personaName, role: target.role, redirectTo });
+  // The endpoint is staging-only and secret-protected. Returning the short-lived
+  // test session lets the browser Supabase client persist the same genuine
+  // session before the hard navigation, which keeps role checks deterministic
+  // across page loads without weakening production auth.
+  return NextResponse.json({
+    success: true,
+    persona: personaName,
+    role: target.role,
+    redirectTo,
+    accessToken: session.access_token,
+    refreshToken: session.refresh_token,
+  });
 }

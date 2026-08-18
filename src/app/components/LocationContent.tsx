@@ -4,7 +4,6 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { MapPin, Car, ChevronRight, ArrowRight, Navigation, CheckCircle2, Loader2 } from 'lucide-react';
 import { getActiveLocations, getRoutesForLocation, type Location, type RouteForLocation } from '@/lib/raahiApi';
-import { createClient } from '@/lib/supabase/client';
 import { RouteListSkeleton } from '@/components/ui/LoadingSkeleton';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -52,18 +51,8 @@ export default function LocationContent() {
     if (selectedLocationId) loadRoutes(selectedLocationId);
   }, [selectedLocationId, loadRoutes]);
 
-  // Realtime: subscribe to trips table changes → refetch routes
-  useEffect(() => {
-    if (!selectedLocationId) return;
-    const supabase = createClient();
-    const channel = supabase
-      .channel('location_trips_watch')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'trips' }, () => {
-        loadRoutes(selectedLocationId);
-      })
-      .subscribe();
-    return () => { supabase.removeChannel(channel); };
-  }, [selectedLocationId, loadRoutes]);
+  // Realtime invalidation is owned by the page-level RealtimeRefreshBoundary.
+  // It subscribes only to raahi_invalidation_events and remounts this projection.
 
   const handleSelectLocation = (locId: string) => {
     setSelectedLocationId(locId);
@@ -164,7 +153,6 @@ function RouteGroup({ title, routes }: { title: string; routes: RouteForLocation
       <div className="space-y-2">
         {routes.map((route) => {
           const isCollecting = route.active_car_status === 'ACTIVE_COLLECTING';
-          const isInProgress = route.active_car_status === 'IN_PROGRESS';
           const hasActiveCar = route.has_active_car;
 
           return (
