@@ -6,7 +6,6 @@ import {
   AlertTriangle, Loader2, Car, Lock, Navigation, RefreshCw, ShieldCheck
 } from 'lucide-react';
 import { getDriverActiveCar, driverConfirmPayment, driverMarkPassengerAbsent, driverAdvanceStop, driverCloseEmptySeats, startTrip, completeTrip, type DriverActiveTrip, type PassengerRequest } from '@/lib/raahiApi';
-import { createClient } from '@/lib/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import SeatCountBadge from '@/components/ui/SeatCountBadge';
 import StatusBadge from '@/components/ui/StatusBadge';
@@ -30,18 +29,6 @@ export default function DriverActiveCarContent() {
     if (!authLoading && user) fetchTrip();
     else if (!authLoading) setLoading(false);
   }, [authLoading, user, fetchTrip]);
-
-  // Realtime subscription
-  useEffect(() => {
-    if (!user) return;
-    const supabase = createClient();
-    const channel = supabase
-      .channel('driver_trip_watch')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'trips' }, () => fetchTrip())
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'seat_requests' }, () => fetchTrip())
-      .subscribe();
-    return () => { supabase.removeChannel(channel); };
-  }, [user, fetchTrip]);
 
   const handleAction = async (actionKey: string, fn: () => Promise<any>, successMsg: string) => {
     setLoadingAction(actionKey);
