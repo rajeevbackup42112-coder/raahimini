@@ -104,9 +104,9 @@ export default function RequestStatusContent() {
       : `~${req.eta_minutes} min`;
 
   return (
-    <div className="max-w-screen-2xl mx-auto px-4 py-4 space-y-4 animate-fade-in">
+    <div className="mobile-page space-y-3 animate-fade-in">
       {/* Status Card */}
-      <div className={`card p-4 border-l-4 ${
+      <div className={`compact-card border-l-4 ${
         isExpired ? 'border-l-gray-400' : isConfirmed ? 'border-l-green-500' : 'border-l-amber-500'
       }`}>
         <div className="flex items-start justify-between">
@@ -172,7 +172,7 @@ export default function RequestStatusContent() {
       )}
 
       {/* Pickup Info */}
-      <div className="card p-4 space-y-3">
+      <div className="compact-card space-y-3">
         <p className="section-label">Your Journey Details</p>
         <div className="flex items-center gap-3">
           <MapPin size={18} className="text-primary flex-shrink-0" />
@@ -199,7 +199,7 @@ export default function RequestStatusContent() {
 
       {/* Driver Progress */}
       {req.stops && req.stops.length > 0 && (
-        <div className="card p-4">
+        <div className="compact-card">
           <div className="flex items-center justify-between mb-3">
             <p className="section-label">Driver Progress</p>
             <span className="text-xs text-muted-foreground">
@@ -243,7 +243,7 @@ export default function RequestStatusContent() {
         {req.driver_phone && !isTripCompleted && (
           <a
             href={`tel:+91${req.driver_phone.replace(/\D/g, '')}`}
-            className="btn-accent w-full"
+            className="btn-accent w-full min-h-12"
           >
             <Phone size={18} />
             Call Driver
@@ -253,7 +253,7 @@ export default function RequestStatusContent() {
         {isHeld && (
           <button
             onClick={() => setShowWithdrawConfirm(true)}
-            className="btn-outline w-full border-red-200 text-red-600 hover:bg-red-50"
+            className="quiet-action w-full text-red-600 hover:bg-red-50"
           >
             <X size={18} />
             Withdraw Request

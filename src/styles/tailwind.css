@@ -206,3 +206,17 @@
     @apply w-0.5 h-6 bg-accent mx-auto;
   }
 }
+
+@layer components {
+  .mobile-page {
+    @apply mx-auto w-full max-w-3xl px-3 py-3 pb-24 sm:px-4 sm:py-5;
+  }
+
+  .compact-card {
+    @apply rounded-2xl border border-border bg-card p-3 card-shadow sm:p-4;
+  }
+
+  .quiet-action {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl border border-transparent px-4 py-2.5 text-sm font-semibold text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50;
+  }
+}
