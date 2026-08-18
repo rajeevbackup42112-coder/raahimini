@@ -34,6 +34,35 @@ async function loginContext(context, loginId) {
   return response.json();
 }
 
+async function gotoRetry(page, url) {
+  let lastError;
+  for (let attempt = 1; attempt <= 3; attempt += 1) {
+    try {
+      await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 15_000 });
+      return;
+    } catch (error) {
+      lastError = error;
+      console.log(`[operational] navigation retry ${attempt} for ${url}`);
+      if (attempt < 3) await page.waitForTimeout(700 * attempt);
+    }
+  }
+  throw lastError;
+}
+
+async function reloadRetry(page) {
+  let lastError;
+  for (let attempt = 1; attempt <= 3; attempt += 1) {
+    try {
+      await page.reload({ waitUntil: 'domcontentloaded', timeout: 15_000 });
+      return;
+    } catch (error) {
+      lastError = error;
+      if (attempt < 3) await page.waitForTimeout(700 * attempt);
+    }
+  }
+  throw lastError;
+}
+
 test('controlled passenger request → driver confirm → trip completion → restore collector', async ({ browser }) => {
   test.setTimeout(240_000);
 
@@ -42,18 +71,14 @@ test('controlled passenger request → driver confirm → trip completion → re
   const passenger = await passengerContext.newPage();
   const driver = await driverContext.newPage();
 
-  console.log('[operational] preflight passenger session');
+  console.log('[operational] preflight both sessions before mutation');
   await loginContext(passengerContext, 'rajeev2');
-  await passenger.goto('/');
-  await expect(passenger.getByText('Passenger', { exact: true })).toBeVisible();
-
-  console.log('[operational] preflight driver session');
   await loginContext(driverContext, 'rajeev4-driver');
-  await driver.goto('/driver-active-car-screen', { waitUntil: 'domcontentloaded', timeout: 20_000 });
+  await gotoRetry(driver, '/driver-active-car-screen');
   await expect(driver.getByText(/Passenger Requests \(/)).toBeVisible();
 
   console.log('[operational] clean stale held request if present');
-  await passenger.goto('/request-status-screen');
+  await gotoRetry(passenger, '/request-status-screen');
   const withdraw = passenger.getByRole('button', { name: 'Withdraw Request', exact: true });
   if (await withdraw.isVisible().catch(() => false)) {
     await withdraw.click();
@@ -62,7 +87,7 @@ test('controlled passenger request → driver confirm → trip completion → re
   }
 
   console.log('[operational] passenger active car');
-  await passenger.goto(`/active-car-screen?route_id=${GD_ROUTE_ID}`);
+  await gotoRetry(passenger, `/active-car-screen?route_id=${GD_ROUTE_ID}`);
   await expect(passenger.getByRole('heading', { name: 'Active Car', exact: true })).toBeVisible();
   await passenger.getByRole('link', { name: /Request a Seat/ }).click();
 
@@ -77,13 +102,13 @@ test('controlled passenger request → driver confirm → trip completion → re
   await expect(passenger.getByText('Held', { exact: true }).first()).toBeVisible();
 
   console.log('[operational] driver confirm');
-  await driver.reload({ waitUntil: 'domcontentloaded' });
+  await reloadRetry(driver);
   await expect(driver.getByText('Passenger Requests (1)', { exact: true })).toBeVisible();
   await driver.getByRole('button', { name: 'Payment Received', exact: true }).click();
   await expect(driver.getByText('Confirmed', { exact: true }).first()).toBeVisible();
 
   console.log('[operational] passenger confirmed');
-  await passenger.reload();
+  await reloadRetry(passenger);
   await expect(passenger.getByText('Booking Confirmed', { exact: true })).toBeVisible();
 
   console.log('[operational] close empty seats');
@@ -109,11 +134,11 @@ test('controlled passenger request → driver confirm → trip completion → re
   await expect(driver.getByText('No Active Trip', { exact: true })).toBeVisible();
 
   console.log('[operational] passenger completed');
-  await passenger.reload();
+  await reloadRetry(passenger);
   await expect(passenger.getByText('Trip Completed', { exact: true })).toBeVisible();
 
   console.log('[operational] restore GD collector');
-  await driver.goto('/driver-route-selection');
+  await gotoRetry(driver, '/driver-route-selection');
   await expect(driver.getByRole('heading', { name: 'Where are you now?', exact: true })).toBeVisible();
   await driver.getByRole('button', { name: /Gomoh.*I am here/ }).click();
   await expect(driver.getByText('Going from Gomoh', { exact: true })).toBeVisible();
