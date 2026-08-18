@@ -44,15 +44,6 @@ function safeEqual(left: string, right: string): boolean {
   return a.length === b.length && timingSafeEqual(a, b);
 }
 
-function parseAllowedHosts(): Set<string> {
-  return new Set(
-    (process.env.RAAHI_TEST_AUTH_ALLOWED_HOSTS || '')
-      .split(',')
-      .map((host) => normalizeHost(host))
-      .filter(Boolean)
-  );
-}
-
 function parsePersonas(): PersonaMap {
   const raw = process.env.RAAHI_TEST_PERSONAS_JSON;
   if (!raw) return {};
@@ -74,19 +65,20 @@ function disabled(): NextResponse {
 }
 
 export async function POST(request: NextRequest) {
-  const forwardedHost = normalizeHost(request.headers.get('x-forwarded-host'));
-  const directHost = normalizeHost(request.headers.get('host'));
-  const candidateHosts = [forwardedHost, directHost].filter(Boolean);
-  const allowedHosts = parseAllowedHosts();
+  const candidateHosts = [
+    normalizeHost(request.headers.get('x-forwarded-host')),
+    normalizeHost(request.headers.get('host')),
+  ].filter(Boolean);
 
   const hitsBlockedHost = candidateHosts.some((host) => HARD_BLOCKED_HOSTS.has(host));
-  const hitsAllowedHost = candidateHosts.some((host) => allowedHosts.has(host));
 
+  // Staging-only switch remains mandatory. Production hostnames are explicitly
+  // denied even if environment variables are copied there accidentally. The
+  // shared staging secret below is still required for every request.
   if (
     process.env.RAAHI_TEST_AUTH_ENABLED !== 'true' ||
     candidateHosts.length === 0 ||
-    hitsBlockedHost ||
-    !hitsAllowedHost
+    hitsBlockedHost
   ) {
     return disabled();
   }
