@@ -39,11 +39,13 @@ export default function DriverLoginPage() {
     router.replace('/driver-login');
   };
 
+  const resolvingProfile = !!user && !profile;
+
   return (
     <div className="min-h-screen bg-background">
       <AppHeader title="Driver Sign In" showBack />
       <main className="max-w-md mx-auto px-4 py-10">
-        {loading ? (
+        {loading || resolvingProfile ? (
           <div className="flex justify-center py-16"><Loader2 className="animate-spin text-primary" /></div>
         ) : user ? (
           <div className="card p-6 text-center space-y-4">
