@@ -15,6 +15,10 @@ async function loginContext(context, loginId) {
         data: { loginId, password },
         timeout: 15_000,
       });
+      if (response.status() >= 500 && attempt < 3) {
+        await new Promise((resolve) => setTimeout(resolve, 750 * attempt));
+        continue;
+      }
       break;
     } catch (error) {
       lastError = error;
@@ -44,8 +48,8 @@ test('controlled passenger request → driver confirm → trip completion → re
 
   console.log('[operational] passenger request form');
   await expect(passenger).toHaveURL(/\/request-seat-screen/);
-  const firstPickup = passenger.getByRole('radio').first();
-  await firstPickup.check();
+  const firstPickupLabel = passenger.locator('label').filter({ has: passenger.locator('input[name="pickup_stop"]') }).first();
+  await firstPickupLabel.click();
   await passenger.getByRole('button', { name: '1', exact: true }).click();
   await passenger.getByRole('button', { name: 'Request Seat', exact: true }).click();
 
