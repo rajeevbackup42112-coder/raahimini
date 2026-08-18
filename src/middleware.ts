@@ -15,6 +15,11 @@ function injectTokenFromHeader(request: NextRequest): void {
 }
 
 export async function middleware(request: NextRequest) {
+  // Guard: skip Supabase middleware if env vars are not available
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+    return NextResponse.next({ request });
+  }
+
   injectTokenFromHeader(request);
   let supabaseResponse = NextResponse.next({ request });
 
