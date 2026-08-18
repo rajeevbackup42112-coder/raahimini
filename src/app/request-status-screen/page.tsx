@@ -1,11 +1,14 @@
 import React from 'react';
 import AppLayout from '@/components/AppLayout';
-import RequestStatusContent from './components/RequestStatusContent';
+import RequestStatusRouter from './components/RequestStatusRouter';
+import RealtimeRefreshBoundary from '@/components/RealtimeRefreshBoundary';
 
 export default function RequestStatusPage() {
   return (
     <AppLayout headerTitle="Your Request" headerBack>
-      <RequestStatusContent />
+      <RealtimeRefreshBoundary>
+        <RequestStatusRouter />
+      </RealtimeRefreshBoundary>
     </AppLayout>
   );
 }

@@ -102,11 +102,14 @@ export default function DriverActiveCarContent() {
   const canCloseSeats = (trip.available_count ?? 0) > 0 && heldRequests.length === 0;
   const canStartTrip = trip.departure_eligible ?? false;
   const heldBlocking = heldRequests.length > 0;
+  const stopCount = trip.stops?.length ?? 0;
+  const finalStopOrder = trip.stops?.[stopCount - 1]?.stop_order;
+  const atFinalStop = finalStopOrder != null && trip.current_stop_order === finalStopOrder;
 
   return (
-    <div className="max-w-screen-2xl mx-auto px-4 py-4 space-y-4 animate-fade-in">
+    <div className="mobile-page space-y-3 animate-fade-in">
       {/* Route Info */}
-      <div className="card p-4">
+      <div className="compact-card">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center flex-shrink-0">
             <Car size={18} className="text-primary" />
@@ -123,14 +126,17 @@ export default function DriverActiveCarContent() {
       </div>
 
       {/* Seat Stats */}
-      <div>
-        <p className="section-label mb-2">Seat Accounting</p>
-        <div className="grid grid-cols-5 gap-1.5">
-          <SeatCountBadge label="Total" count={trip.capacity ?? 0} variant="capacity" />
+      <div className="compact-card">
+        <div className="mb-2 flex items-center justify-between gap-3">
+          <p className="section-label">Seats</p>
+          <p className="text-xs text-muted-foreground">
+            {trip.capacity ?? 0} total{(trip.driver_closed_count ?? 0) > 0 ? ` · ${trip.driver_closed_count} closed` : ''}
+          </p>
+        </div>
+        <div className="grid grid-cols-3 gap-2">
           <SeatCountBadge label="Confirmed" count={trip.confirmed_count ?? 0} variant="confirmed" />
           <SeatCountBadge label="Held" count={trip.held_count ?? 0} variant="held" />
           <SeatCountBadge label="Available" count={trip.available_count ?? 0} variant="available" />
-          <SeatCountBadge label="Closed" count={trip.driver_closed_count ?? 0} variant="closed" />
         </div>
       </div>
 
@@ -160,7 +166,7 @@ export default function DriverActiveCarContent() {
         <p className="section-label mb-2">Passenger Requests ({(trip.passenger_requests ?? []).length})</p>
         <div className="space-y-2">
           {(trip.passenger_requests ?? []).length === 0 && (
-            <div className="card p-6 text-center">
+            <div className="compact-card py-5 text-center">
               <Users size={32} className="mx-auto text-muted-foreground opacity-40 mb-2" />
               <p className="text-sm text-muted-foreground">No passenger requests yet</p>
             </div>
@@ -186,10 +192,10 @@ export default function DriverActiveCarContent() {
       </div>
 
       {/* Stop Progression */}
-      {trip.status === 'ACTIVE_COLLECTING' && (
-        <div className="card p-4">
+      {(trip.status === 'ACTIVE_COLLECTING' || trip.status === 'IN_PROGRESS') && (
+        <div className="compact-card">
           <div className="flex items-center justify-between mb-3">
-            <p className="section-label">Pickup Progress</p>
+            <p className="section-label">{trip.status === 'IN_PROGRESS' ? 'Trip Progress' : 'Pickup Progress'}</p>
             <span className="text-xs text-muted-foreground">
               Stop {trip.current_stop_order} of {(trip.stops ?? []).length}
             </span>
@@ -242,7 +248,7 @@ export default function DriverActiveCarContent() {
           className={`w-full flex items-center justify-center gap-2 rounded-2xl px-5 py-4 font-semibold text-base transition-all duration-150 active:scale-95 ${
             heldBlocking
               ? 'bg-muted text-muted-foreground cursor-not-allowed opacity-60'
-              : 'bg-purple-50 border border-purple-200 text-purple-700 hover:bg-purple-100'
+              : 'bg-secondary border border-border text-accent hover:bg-secondary/70'
           }`}
         >
           <Lock size={18} />
@@ -268,7 +274,7 @@ export default function DriverActiveCarContent() {
       )}
 
       {/* Complete Trip */}
-      {trip.status === 'IN_PROGRESS' && (
+      {trip.status === 'IN_PROGRESS' && atFinalStop && (
         <button
           onClick={() => setShowCompleteTripModal(true)}
           disabled={!!loadingAction}
@@ -315,14 +321,14 @@ export default function DriverActiveCarContent() {
           <div className="w-full max-w-md bg-card rounded-t-3xl p-6 space-y-4 animate-slide-up">
             <h2 className="text-lg font-bold text-foreground">Start Trip?</h2>
             <p className="text-sm text-muted-foreground">
-              This will mark the trip as IN_PROGRESS and the next queued driver will immediately become ACTIVE_COLLECTING.
+              This will mark the trip as in progress. If another driver is waiting, Raahi will activate that driver for passenger collection.
             </p>
             <div className="flex gap-3">
               <button onClick={() => setShowStartTripModal(false)} className="btn-outline flex-1">Not Yet</button>
               <button
                 onClick={() => {
                   setShowStartTripModal(false);
-                  handleAction('start-trip', () => startTrip(trip.trip_id!), 'Trip started — next driver is now collecting');
+                  handleAction('start-trip', () => startTrip(trip.trip_id!), 'Trip started successfully');
                 }}
                 disabled={loadingAction === 'start-trip'}
                 className="btn-primary flex-1"

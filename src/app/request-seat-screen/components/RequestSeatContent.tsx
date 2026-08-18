@@ -14,7 +14,7 @@ export default function RequestSeatContent() {
   const routeId = searchParams.get('route_id');
   const tripId = searchParams.get('trip_id');
 
-  const { user, signInWithOtp, verifyOtp, signInWithGoogle } = useAuth();
+  const { user, signInWithGoogle, requestPhoneVerification, verifyPhoneChange } = useAuth();
 
   const [car, setCar] = useState<ActiveCarPublic | null>(null);
   const [loadingCar, setLoadingCar] = useState(true);
@@ -22,6 +22,7 @@ export default function RequestSeatContent() {
   const [seatCount, setSeatCount] = useState(1);
   const [submitting, setSubmitting] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
+  const [showPhoneModal, setShowPhoneModal] = useState(false);
   const [pendingSubmit, setPendingSubmit] = useState(false);
 
   // Load active car data
@@ -33,14 +34,19 @@ export default function RequestSeatContent() {
     });
   }, [routeId]);
 
-  // After auth completes, auto-submit if there was a pending request
+  // Continue the in-page flow after authentication. Phone verification remains
+  // a separate account-enrollment step; the server independently enforces it.
   useEffect(() => {
-    if (user && pendingSubmit && selectedStopId && car?.trip_id) {
-      setPendingSubmit(false);
-      setShowAuthModal(false);
-      doSubmitRequest();
+    if (!user || !pendingSubmit || !selectedStopId || !car?.trip_id) return;
+    setShowAuthModal(false);
+    if (!user.phone || !user.phone_confirmed_at) {
+      setShowPhoneModal(true);
+      return;
     }
-  }, [user, pendingSubmit]);
+    setPendingSubmit(false);
+    setShowPhoneModal(false);
+    doSubmitRequest();
+  }, [user, user?.phone, user?.phone_confirmed_at, pendingSubmit]);
 
   const doSubmitRequest = async () => {
     const effectiveTripId = tripId || car?.trip_id;
@@ -62,6 +68,13 @@ export default function RequestSeatContent() {
     }
   };
 
+  const savePendingContext = () => {
+    if (routeId) localStorage.setItem('raahi_pending_route_id', routeId);
+    if (tripId || car?.trip_id) localStorage.setItem('raahi_pending_trip_id', tripId || car?.trip_id || '');
+    localStorage.setItem('raahi_pending_stop_id', selectedStopId);
+    localStorage.setItem('raahi_pending_seat_count', String(seatCount));
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedStopId) {
@@ -69,13 +82,15 @@ export default function RequestSeatContent() {
       return;
     }
     if (!user) {
-      // Save context for post-auth restore
-      if (routeId) localStorage.setItem('raahi_pending_route_id', routeId);
-      if (tripId || car?.trip_id) localStorage.setItem('raahi_pending_trip_id', tripId || car?.trip_id || '');
-      localStorage.setItem('raahi_pending_stop_id', selectedStopId);
-      localStorage.setItem('raahi_pending_seat_count', String(seatCount));
+      savePendingContext();
       setPendingSubmit(true);
       setShowAuthModal(true);
+      return;
+    }
+    if (!user.phone || !user.phone_confirmed_at) {
+      savePendingContext();
+      setPendingSubmit(true);
+      setShowPhoneModal(true);
       return;
     }
     doSubmitRequest();
@@ -258,9 +273,19 @@ export default function RequestSeatContent() {
         <AuthModal
           onComplete={handleAuthComplete}
           onClose={() => { setShowAuthModal(false); setPendingSubmit(false); }}
-          signInWithOtp={signInWithOtp}
-          verifyOtp={verifyOtp}
           signInWithGoogle={signInWithGoogle}
+        />
+      )}
+      {showPhoneModal && (
+        <PhoneVerificationModal
+          onComplete={() => {
+            setShowPhoneModal(false);
+            setPendingSubmit(false);
+            doSubmitRequest();
+          }}
+          onClose={() => { setShowPhoneModal(false); setPendingSubmit(false); }}
+          requestPhoneVerification={requestPhoneVerification}
+          verifyPhoneChange={verifyPhoneChange}
         />
       )}
     </div>
@@ -270,61 +295,23 @@ export default function RequestSeatContent() {
 function AuthModal({
   onComplete,
   onClose,
-  signInWithOtp,
-  verifyOtp,
   signInWithGoogle,
 }: {
   onComplete: () => void;
   onClose: () => void;
-  signInWithOtp: (phone: string) => Promise<any>;
-  verifyOtp: (phone: string, token: string) => Promise<any>;
   signInWithGoogle: (redirectTo?: string) => Promise<any>;
 }) {
-  const [step, setStep] = useState<'choose' | 'otp'>('choose');
-  const [phone, setPhone] = useState('');
-  const [otp, setOtp] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const handleSendOtp = async () => {
-    if (!phone || phone.replace(/\D/g, '').length < 10) {
-      setError('Enter a valid 10-digit mobile number');
-      return;
-    }
-    setLoading(true);
-    setError('');
-    try {
-      await signInWithOtp(phone);
-      setStep('otp');
-    } catch (err: any) {
-      setError(err.message || 'Failed to send OTP. Please try again.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleVerifyOtp = async () => {
-    if (!otp || otp.length < 4) {
-      setError('Enter the OTP sent to your phone');
-      return;
-    }
-    setLoading(true);
-    setError('');
-    try {
-      await verifyOtp(phone, otp);
-      onComplete();
-    } catch (err: any) {
-      setError(err.message || 'Invalid OTP. Please try again.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleGoogle = async () => {
+  const handleGoogle = async (event: React.MouseEvent<HTMLButtonElement>) => {
+    event.preventDefault();
+    event.stopPropagation();
     setLoading(true);
     setError('');
     try {
       await signInWithGoogle(window.location.pathname + window.location.search);
+      onComplete();
     } catch (err: any) {
       setError(err.message || 'Google sign-in failed');
       setLoading(false);
@@ -336,94 +323,113 @@ function AuthModal({
       <div className="w-full max-w-md bg-card rounded-t-3xl p-6 space-y-5 animate-slide-up">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-bold text-foreground">Sign In to Continue</h2>
-          <button
-            onClick={onClose}
-            className="w-8 h-8 flex items-center justify-center rounded-xl hover:bg-muted transition-colors duration-150"
-          >
+          <button type="button" onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-xl hover:bg-muted">
             <X size={18} className="text-muted-foreground" />
           </button>
         </div>
         <p className="text-sm text-muted-foreground">
-          Your pickup and seat selection have been saved. Sign in to complete your request.
+          Your pickup and seat selection have been saved. Sign in with Google to continue.
         </p>
-
         {error && (
           <div className="flex items-center gap-2 bg-red-50 border border-red-200 rounded-xl px-3 py-2">
-            <AlertTriangle size={14} className="text-red-500 flex-shrink-0" />
+            <AlertTriangle size={14} className="text-red-500" />
             <p className="text-xs text-red-700">{error}</p>
           </div>
         )}
+        <button type="button" className="btn-primary w-full" onClick={handleGoogle} disabled={loading}>
+          {loading ? <Loader2 size={18} className="animate-spin" /> : <span className="text-sm font-bold">G</span>}
+          {loading ? 'Opening Google...' : 'Continue with Google'}
+        </button>
+        <p className="text-xs text-center text-muted-foreground">
+          A verified mobile number is required once before your first booking.
+        </p>
+      </div>
+    </div>
+  );
+}
 
-        {step === 'choose' && (
+function PhoneVerificationModal({
+  onComplete,
+  onClose,
+  requestPhoneVerification,
+  verifyPhoneChange,
+}: {
+  onComplete: () => void;
+  onClose: () => void;
+  requestPhoneVerification: (phone: string) => Promise<any>;
+  verifyPhoneChange: (phone: string, token: string) => Promise<any>;
+}) {
+  const [step, setStep] = useState<'phone' | 'otp'>('phone');
+  const [phone, setPhone] = useState('');
+  const [otp, setOtp] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  const sendOtp = async (event: React.MouseEvent<HTMLButtonElement>) => {
+    event.preventDefault();
+    event.stopPropagation();
+    if (phone.length !== 10) return;
+    setLoading(true);
+    setError('');
+    try {
+      await requestPhoneVerification(phone);
+      setStep('otp');
+    } catch (err: any) {
+      setError(err.message || 'Could not send verification OTP.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const verify = async (event: React.MouseEvent<HTMLButtonElement>) => {
+    event.preventDefault();
+    event.stopPropagation();
+    if (otp.length !== 6) return;
+    setLoading(true);
+    setError('');
+    try {
+      await verifyPhoneChange(phone, otp);
+      onComplete();
+    } catch (err: any) {
+      setError(err.message || 'Invalid OTP. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 animate-fade-in">
+      <div className="w-full max-w-md bg-card rounded-t-3xl p-6 space-y-5 animate-slide-up">
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-bold">Verify Your Mobile Number</h2>
+          <button type="button" onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-xl hover:bg-muted">
+            <X size={18} className="text-muted-foreground" />
+          </button>
+        </div>
+        <p className="text-sm text-muted-foreground">
+          Drivers need a verified contact number. You only enroll it once; OTP is required again only when you choose phone login.
+        </p>
+        {error && <div className="bg-red-50 border border-red-200 rounded-xl px-3 py-2 text-xs text-red-700">{error}</div>}
+        {step === 'phone' ? (
           <div className="space-y-3">
-            <div>
-              <label className="block text-sm font-semibold text-foreground mb-1.5">Mobile Number</label>
-              <div className="flex gap-2">
-                <span className="flex items-center justify-center px-3 bg-muted border border-border rounded-xl text-sm font-medium text-foreground">
-                  +91
-                </span>
-                <input
-                  type="tel"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
-                  placeholder="98765 43210"
-                  className="input-field flex-1"
-                />
-              </div>
+            <div className="flex gap-2">
+              <span className="flex items-center px-3 rounded-xl bg-muted border border-border text-sm">+91</span>
+              <input type="tel" value={phone} onChange={(event) => setPhone(event.target.value.replace(/\D/g, '').slice(0, 10))} placeholder="98765 43210" className="input-field flex-1" />
             </div>
-            <button
-              onClick={handleSendOtp}
-              disabled={loading || phone.replace(/\D/g, '').length < 10}
-              className="btn-primary w-full"
-            >
+            <button type="button" onClick={sendOtp} disabled={loading || phone.length !== 10} className="btn-primary w-full">
               {loading ? <Loader2 size={18} className="animate-spin" /> : <Phone size={18} />}
-              {loading ? 'Sending OTP...' : 'Send OTP'}
-            </button>
-            <div className="relative flex items-center">
-              <div className="flex-1 border-t border-border" />
-              <span className="mx-3 text-xs text-muted-foreground">or</span>
-              <div className="flex-1 border-t border-border" />
-            </div>
-            <button
-              className="btn-outline w-full"
-              onClick={handleGoogle}
-              disabled={loading}
-            >
-              <span className="text-sm font-bold">G</span>
-              Continue with Google
+              {loading ? 'Sending OTP...' : 'Send verification OTP'}
             </button>
           </div>
-        )}
-
-        {step === 'otp' && (
+        ) : (
           <div className="space-y-3">
-            <p className="text-sm text-muted-foreground">
-              Enter the OTP sent to <strong>+91 {phone}</strong>
-            </p>
-            <div>
-              <label className="block text-sm font-semibold text-foreground mb-1.5">OTP</label>
-              <input
-                type="number"
-                value={otp}
-                onChange={(e) => setOtp(e.target.value.slice(0, 6))}
-                placeholder="6-digit OTP"
-                className="input-field text-center text-xl tracking-[0.4em] font-bold"
-              />
-            </div>
-            <button
-              onClick={handleVerifyOtp}
-              disabled={loading || otp.length < 4}
-              className="btn-primary w-full"
-            >
-              {loading ? <Loader2 size={18} className="animate-spin" /> : null}
+            <p className="text-sm text-muted-foreground">Enter the code sent to +91 {phone}</p>
+            <input inputMode="numeric" value={otp} onChange={(event) => setOtp(event.target.value.replace(/\D/g, '').slice(0, 6))} placeholder="6-digit OTP" className="input-field text-center text-xl tracking-[0.35em] font-bold" />
+            <button type="button" onClick={verify} disabled={loading || otp.length !== 6} className="btn-primary w-full">
+              {loading && <Loader2 size={18} className="animate-spin" />}
               {loading ? 'Verifying...' : 'Verify & Request Seat'}
             </button>
-            <button
-              onClick={() => { setStep('choose'); setOtp(''); setError(''); }}
-              className="w-full text-sm text-muted-foreground text-center hover:text-foreground transition-colors"
-            >
-              Change number
-            </button>
+            <button type="button" onClick={() => { setStep('phone'); setOtp(''); setError(''); }} className="w-full text-sm text-muted-foreground">Change number</button>
           </div>
         )}
       </div>
