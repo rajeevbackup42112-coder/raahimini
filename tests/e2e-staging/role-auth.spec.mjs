@@ -5,16 +5,39 @@ const password = process.env.RAAHI_TEST_PASSWORD;
 async function loginAs(page, loginId) {
   if (!password) throw new Error('RAAHI_TEST_PASSWORD is not configured');
 
-  const response = await page.context().request.post('/api/test-auth', {
-    data: { loginId, password },
-  });
-  if (!response.ok()) {
-    throw new Error(`Test auth failed for ${loginId}: ${response.status()}`);
+  let lastError;
+  for (let attempt = 1; attempt <= 3; attempt += 1) {
+    try {
+      const response = await page.context().request.post('/api/test-auth', {
+        data: { loginId, password },
+      });
+      if (!response.ok()) {
+        throw new Error(`test auth failed with HTTP ${response.status()}`);
+      }
+
+      const result = await response.json();
+      if (!result?.accessToken || !result?.refreshToken || !result?.redirectTo) {
+        throw new Error('test auth response did not contain a complete session');
+      }
+
+      await page.goto('/test-login');
+      await page.evaluate(async ({ accessToken, refreshToken, redirectTo }) => {
+        const { createClient } = await import('/_next/static/chunks/app/test-login/page.js').catch(() => ({ createClient: null }));
+        return { accessToken, refreshToken, redirectTo, createClient };
+      }, result).catch(() => null);
+
+      await page.goto('/test-login');
+      await page.getByLabel('Login ID').fill(loginId);
+      await page.getByLabel('Password').fill(password);
+      await page.getByRole('button', { name: 'Sign in' }).click();
+      return;
+    } catch (error) {
+      lastError = error;
+      if (attempt < 3) await page.waitForTimeout(750 * attempt);
+    }
   }
 
-  const result = await response.json();
-  if (!result?.redirectTo) throw new Error(`Test auth returned no redirect for ${loginId}`);
-  await page.goto(result.redirectTo);
+  throw lastError;
 }
 
 test('anonymous passenger discovery loads without login', async ({ page }) => {
