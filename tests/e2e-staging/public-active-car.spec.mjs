@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 
+// Post-cleanup launch probe: content is intentionally unchanged.
 const GD_ROUTE_ID = '1212f1bf-5b81-4d41-aad4-76323f228110';
 
 test('GD-01 public active car exposes the configured fare and seat projection', async ({ page }) => {
