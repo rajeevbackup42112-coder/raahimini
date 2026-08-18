@@ -1,18 +1,15 @@
 'use client';
 
 import React, { useEffect, useRef, useState } from 'react';
-import { useSearchParams } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 
 export default function RealtimeRefreshBoundary({
   children,
-  routeFromSearchParams = false,
+  routeId = null,
 }: {
   children: React.ReactNode;
-  routeFromSearchParams?: boolean;
+  routeId?: string | null;
 }) {
-  const searchParams = useSearchParams();
-  const routeId = routeFromSearchParams ? searchParams.get('route_id') : null;
   const [version, setVersion] = useState(0);
   const timerRef = useRef<number | null>(null);
 
