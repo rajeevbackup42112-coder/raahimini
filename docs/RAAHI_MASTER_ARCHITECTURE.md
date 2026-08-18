@@ -29,6 +29,7 @@ Drivers belong to Raahi and a vehicle, not permanently to a route. For every jou
 11. Historical terminal queue records may repeat; uniqueness applies to live state only.
 12. Configuration tables are client read-only. Writes require canonical audited admin commands or reviewed migrations.
 13. A route-fare change applies to future trips only; an existing trip's snapshotted fare is immutable through normal operations.
+14. A passenger account with a HELD or CONFIRMED seat request cannot transition to driver or admin until that request reaches a terminal state.
 
 ## 3. Domain ownership
 
@@ -63,7 +64,7 @@ Every authenticated account has exactly one operational role: `passenger`, `driv
 - **Driver:** route selection, FIFO queue, passenger handling and trip operations. Cannot request passenger seats.
 - **Admin:** administration only. Cannot request passenger seats or operate a driver journey unless deliberately converted through a trusted administrative process.
 
-There is no user-facing role switcher. Client metadata can never self-promote a user.
+There is no user-facing role switcher. Client metadata can never self-promote a user. A passenger with a live `HELD` or `CONFIRMED` request remains a passenger until that request is withdrawn, expired, missed, driver-cancelled or otherwise terminal; promotion/onboarding to driver or admin is blocked at the database invariant boundary while the request is active.
 
 ### Routing and identity clarity
 
@@ -114,6 +115,7 @@ Passenger rules:
 - The driver's amount due for a request is `seat_count × trip.fare_per_seat`.
 - Passenger cannot be marked absent before the car reaches the selected pickup stop.
 - Driver cancellation after confirmation preserves passenger visibility through `DRIVER_CANCELLED` and refund/rebook guidance.
+- A HELD/CONFIRMED passenger request blocks role transition away from `passenger`; this prevents an in-flight passenger journey from becoming unreachable after promotion to driver/admin.
 
 ## 7. Driver queue and journey lifecycle
 
@@ -147,6 +149,7 @@ Queue invariants:
 Driver/vehicle safeguards:
 
 - Driver must have trusted `profiles.role='driver'`, be unrestricted, have active driver record and active vehicle.
+- A passenger candidate cannot be onboarded as driver while any HELD/CONFIRMED passenger request remains active.
 - A driver cannot join another queue while already live elsewhere or while owning an in-progress trip.
 - Admin cannot reassign a driver/vehicle while that driver is queued or owns a live trip.
 - An active vehicle cannot be shared by another active driver/live trip.
@@ -259,7 +262,7 @@ V1 reliability is evidence-first, not automatic financial punishment. Behaviour 
 - other configuration changes only through canonical audited RPCs or reviewed migrations
 
 ### Internal-only helpers
-FIFO activation, audit recording, behaviour recording, seat-release helpers and fare-snapshot trigger functions are not executable by ordinary anonymous/authenticated clients.
+FIFO activation, audit recording, behaviour recording, seat-release helpers, fare-snapshot trigger functions and role-transition guard triggers are not executable by ordinary anonymous/authenticated clients.
 
 ## 13. Admin authority and manual-control boundary
 
@@ -269,11 +272,14 @@ Admin delegation safeguards:
 
 1. Only an active unrestricted admin can grant/revoke admin role.
 2. Only existing passenger accounts can be promoted to admin.
-3. Driver accounts cannot simultaneously be admins.
-4. Restricted users cannot be promoted.
-5. An admin cannot remove their own admin access.
-6. The final active admin cannot be removed.
-7. Every grant/revoke is audited.
+3. Passenger accounts with HELD/CONFIRMED requests cannot be promoted to admin or onboarded as driver until those requests are terminal.
+4. Driver accounts cannot simultaneously be admins.
+5. Restricted users cannot be promoted.
+6. An admin cannot remove their own admin access.
+7. The final active admin cannot be removed.
+8. Every grant/revoke is audited.
+
+The active-request role-transition guard is enforced by a database trigger on `profiles.role`, so every trusted role-change path shares the same invariant rather than relying on UI checks or one specific RPC.
 
 Admin should correct coordination failures through explicit commands, not by manually editing physical truth. Admin must not directly substitute one passenger into another request, rewrite `trip_seats`, replace a driver on an active trip by row editing, or mutate live queue/trip state outside canonical exception commands.
 
@@ -332,7 +338,8 @@ Before release confidence is claimed, repeated end-to-end tests must show all of
 15. Admin queue overrides preserve queue/trip/seat invariants and remain auditable.
 16. Admin fare changes affect future trips only; current trip fare remains unchanged.
 17. Admin cannot disable a route with a live queue or trip.
-18. All invariant audit queries return zero violations after each scenario.
+18. A passenger with HELD/CONFIRMED seats cannot be promoted to driver/admin until the request becomes terminal.
+19. All invariant audit queries return zero violations after each scenario.
 
 ## 17. Architecture change governance
 
@@ -376,6 +383,7 @@ Do not redesign Raahi from memory. Read this Master Architecture Sheet first, in
 - Route fares became first-class configuration and are snapshotted onto each trip.
 - Passenger and driver projections now expose fixed trip fare; driver requests include amount due.
 - Admin gained audited fare and route enable/disable controls with live-state safeguards.
+- Passenger-to-driver/admin role transitions are now blocked while HELD/CONFIRMED passenger requests exist, enforced by a database trigger shared by all trusted role-change paths.
 
 ---
 
