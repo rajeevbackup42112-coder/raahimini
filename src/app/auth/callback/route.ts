@@ -1,10 +1,9 @@
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 
-const PRODUCTION_ORIGIN = 'https://raahi-mini.netlify.app';
-
 function getPublicOrigin(requestOrigin: string) {
-  return process.env.NODE_ENV === 'production' ? PRODUCTION_ORIGIN : requestOrigin;
+  const configuredOrigin = process.env.NEXT_PUBLIC_SITE_URL?.trim().replace(/\/$/, '');
+  return configuredOrigin || requestOrigin;
 }
 
 function safeRedirectPath(next: string) {
@@ -39,8 +38,8 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(`${publicOrigin}/?auth_error=oauth_callback`);
   }
 
-  // A 200 completion document makes Netlify commit the Set-Cookie headers before
-  // the browser navigates to the saved destination.
+  // Return a small completion document so auth cookies are committed before
+  // the browser navigates to the saved destination on the configured public host.
   const response = new NextResponse(completionHtml(`${publicOrigin}${destination}`), {
     status: 200,
     headers: {
