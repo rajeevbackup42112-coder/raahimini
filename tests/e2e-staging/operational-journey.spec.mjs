@@ -49,20 +49,6 @@ async function gotoRetry(page, url) {
   throw lastError;
 }
 
-async function reloadRetry(page) {
-  let lastError;
-  for (let attempt = 1; attempt <= 3; attempt += 1) {
-    try {
-      await page.reload({ waitUntil: 'domcontentloaded', timeout: 15_000 });
-      return;
-    } catch (error) {
-      lastError = error;
-      if (attempt < 3) await page.waitForTimeout(700 * attempt);
-    }
-  }
-  throw lastError;
-}
-
 test('controlled passenger request → driver confirm → trip completion → restore collector', async ({ browser }) => {
   test.setTimeout(240_000);
 
@@ -104,13 +90,13 @@ test('controlled passenger request → driver confirm → trip completion → re
   await expect(passenger.getByText('Held', { exact: true }).first()).toBeVisible();
 
   console.log('[operational] driver confirm');
-  await reloadRetry(driver);
+  await gotoRetry(driver, '/driver-active-car-screen');
   await expect(driver.getByText('Passenger Requests (1)', { exact: true })).toBeVisible();
   await driver.getByRole('button', { name: 'Payment Received', exact: true }).click();
   await expect(driver.getByText('Confirmed', { exact: true }).first()).toBeVisible();
 
   console.log('[operational] passenger confirmed');
-  await reloadRetry(passenger);
+  await gotoRetry(passenger, '/request-status-screen');
   await expect(passenger.getByText('Booking Confirmed', { exact: true })).toBeVisible();
 
   console.log('[operational] close empty seats');
@@ -136,7 +122,7 @@ test('controlled passenger request → driver confirm → trip completion → re
   await expect(driver.getByText('No Active Trip', { exact: true })).toBeVisible();
 
   console.log('[operational] passenger completed');
-  await reloadRetry(passenger);
+  await gotoRetry(passenger, '/request-status-screen');
   await expect(passenger.getByText('Trip Completed', { exact: true })).toBeVisible();
 
   console.log('[operational] restore GD collector');
