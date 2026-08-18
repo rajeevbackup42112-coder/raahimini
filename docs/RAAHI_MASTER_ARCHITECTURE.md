@@ -6,9 +6,11 @@
 
 ## 1. Product definition
 
-Raahi Mini is a shared-seat micro-transit coordination system. Public users may choose a location, discover connected routes, inspect the current collecting car, seat availability, pickup points, route progress and ETA without signing in. Authentication is required only when a passenger actually requests seats.
+Raahi Mini is a shared-seat micro-transit coordination system. Public users may choose a location, discover connected routes, inspect the current collecting car, seat availability, fare, pickup points, route progress and ETA without signing in. Authentication is required only when a passenger actually requests seats.
 
-Passengers pay the driver directly after meeting physically. Raahi does not collect fare in V1. Reliability comes from trusted identity, verified phone for passenger booking, behaviour events, no-show/cancellation history, admin restrictions and auditable operational controls.
+Each route has a configured fare per seat. When a car becomes active, that fare is snapshotted onto the trip and remains fixed for that car even if Admin later changes the route fare. Passengers see the trip fare before requesting seats. Payment is made directly to the driver after meeting physically; Raahi does not collect money in V1.
+
+Reliability comes from trusted identity, verified phone for passenger booking, behaviour events, no-show/cancellation history, admin restrictions and auditable operational controls.
 
 Drivers belong to Raahi and a vehicle, not permanently to a route. For every journey the driver selects a current location, sees only routes departing that location, selects a route and joins FIFO. After completion the destination is suggested as the next current location.
 
@@ -19,13 +21,14 @@ Drivers belong to Raahi and a vehicle, not permanently to a route. For every jou
 3. Every business transition occurs through one canonical RPC/command.
 4. Supabase Realtime only invalidates/refetches canonical projections; realtime payloads are not state authority.
 5. `driver_queue` owns FIFO and journey-specific driver route choice.
-6. `trips` owns journey lifecycle.
+6. `trips` owns journey lifecycle and snapshots operational facts that must not change mid-journey, including fare.
 7. `seat_requests` owns passenger demand lifecycle.
 8. `trip_seats` is the authoritative physical seat ledger.
 9. Admin exceptions use explicit audited commands and preserve the same invariants as normal flows.
 10. Public clients consume purpose-built projections, not authoritative operational rows.
 11. Historical terminal queue records may repeat; uniqueness applies to live state only.
 12. Configuration tables are client read-only. Writes require canonical audited admin commands or reviewed migrations.
+13. A route-fare change applies to future trips only; an existing trip's snapshotted fare is immutable through normal operations.
 
 ## 3. Domain ownership
 
@@ -33,16 +36,16 @@ Drivers belong to Raahi and a vehicle, not permanently to a route. For every jou
 - `drivers`: driver operational record; no permanent route ownership.
 - `vehicles`: actual vehicle and capacity (4/6/8).
 - `locations`: service locations/cities.
-- `routes`: directed journey from one location to another.
+- `routes`: directed journey, active/inactive availability and configured `fare_per_seat` for future cars.
 - `route_locations`: discovery tags connecting a route to relevant locations.
 - `route_stops`: fixed ordered pickup path.
 - `driver_queue`: journey-specific route choice, FIFO state and rank.
-- `trips`: collecting/in-progress/completed/cancelled journey instance.
+- `trips`: collecting/in-progress/completed/cancelled journey instance, including snapshotted `fare_per_seat`.
 - `seat_requests`: passenger HELD/CONFIRMED/terminal request state.
 - `trip_seats`: concrete AVAILABLE/HELD/CONFIRMED/DRIVER_CLOSED seat rows.
 - `trip_progress`: ordered stop arrivals.
 - `behaviour_events`: reliability evidence.
-- `audit_logs`: immutable operational audit trail.
+- `audit_log`: immutable operational audit trail.
 
 ## 4. Location and route discovery
 
@@ -50,7 +53,7 @@ Browsing is public. The first discovery layer is location/city selection. Select
 
 Driver discovery is stricter: after choosing current location, the driver sees only active routes whose `from_location_id` equals that location. The server validates this again when `join_driver_queue` runs.
 
-Public discovery only exposes an `ACTIVE_COLLECTING` car as the currently bookable car. An `IN_PROGRESS` car is never presented as bookable.
+Public discovery only exposes an `ACTIVE_COLLECTING` car as the currently bookable car. An `IN_PROGRESS` car is never presented as bookable. Public passenger surfaces expose the configured/snapshotted per-seat fare before the request action.
 
 ## 5. Strict operational role model
 
@@ -105,8 +108,10 @@ Passenger rules:
 - A passenger cannot have more than one HELD/CONFIRMED request on the same trip.
 - Multi-seat requests are all-or-nothing.
 - Every HELD/CONFIRMED request owns exactly `seat_count` concrete `trip_seats` rows.
+- Passenger sees the active trip's fixed fare before requesting.
 - Payment is direct to driver after physical meeting.
 - CONFIRMED means the driver acknowledged payment in person.
+- The driver's amount due for a request is `seat_count × trip.fare_per_seat`.
 - Passenger cannot be marked absent before the car reaches the selected pickup stop.
 - Driver cancellation after confirmation preserves passenger visibility through `DRIVER_CANCELLED` and refund/rebook guidance.
 
@@ -119,7 +124,7 @@ flowchart TD
     C --> D{Collecting car already exists?}
     D -- No --> E[Activate FIFO head]
     D -- Yes --> F[WAITING]
-    E --> G[Create trip + seat ledger atomically]
+    E --> G[Create trip + seat ledger + fare snapshot atomically]
     G --> H[ACTIVE_COLLECTING]
     H --> I{Departure invariant satisfied?}
     I -- No --> H
@@ -178,6 +183,7 @@ Hard invariants:
 6. Departure requires `held_count = 0` and `confirmed_count + driver_closed_count = capacity`.
 7. Driver may intentionally close remaining AVAILABLE seats only after HELD requests are resolved.
 8. Trip completion is allowed only from `IN_PROGRESS` at the route final stop.
+9. Every trip snapshots a valid route fare at creation; route fare changes cannot alter an existing trip fare.
 
 ## 9. Fixed stop progression and ETA model
 
@@ -185,7 +191,18 @@ Stops are deterministic and ordered. Driver progression cannot skip or move back
 
 Pilot assumptions remain configurable but approximately: Gomoh pickup cluster ~5 minutes total and Dhanbad pickup cluster ~15 minutes total. The UI derives ETA/progress from canonical stop progression rather than requiring GPS in V1.
 
-## 10. Cancellation and reliability
+## 10. Fare and payment model
+
+- `routes.fare_per_seat` is the Admin-controlled fare for future cars on that route.
+- At trip creation, `trips.fare_per_seat` is populated from the route by a database trigger.
+- The trip fare is the pricing authority for every request on that car.
+- Admin fare changes do not alter ACTIVE_COLLECTING or IN_PROGRESS trip fares.
+- Public active-car and route projections expose fare so a passenger sees price before requesting.
+- Driver active-car projections expose fare and per-request amount due.
+- Admin changes fare only through audited `admin_set_route_fare`.
+- V1 has no online payment, escrow, platform fee or automated refund. Money moves directly passenger → driver after meeting.
+
+## 11. Cancellation and reliability
 
 A driver may cancel only an `ACTIVE_COLLECTING` trip. Cancellation:
 
@@ -200,12 +217,12 @@ Raahi does not process money/refunds in V1 because payment is direct to the driv
 
 V1 reliability is evidence-first, not automatic financial punishment. Behaviour events cover request creation/withdrawal/expiry, confirmed no-show, booking confirmation, driver cancellation before/after confirmation, trip completion and refund complaints.
 
-## 11. Canonical command and projection surface
+## 12. Canonical command and projection surface
 
 ### Public projections
 - `get_active_locations()`
-- routes for selected location
-- `get_public_active_car(route_id)`
+- `get_routes_for_location(location_id)` including configured fare
+- `get_public_active_car(route_id)` including snapshotted trip fare
 - active-car seat availability, pickup stops and route progress
 
 ### Passenger commands/projections
@@ -219,7 +236,7 @@ V1 reliability is evidence-first, not automatic financial punishment. Behaviour 
 - `get_driver_departing_routes(location_id)`
 - `join_driver_queue(route_id, current_location_id)`
 - `leave_driver_queue(route_id)`
-- driver home/active-car context
+- driver home/active-car context including trip fare and request amount due
 - queue status/rank
 - `driver_confirm_payment(request_id)`
 - `driver_mark_passenger_absent(request_id)`
@@ -237,12 +254,14 @@ V1 reliability is evidence-first, not automatic financial punishment. Behaviour 
 - restrict/unrestrict users subject to live-state safeguards
 - read active trips and behaviour events
 - read/reorder/remove queue entries through invariant-preserving commands
-- configuration changes only through canonical audited RPCs or reviewed migrations
+- `admin_set_route_fare(route_id, fare_per_seat)` for future cars
+- `admin_set_route_active(route_id, is_active)`; disabling is blocked while the route has a live queue/trip
+- other configuration changes only through canonical audited RPCs or reviewed migrations
 
 ### Internal-only helpers
-FIFO activation, audit recording, behaviour recording and seat-release helpers are not executable by ordinary anonymous/authenticated clients.
+FIFO activation, audit recording, behaviour recording, seat-release helpers and fare-snapshot trigger functions are not executable by ordinary anonymous/authenticated clients.
 
-## 12. Admin authority and manual-control boundary
+## 13. Admin authority and manual-control boundary
 
 Admin authority requires a trusted, unrestricted `profiles.role='admin'` row. Selecting a login path never grants admin authority.
 
@@ -258,13 +277,20 @@ Admin delegation safeguards:
 
 Admin should correct coordination failures through explicit commands, not by manually editing physical truth. Admin must not directly substitute one passenger into another request, rewrite `trip_seats`, replace a driver on an active trip by row editing, or mutate live queue/trip state outside canonical exception commands.
 
+Route controls:
+
+- Admin may set the per-seat fare for future trips.
+- Admin may enable a route.
+- Admin may disable a route only when it has no live queue or live trip.
+- Route fare/availability changes are audited.
+
 Restriction rules:
 
 - Restricted admins have no admin authority.
 - Admin restriction cannot target another admin.
 - A queued/on-trip driver cannot be restricted until the live operation is safely resolved.
 
-## 13. Database exposure and security boundary
+## 14. Database exposure and security boundary
 
 - Core operational tables such as `trips`, `trip_seats` and `driver_queue` are not directly readable by anonymous/authenticated clients as a substitute for projections.
 - Configuration tables used for public discovery are read-only to client roles.
@@ -273,7 +299,7 @@ Restriction rules:
 - Authenticated SECURITY DEFINER RPCs remain callable only where their bodies enforce trusted identity, ownership and/or role authorization.
 - RLS and grants are defense in depth; RPC body authorization is required for privileged commands.
 
-## 14. Realtime contract
+## 15. Realtime contract
 
 ```mermaid
 flowchart LR
@@ -285,7 +311,7 @@ flowchart LR
 
 Realtime payloads never become business state by themselves.
 
-## 15. Production acceptance invariants
+## 16. Production acceptance invariants
 
 Before release confidence is claimed, repeated end-to-end tests must show all of the following without manual database correction:
 
@@ -293,19 +319,22 @@ Before release confidence is claimed, repeated end-to-end tests must show all of
 2. Passenger/driver/admin role routing is mutually exclusive and correct.
 3. Driver joins valid departing route and becomes WAITING or ACTIVE_COLLECTING according to FIFO.
 4. Public active car becomes visible only when collecting.
-5. Passenger request allocates exact HELD seats.
-6. Driver confirmation converts exact seats to CONFIRMED idempotently.
-7. Withdrawal/expiry/absence release exact HELD seats.
-8. Departure cannot happen with HELD seats or unaccounted capacity.
-9. Closing stale seats permits departure without corrupting seat counts.
-10. Starting a trip activates the next waiting car for the route when applicable.
-11. Stop progression is ordered and trip completes only at final stop.
-12. Driver cancellation preserves passenger recovery state and next-driver handoff.
-13. Repeated journeys by the same driver/route create valid terminal history without uniqueness failures.
-14. Admin overrides preserve queue/trip/seat invariants and remain auditable.
-15. All invariant audit queries return zero violations after each scenario.
+5. Passenger sees the fixed trip fare before making a request.
+6. Passenger request allocates exact HELD seats.
+7. Driver confirmation converts exact seats to CONFIRMED idempotently and driver sees the correct amount due.
+8. Withdrawal/expiry/absence release exact HELD seats.
+9. Departure cannot happen with HELD seats or unaccounted capacity.
+10. Closing stale seats permits departure without corrupting seat counts.
+11. Starting a trip activates the next waiting car for the route when applicable.
+12. Stop progression is ordered and trip completes only at final stop.
+13. Driver cancellation preserves passenger recovery state and next-driver handoff.
+14. Repeated journeys by the same driver/route create valid terminal history without uniqueness failures.
+15. Admin queue overrides preserve queue/trip/seat invariants and remain auditable.
+16. Admin fare changes affect future trips only; current trip fare remains unchanged.
+17. Admin cannot disable a route with a live queue or trip.
+18. All invariant audit queries return zero violations after each scenario.
 
-## 16. Architecture change governance
+## 17. Architecture change governance
 
 Every PR must state one of:
 
@@ -314,7 +343,7 @@ Every PR must state one of:
 
 Do not redesign Raahi from memory. Read this Master Architecture Sheet first, inspect current migrations/code and live database state, then make the smallest architecture-consistent change.
 
-## 17. Consolidated changelog
+## 18. Consolidated changelog
 
 ### 2026-08-16
 - Dynamic journey-specific driver routes replaced permanent driver-route ownership.
@@ -344,6 +373,9 @@ Do not redesign Raahi from memory. Read this Master Architecture Sheet first, in
 - Driver/vehicle reassignment during live operations was blocked.
 - Admin queue overrides were serialized with live route operations.
 - Repository migrations were reconciled with live Supabase production state.
+- Route fares became first-class configuration and are snapshotted onto each trip.
+- Passenger and driver projections now expose fixed trip fare; driver requests include amount due.
+- Admin gained audited fare and route enable/disable controls with live-state safeguards.
 
 ---
 
