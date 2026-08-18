@@ -10,6 +10,7 @@ export default defineConfig({
   reporter: [['list'], ['html', { outputFolder: 'playwright-report', open: 'never' }]],
   use: {
     baseURL: process.env.RAAHI_STAGING_URL || 'https://raahimini-x1xy611.public.builtwithrocket.new',
+    ignoreHTTPSErrors: true,
     trace: 'retain-on-failure',
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
