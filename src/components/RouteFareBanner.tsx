@@ -1,16 +1,20 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { IndianRupee, Loader2 } from 'lucide-react';
 import { getPublicActiveCar } from '@/lib/raahiApi';
 
-export default function RouteFareBanner({ routeId }: { routeId: string | null }) {
+export default function RouteFareBanner() {
+  const searchParams = useSearchParams();
+  const routeId = searchParams.get('route_id');
   const [fare, setFare] = useState<number | null>(null);
   const [loading, setLoading] = useState(Boolean(routeId));
 
   useEffect(() => {
     let alive = true;
     if (!routeId) { setLoading(false); return; }
+    setLoading(true);
     getPublicActiveCar(routeId).then((car: any) => {
       if (!alive) return;
       setFare(typeof car?.fare_per_seat === 'number' ? car.fare_per_seat : null);
