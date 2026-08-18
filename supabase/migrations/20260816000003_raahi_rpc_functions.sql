@@ -37,23 +37,9 @@ LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path = public
 AS $$
-DECLARE
-  v_actor_id UUID := p_actor_id;
 BEGIN
-  -- Driver command RPCs work with drivers.id, while behaviour_events.actor_id
-  -- references profiles.id. Normalize internal driver identifiers here.
-  IF p_actor_role = 'driver' THEN
-    SELECT profile_id INTO v_actor_id
-    FROM public.drivers
-    WHERE id = p_actor_id;
-  END IF;
-
-  IF v_actor_id IS NULL THEN
-    RAISE EXCEPTION 'Behaviour actor not found';
-  END IF;
-
   INSERT INTO public.behaviour_events (actor_id, actor_role, event_type, trip_id, request_id, metadata)
-  VALUES (v_actor_id, p_actor_role, p_event_type, p_trip_id, p_request_id, p_metadata);
+  VALUES (p_actor_id, p_actor_role, p_event_type, p_trip_id, p_request_id, p_metadata);
 END;
 $$;
 

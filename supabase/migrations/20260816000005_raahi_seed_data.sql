@@ -97,9 +97,53 @@ BEGIN
   SELECT id INTO v_vehicle2_id FROM public.vehicles WHERE registration_number = 'JH10CD7832' LIMIT 1;
   SELECT id INTO v_vehicle3_id FROM public.vehicles WHERE registration_number = 'JH10EF1123' LIMIT 1;
 
-  -- Auth identities and privileged roles are intentionally not seeded.
-  -- Create test users through Supabase Auth and assign trusted driver/admin roles
-  -- through an administrator-controlled provisioning workflow.
+  -- ─── AUTH USERS (admin + test drivers) ──────────────────────────────────────
+  INSERT INTO auth.users (
+    id, instance_id, aud, role, email, encrypted_password, email_confirmed_at,
+    created_at, updated_at, raw_user_meta_data, raw_app_meta_data,
+    is_sso_user, is_anonymous, confirmation_token, confirmation_sent_at,
+    recovery_token, recovery_sent_at, email_change_token_new, email_change,
+    email_change_sent_at, email_change_token_current, email_change_confirm_status,
+    reauthentication_token, reauthentication_sent_at, phone, phone_change,
+    phone_change_token, phone_change_sent_at
+  ) VALUES
+    (v_admin_uuid, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated',
+     'admin@raahimini.in', crypt('raahi@admin2026', gen_salt('bf', 10)), now(), now(), now(),
+     jsonb_build_object('display_name', 'Raahi Admin', 'role', 'admin'),
+     jsonb_build_object('provider', 'email', 'providers', ARRAY['email']::TEXT[]),
+     false, false, '', null, '', null, '', '', null, '', 0, '', null, null, '', '', null),
+    (v_driver1_uuid, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated',
+     'ramesh@raahimini.in', crypt('driver@2026', gen_salt('bf', 10)), now(), now(), now(),
+     jsonb_build_object('display_name', 'Ramesh K.', 'role', 'driver', 'phone', '9876543210'),
+     jsonb_build_object('provider', 'email', 'providers', ARRAY['email']::TEXT[]),
+     false, false, '', null, '', null, '', '', null, '', 0, '', null, null, '', '', null),
+    (v_driver2_uuid, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated',
+     'suresh@raahimini.in', crypt('driver@2026', gen_salt('bf', 10)), now(), now(), now(),
+     jsonb_build_object('display_name', 'Suresh M.', 'role', 'driver', 'phone', '7012345678'),
+     jsonb_build_object('provider', 'email', 'providers', ARRAY['email']::TEXT[]),
+     false, false, '', null, '', null, '', '', null, '', 0, '', null, null, '', '', null),
+    (v_driver3_uuid, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated',
+     'vikram@raahimini.in', crypt('driver@2026', gen_salt('bf', 10)), now(), now(), now(),
+     jsonb_build_object('display_name', 'Vikram S.', 'role', 'driver', 'phone', '9456789012'),
+     jsonb_build_object('provider', 'email', 'providers', ARRAY['email']::TEXT[]),
+     false, false, '', null, '', null, '', '', null, '', 0, '', null, null, '', '', null)
+  ON CONFLICT (id) DO NOTHING;
+
+  -- Wait for trigger to create profiles, then create driver records
+  -- (trigger handle_new_user fires on auth.users INSERT)
+
+  -- ─── DRIVER RECORDS ─────────────────────────────────────────────────────────
+  INSERT INTO public.drivers (profile_id, vehicle_id, route_id, display_name, phone, is_active)
+  VALUES (v_driver1_uuid, v_vehicle1_id, v_gd01_id, 'Ramesh K.', '9876543210', true)
+  ON CONFLICT (profile_id) DO NOTHING;
+
+  INSERT INTO public.drivers (profile_id, vehicle_id, route_id, display_name, phone, is_active)
+  VALUES (v_driver2_uuid, v_vehicle2_id, v_gd01_id, 'Suresh M.', '7012345678', true)
+  ON CONFLICT (profile_id) DO NOTHING;
+
+  INSERT INTO public.drivers (profile_id, vehicle_id, route_id, display_name, phone, is_active)
+  VALUES (v_driver3_uuid, v_vehicle3_id, v_dg01_id, 'Vikram S.', '9456789012', true)
+  ON CONFLICT (profile_id) DO NOTHING;
 
   -- ─── ADMIN CONFIG ────────────────────────────────────────────────────────────
   INSERT INTO public.admin_config (key, value, description)

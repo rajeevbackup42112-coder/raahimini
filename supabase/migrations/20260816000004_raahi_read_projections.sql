@@ -314,8 +314,8 @@ BEGIN
       'request_id', sr.id,
       'passenger_display_name', p.display_name,
       'phone_masked', CASE
-        WHEN length(p.phone) >= 10
-        THEN '+91 ' || left(p.phone, 2) || 'xxx xx' || right(p.phone, 4)
+        WHEN length(v_driver.phone) >= 10
+        THEN '+91 ' || left(v_driver.phone, 2) || 'xxx xx' || right(v_driver.phone, 4)
         ELSE 'N/A'
       END,
       'pickup_stop_name', rs.name,
@@ -327,6 +327,7 @@ BEGIN
   FROM public.seat_requests sr
   JOIN public.profiles p ON p.id = sr.passenger_id
   JOIN public.route_stops rs ON rs.id = sr.pickup_stop_id
+  LEFT JOIN public.drivers v_driver ON v_driver.id = v_trip.driver_id
   WHERE sr.trip_id = v_trip.id AND sr.status IN ('HELD', 'CONFIRMED');
 
   -- Build stops
@@ -464,7 +465,6 @@ $$;
 CREATE OR REPLACE FUNCTION public.admin_get_behaviour_events(p_limit INTEGER DEFAULT 50)
 RETURNS TABLE (
   event_id UUID,
-  actor_id UUID,
   actor_name TEXT,
   actor_role TEXT,
   event_type TEXT,
@@ -484,7 +484,6 @@ BEGIN
   RETURN QUERY
   SELECT
     be.id AS event_id,
-    be.actor_id,
     p.display_name AS actor_name,
     be.actor_role::TEXT,
     be.event_type::TEXT,
