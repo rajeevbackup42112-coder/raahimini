@@ -4,7 +4,7 @@
 
 create table if not exists public.raahi_invalidation_events (
   id bigint generated always as identity primary key,
-  route_id uuid null references public.routes(id) on delete cascade,
+  route_id uuid null,
   source_table text not null,
   event_kind text not null,
   created_at timestamptz not null default now()
