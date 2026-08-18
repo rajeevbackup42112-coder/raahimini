@@ -80,10 +80,12 @@ test('controlled passenger request → driver confirm → trip completion → re
   console.log('[operational] clean stale held request if present');
   await gotoRetry(passenger, '/request-status-screen');
   const withdraw = passenger.getByRole('button', { name: 'Withdraw Request', exact: true });
-  if (await withdraw.isVisible().catch(() => false)) {
+  const noActiveRequest = passenger.getByText('No Active Request', { exact: true });
+  await expect(withdraw.or(noActiveRequest)).toBeVisible();
+  if (await withdraw.isVisible()) {
     await withdraw.click();
     await passenger.getByRole('button', { name: 'Yes, Withdraw', exact: true }).click();
-    await expect(passenger.getByText('No Active Request', { exact: true })).toBeVisible();
+    await expect(noActiveRequest.or(passenger.getByText('Request Withdrawn', { exact: true }))).toBeVisible();
   }
 
   console.log('[operational] passenger active car');
