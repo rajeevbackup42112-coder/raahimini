@@ -4,10 +4,17 @@ const password = process.env.RAAHI_TEST_PASSWORD;
 
 async function loginAs(page, loginId) {
   if (!password) throw new Error('RAAHI_TEST_PASSWORD is not configured');
-  await page.goto('/test-login');
-  await page.getByLabel('Login ID').fill(loginId);
-  await page.getByLabel('Password').fill(password);
-  await page.getByRole('button', { name: 'Sign in' }).click();
+
+  const response = await page.context().request.post('/api/test-auth', {
+    data: { loginId, password },
+  });
+  if (!response.ok()) {
+    throw new Error(`Test auth failed for ${loginId}: ${response.status()}`);
+  }
+
+  const result = await response.json();
+  if (!result?.redirectTo) throw new Error(`Test auth returned no redirect for ${loginId}`);
+  await page.goto(result.redirectTo);
 }
 
 test('anonymous passenger discovery loads without login', async ({ page }) => {
