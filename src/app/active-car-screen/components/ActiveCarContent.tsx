@@ -4,7 +4,6 @@ import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { Car, User, CheckCircle2, Clock, MapPin, RefreshCw, Loader2 } from 'lucide-react';
 import { getPublicActiveCar, type ActiveCarPublic, type StopWithEta } from '@/lib/raahiApi';
-import { createClient } from '@/lib/supabase/client';
 import SeatCountBadge from '@/components/ui/SeatCountBadge';
 import StatusBadge from '@/components/ui/StatusBadge';
 
@@ -33,21 +32,8 @@ export default function ActiveCarContent() {
     fetchCar();
   }, [fetchCar]);
 
-  // Realtime: subscribe to trips changes → refetch canonical projection
-  useEffect(() => {
-    if (!routeId) return;
-    const supabase = createClient();
-    const channel = supabase
-      .channel('active_car_watch')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'trips' }, () => {
-        fetchCar();
-      })
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'trip_progress' }, () => {
-        fetchCar();
-      })
-      .subscribe();
-    return () => { supabase.removeChannel(channel); };
-  }, [routeId, fetchCar]);
+  // Realtime invalidation is owned by RouteRealtimeRefreshBoundary, which
+  // subscribes to raahi_invalidation_events and remounts this projection.
 
   if (loading) {
     return (
