@@ -20,8 +20,8 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: 'Raahi Mini — Shared Seats, Gomoh ↔ Dhanbad',
-  description: 'Find and request shared car seats between Gomoh and Dhanbad instantly — no advance payment, pay the driver directly.',
+  title: 'Raahi Mini — Shared Seats',
+  description: 'Discover and request shared car seats on Raahi routes — no advance payment, pay the driver directly.',
   icons: {
     icon: [{ url: '/favicon.ico', type: 'image/x-icon' }],
   },
@@ -48,9 +48,7 @@ export default function RootLayout({
             },
           }}
         />
-
-        <script type="module" async src="https://static.rocket.new/rocket-web.js?_cfg=https%3A%2F%2Fraahimini2509back.builtwithrocket.new&_be=https%3A%2F%2Fappanalytics.rocket.new&_v=0.1.20" />
-        <script type="module" defer src="https://static.rocket.new/rocket-shot.js?v=0.0.2" /></body>
+      </body>
     </html>
   );
 }
