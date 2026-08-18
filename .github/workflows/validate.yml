@@ -24,5 +24,11 @@ jobs:
         run: npm install --no-audit --no-fund
       - name: Type check
         run: npm run type-check
+      - name: Validate Raahi-Test scripts
+        run: |
+          node --check Raahi-Test/src/config.mjs
+          node --check Raahi-Test/src/setup-auth.mjs
+          node --check Raahi-Test/src/check-auth.mjs
+          node --check Raahi-Test/src/smoke.mjs
       - name: Production build
         run: npm run build
