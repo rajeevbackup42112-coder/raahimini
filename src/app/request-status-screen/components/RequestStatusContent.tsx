@@ -3,7 +3,6 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
 import { Phone, X, Clock, MapPin, Car, CheckCircle2, AlertCircle, Loader2, RefreshCw } from 'lucide-react';
 import { getMyActiveRequest, withdrawSeatRequest, type PassengerRideStatus } from '@/lib/raahiApi';
-import { createClient } from '@/lib/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import PayWarningBanner from '@/components/ui/PayWarningBanner';
 import StatusBadge from '@/components/ui/StatusBadge';
@@ -25,22 +24,6 @@ export default function RequestStatusContent() {
   useEffect(() => {
     if (!authLoading) fetchStatus();
   }, [authLoading, fetchStatus]);
-
-  // Realtime: subscribe to seat_requests and trips changes → refetch
-  useEffect(() => {
-    if (!user) return;
-    const supabase = createClient();
-    const channel = supabase
-      .channel('request_status_watch')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'seat_requests' }, () => {
-        fetchStatus();
-      })
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'trips' }, () => {
-        fetchStatus();
-      })
-      .subscribe();
-    return () => { supabase.removeChannel(channel); };
-  }, [user, fetchStatus]);
 
   const handleWithdraw = async () => {
     if (!rideStatus?.request_id) return;
