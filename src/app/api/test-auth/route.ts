@@ -8,6 +8,7 @@ export const dynamic = 'force-dynamic';
 
 const HARD_BLOCKED_HOSTS = new Set([
   'raahi-mini.netlify.app',
+  'raahi-mini.referralhub.co.in',
 ]);
 
 type PersonaRole = 'passenger' | 'driver' | 'admin';
@@ -18,9 +19,23 @@ type PersonaConfig = {
 
 type PersonaMap = Record<string, PersonaConfig>;
 
+const LOGIN_PERSONAS: PersonaMap = {
+  'ajit-admin': { userId: 'cb7f0d46-e909-4a75-ab0f-20eae6ab089d', role: 'admin' },
+  'dipti-driver': { userId: '90883c8e-ffe6-4854-9ff1-c5f80cc445e7', role: 'driver' },
+  'rajeev4-driver': { userId: 'b4318eff-f019-4631-a82d-34da3435b6e4', role: 'driver' },
+  rajeev1: { userId: 'ac22d5a7-74da-4c3f-ab2a-d485d8d28cd1', role: 'passenger' },
+  rajeev2: { userId: '87e6948e-3964-4b3c-b359-bea32b861561', role: 'passenger' },
+  rajeev3: { userId: 'b8966112-a32a-439c-9e68-7ea8e7db3752', role: 'passenger' },
+  naresh: { userId: '344b8770-ba98-4688-a23b-3cbf899795f2', role: 'passenger' },
+};
+
 function normalizeHost(value: string | null): string {
   if (!value) return '';
   return value.split(',')[0].trim().toLowerCase().replace(/:\d+$/, '');
+}
+
+function normalizeLogin(value: string): string {
+  return value.trim().toLowerCase();
 }
 
 function safeEqual(left: string, right: string): boolean {
@@ -55,8 +70,6 @@ function parsePersonas(): PersonaMap {
 }
 
 function disabled(): NextResponse {
-  // Deliberately return 404 so production does not advertise that a test-auth
-  // endpoint exists.
   return NextResponse.json({ error: 'Not found' }, { status: 404 });
 }
 
@@ -75,19 +88,21 @@ export async function POST(request: NextRequest) {
     return disabled();
   }
 
+  let body: { persona?: unknown; loginId?: unknown; password?: unknown };
+  try {
+    body = (await request.json()) as { persona?: unknown; loginId?: unknown; password?: unknown };
+  } catch {
+    return NextResponse.json({ error: 'Invalid request' }, { status: 400 });
+  }
+
   const configuredKey = process.env.RAAHI_TEST_AUTH_KEY || '';
-  const suppliedKey = request.headers.get('x-raahi-test-key') || '';
+  const suppliedKey = request.headers.get('x-raahi-test-key') || (typeof body.password === 'string' ? body.password : '');
   if (!configuredKey || !suppliedKey || !safeEqual(configuredKey, suppliedKey)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  let persona: string;
-  try {
-    const body = (await request.json()) as { persona?: unknown };
-    persona = typeof body.persona === 'string' ? body.persona : '';
-  } catch {
-    return NextResponse.json({ error: 'Invalid request' }, { status: 400 });
-  }
+  const loginId = typeof body.loginId === 'string' ? normalizeLogin(body.loginId) : '';
+  const persona = typeof body.persona === 'string' ? body.persona : '';
 
   let personas: PersonaMap;
   try {
@@ -96,7 +111,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Test auth is misconfigured' }, { status: 503 });
   }
 
-  const target = personas[persona];
+  const target = (loginId ? LOGIN_PERSONAS[loginId] : undefined) || personas[persona];
+  const personaName = loginId || persona;
   if (!target) {
     return NextResponse.json({ error: 'Unknown test persona' }, { status: 400 });
   }
@@ -141,8 +157,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Could not create test session' }, { status: 500 });
   }
 
-  // Verify the generated token through the normal Supabase Auth surface. The
-  // SSR client writes the same authenticated cookies used by the real app.
   const supabase = await createServerClient();
   const { error: verifyError } = await supabase.auth.verifyOtp({
     token_hash: tokenHash,
@@ -159,5 +173,5 @@ export async function POST(request: NextRequest) {
       ? '/driver-route-selection'
       : '/';
 
-  return NextResponse.json({ success: true, persona, role: target.role, redirectTo });
+  return NextResponse.json({ success: true, persona: personaName, role: target.role, redirectTo });
 }
