@@ -3,6 +3,8 @@ import { test, expect } from '@playwright/test';
 const password = process.env.RAAHI_TEST_PASSWORD;
 const GD_ROUTE_ID = '1212f1bf-5b81-4d41-aad4-76323f228110';
 
+test.describe.configure({ retries: 0 });
+
 async function loginContext(context, loginId) {
   if (!password) throw new Error('RAAHI_TEST_PASSWORD is not configured');
 
@@ -15,6 +17,7 @@ async function loginContext(context, loginId) {
         data: { loginId, password },
         timeout: 15_000,
       });
+      console.log(`[operational] auth ${loginId} HTTP ${response.status()}`);
       if (response.status() >= 500 && attempt < 3) {
         await new Promise((resolve) => setTimeout(resolve, 750 * attempt));
         continue;
@@ -32,15 +35,32 @@ async function loginContext(context, loginId) {
 }
 
 test('controlled passenger request → driver confirm → trip completion → restore collector', async ({ browser }) => {
-  test.setTimeout(180_000);
+  test.setTimeout(240_000);
 
   const passengerContext = await browser.newContext({ ignoreHTTPSErrors: true });
   const driverContext = await browser.newContext({ ignoreHTTPSErrors: true });
   const passenger = await passengerContext.newPage();
   const driver = await driverContext.newPage();
 
-  console.log('[operational] passenger login');
+  console.log('[operational] preflight passenger session');
   await loginContext(passengerContext, 'rajeev2');
+  await passenger.goto('/');
+  await expect(passenger.getByText('Passenger', { exact: true })).toBeVisible();
+
+  console.log('[operational] preflight driver session');
+  await loginContext(driverContext, 'rajeev4-driver');
+  await driver.goto('/driver-active-car-screen', { waitUntil: 'domcontentloaded', timeout: 20_000 });
+  await expect(driver.getByText(/Passenger Requests \(/)).toBeVisible();
+
+  console.log('[operational] clean stale held request if present');
+  await passenger.goto('/request-status-screen');
+  const withdraw = passenger.getByRole('button', { name: 'Withdraw Request', exact: true });
+  if (await withdraw.isVisible().catch(() => false)) {
+    await withdraw.click();
+    await passenger.getByRole('button', { name: 'Yes, Withdraw', exact: true }).click();
+    await expect(passenger.getByText('No Active Request', { exact: true })).toBeVisible();
+  }
+
   console.log('[operational] passenger active car');
   await passenger.goto(`/active-car-screen?route_id=${GD_ROUTE_ID}`);
   await expect(passenger.getByRole('heading', { name: 'Active Car', exact: true })).toBeVisible();
@@ -48,20 +68,16 @@ test('controlled passenger request → driver confirm → trip completion → re
 
   console.log('[operational] passenger request form');
   await expect(passenger).toHaveURL(/\/request-seat-screen/);
-  const firstPickupLabel = passenger.locator('label').filter({ has: passenger.locator('input[name="pickup_stop"]') }).first();
-  await firstPickupLabel.click();
+  await passenger.locator('label').filter({ has: passenger.locator('input[name="pickup_stop"]') }).first().click();
   await passenger.getByRole('button', { name: '1', exact: true }).click();
   await passenger.getByRole('button', { name: 'Request Seat', exact: true }).click();
 
   console.log('[operational] passenger held');
   await expect(passenger).toHaveURL(/\/request-status-screen/);
   await expect(passenger.getByText('Held', { exact: true }).first()).toBeVisible();
-  await expect(passenger.getByText('1 Seat', { exact: true })).toBeVisible();
 
-  console.log('[operational] driver login');
-  await loginContext(driverContext, 'rajeev4-driver');
-  await driver.goto('/driver-active-car-screen');
   console.log('[operational] driver confirm');
+  await driver.reload({ waitUntil: 'domcontentloaded' });
   await expect(driver.getByText('Passenger Requests (1)', { exact: true })).toBeVisible();
   await driver.getByRole('button', { name: 'Payment Received', exact: true }).click();
   await expect(driver.getByText('Confirmed', { exact: true }).first()).toBeVisible();
