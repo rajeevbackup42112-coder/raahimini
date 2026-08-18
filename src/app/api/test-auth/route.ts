@@ -76,14 +76,17 @@ function disabled(): NextResponse {
 export async function POST(request: NextRequest) {
   const forwardedHost = normalizeHost(request.headers.get('x-forwarded-host'));
   const directHost = normalizeHost(request.headers.get('host'));
-  const host = forwardedHost || directHost;
+  const candidateHosts = [forwardedHost, directHost].filter(Boolean);
   const allowedHosts = parseAllowedHosts();
+
+  const hitsBlockedHost = candidateHosts.some((host) => HARD_BLOCKED_HOSTS.has(host));
+  const hitsAllowedHost = candidateHosts.some((host) => allowedHosts.has(host));
 
   if (
     process.env.RAAHI_TEST_AUTH_ENABLED !== 'true' ||
-    !host ||
-    HARD_BLOCKED_HOSTS.has(host) ||
-    !allowedHosts.has(host)
+    candidateHosts.length === 0 ||
+    hitsBlockedHost ||
+    !hitsAllowedHost
   ) {
     return disabled();
   }
