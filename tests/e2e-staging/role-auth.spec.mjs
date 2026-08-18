@@ -22,11 +22,11 @@ test('anonymous route discovery exposes both pilot directions', async ({ page })
 
   await page.getByRole('button', { name: /Dhanbad/ }).click();
   await expect(page.getByText('Going from Dhanbad')).toBeVisible();
-  await expect(page.getByText('Dhanbad → Gomoh', { exact: true })).toBeVisible();
+  await expect(page.getByRole('link', { name: /DG-01.*Dhanbad.*Gomoh/ })).toBeVisible();
 
   await page.getByRole('button', { name: /Gomoh/ }).click();
   await expect(page.getByText('Going from Gomoh')).toBeVisible();
-  await expect(page.getByText('Gomoh → Dhanbad', { exact: true })).toBeVisible();
+  await expect(page.getByRole('link', { name: /GD-01.*Gomoh.*Dhanbad/ })).toBeVisible();
 });
 
 test('anonymous users cannot enter protected operational screens', async ({ page }) => {
