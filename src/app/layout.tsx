@@ -4,6 +4,7 @@ import { DM_Sans } from 'next/font/google';
 import '../styles/tailwind.css';
 import { Toaster } from 'sonner';
 import { AuthProvider } from '@/contexts/AuthContext';
+import RoleRouteGuard from '@/components/RoleRouteGuard';
 
 const dmSans = DM_Sans({
   subsets: ['latin'],
@@ -34,6 +35,7 @@ export default function RootLayout({
     <html lang="en" className={dmSans.variable}>
       <body className={dmSans.className}>
         <AuthProvider>
+          <RoleRouteGuard />
           {children}
         </AuthProvider>
         <Toaster
