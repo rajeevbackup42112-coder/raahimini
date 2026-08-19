@@ -166,16 +166,29 @@ export async function POST(request: NextRequest) {
       ? '/driver-route-selection'
       : '/';
 
-  // The endpoint is staging-only and secret-protected. Returning the short-lived
-  // test session lets the browser Supabase client persist the same genuine
-  // session before the hard navigation, which keeps role checks deterministic
-  // across page loads without weakening production auth.
-  return NextResponse.json({
+  // The staging-only endpoint establishes the genuine Supabase session through
+  // the server client's auth cookies. The browser only needs the destination;
+  // returning/re-applying the same refresh token client-side creates a duplicate
+  // handoff path and can cause unnecessary refresh-token rotation.
+  const response = NextResponse.json({
     success: true,
     persona: personaName,
     role: target.role,
     redirectTo,
-    accessToken: session.access_token,
-    refreshToken: session.refresh_token,
   });
+
+  // Explicitly mark this browser session as a deterministic staging persona.
+  // Middleware can use this marker even on hosting platforms where non-public
+  // env values are not consistently available in the edge runtime. The marker
+  // is trusted only on builtwithrocket staging hosts and production hosts remain
+  // hard-blocked from the test-auth endpoint.
+  response.cookies.set('raahi-test-session', '1', {
+    httpOnly: true,
+    sameSite: 'lax',
+    secure: true,
+    path: '/',
+    maxAge: 60 * 60 * 8,
+  });
+
+  return response;
 }

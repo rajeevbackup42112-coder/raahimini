@@ -1,7 +1,6 @@
 'use client';
 
 import { FormEvent, useState } from 'react';
-import { createClient } from '@/lib/supabase/client';
 
 export default function TestLoginForm() {
   const [loginId, setLoginId] = useState('rajeev1');
@@ -23,30 +22,17 @@ export default function TestLoginForm() {
       const result = (await response.json()) as {
         error?: string;
         redirectTo?: string;
-        accessToken?: string;
-        refreshToken?: string;
       };
 
-      if (
-        !response.ok ||
-        !result.redirectTo ||
-        !result.accessToken ||
-        !result.refreshToken
-      ) {
+      if (!response.ok || !result.redirectTo) {
         setError(result.error || 'Login failed');
         return;
       }
 
-      const supabase = createClient();
-      const { error: sessionError } = await supabase.auth.setSession({
-        access_token: result.accessToken,
-        refresh_token: result.refreshToken,
-      });
-      if (sessionError) {
-        setError('Login failed');
-        return;
-      }
-
+      // /api/test-auth establishes the genuine Supabase session in same-origin
+      // auth cookies. Do not call setSession() again in the browser with the same
+      // refresh token: that creates a second session handoff/rotation path and can
+      // make the client refresh an otherwise healthy one-hour token repeatedly.
       window.location.assign(result.redirectTo);
     } catch {
       setError('Login failed');
