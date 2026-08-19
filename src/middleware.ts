@@ -74,7 +74,9 @@ export async function middleware(request: NextRequest) {
   const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).maybeSingle();
   const role = profile?.role || 'passenger';
   const home = roleHome(role);
-  const phoneVerified = Boolean(user.phone && user.phone_confirmed_at);
+  // Staging-only deterministic personas intentionally use synthetic auth metadata.
+  // Production has RAAHI_TEST_AUTH_ENABLED=false, so real passenger/driver phone verification remains mandatory.
+  const phoneVerified = process.env.RAAHI_TEST_AUTH_ENABLED === 'true' || Boolean(user.phone && user.phone_confirmed_at);
 
   if (pathname === '/login') {
     const url = request.nextUrl.clone();
