@@ -4,26 +4,19 @@ const password = process.env.RAAHI_TEST_PASSWORD;
 
 async function loginAs(page, loginId) {
   if (!password) throw new Error('RAAHI_TEST_PASSWORD is not configured');
-
   let response;
   let lastError;
   for (let attempt = 1; attempt <= 3; attempt += 1) {
     try {
-      response = await page.context().request.post('/api/test-auth', {
-        data: { loginId, password },
-      });
+      response = await page.context().request.post('/api/test-auth', { data: { loginId, password } });
       break;
     } catch (error) {
       lastError = error;
       if (attempt < 3) await page.waitForTimeout(750 * attempt);
     }
   }
-
   if (!response) throw lastError;
-  if (!response.ok()) {
-    throw new Error(`Test auth failed for ${loginId}: ${response.status()}`);
-  }
-
+  if (!response.ok()) throw new Error(`Test auth failed for ${loginId}: ${response.status()}`);
   const result = await response.json();
   if (!result?.redirectTo) throw new Error(`Test auth returned no redirect for ${loginId}`);
   await page.goto(result.redirectTo);
@@ -38,22 +31,27 @@ test('anonymous passenger discovery loads without login', async ({ page }) => {
 
 test('anonymous route discovery exposes both pilot directions', async ({ page }) => {
   await page.goto('/');
-
   await page.getByRole('button', { name: /Dhanbad/ }).click();
   await expect(page.getByText('Going from Dhanbad')).toBeVisible();
   await expect(page.getByRole('link', { name: /DG-01.*Dhanbad.*Gomoh/ })).toBeVisible();
-
   await page.getByRole('button', { name: /Gomoh/ }).click();
   await expect(page.getByText('Going from Gomoh')).toBeVisible();
   await expect(page.getByRole('link', { name: /GD-01.*Gomoh.*Dhanbad/ })).toBeVisible();
 });
 
-test('anonymous users cannot enter protected operational screens', async ({ page }) => {
-  await page.goto('/driver-route-selection');
-  await expect(page.getByText('Driver Sign In Required', { exact: true })).toBeVisible();
+test('legacy role login URLs converge on the one login page', async ({ page }) => {
+  await page.goto('/driver-login');
+  await expect(page).toHaveURL(/\/login$/);
+  await expect(page.getByRole('heading', { name: 'Sign in to Raahi' })).toBeVisible();
+  await page.goto('/admin-login');
+  await expect(page).toHaveURL(/\/login$/);
+});
 
+test('anonymous users are redirected from protected operational screens', async ({ page }) => {
+  await page.goto('/driver-route-selection');
+  await expect(page).toHaveURL(/\/login\?next=/);
   await page.goto('/admin-panel');
-  await expect(page.getByText('Admin Access Required', { exact: true })).toBeVisible();
+  await expect(page).toHaveURL(/\/login\?next=/);
 });
 
 for (const loginId of ['rajeev1', 'rajeev2', 'rajeev3', 'naresh']) {
@@ -64,14 +62,12 @@ for (const loginId of ['rajeev1', 'rajeev2', 'rajeev3', 'naresh']) {
   });
 }
 
-test('passenger role is blocked from driver and admin operations', async ({ page }) => {
+test('passenger role redirects away from driver and admin operations', async ({ page }) => {
   await loginAs(page, 'rajeev2');
-
   await page.goto('/driver-route-selection');
-  await expect(page.getByText('Driver Access Only', { exact: true })).toBeVisible();
-
+  await expect(page).toHaveURL(/\/$/);
   await page.goto('/admin-panel');
-  await expect(page.getByText('Admin Access Required', { exact: true })).toBeVisible();
+  await expect(page).toHaveURL(/\/$/);
 });
 
 for (const loginId of ['dipti-driver', 'rajeev4-driver']) {
@@ -81,15 +77,18 @@ for (const loginId of ['dipti-driver', 'rajeev4-driver']) {
   });
 }
 
-test('driver role is blocked from admin operations', async ({ page }) => {
+test('driver role redirects away from passenger and admin operations', async ({ page }) => {
   await loginAs(page, 'dipti-driver');
+  await page.goto('/');
+  await expect(page).toHaveURL(/\/driver-route-selection(?:\?.*)?$/);
   await page.goto('/admin-panel');
-  await expect(page.getByText('Admin Access Required', { exact: true })).toBeVisible();
+  await expect(page).toHaveURL(/\/driver-route-selection(?:\?.*)?$/);
 });
 
-test('ajit-admin lands in admin panel', async ({ page }) => {
+test('ajit-admin lands in admin panel and redirects away from passenger home', async ({ page }) => {
   await loginAs(page, 'ajit-admin');
   await expect(page).toHaveURL(/\/admin-panel(?:\?.*)?$/);
   await expect(page.getByText('Raahi Admin', { exact: true })).toBeVisible();
-  await expect(page.getByText('Admin Access', { exact: true })).toBeVisible();
+  await page.goto('/');
+  await expect(page).toHaveURL(/\/admin-panel(?:\?.*)?$/);
 });
