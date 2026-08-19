@@ -166,16 +166,14 @@ export async function POST(request: NextRequest) {
       ? '/driver-route-selection'
       : '/';
 
-  // The endpoint is staging-only and secret-protected. Returning the short-lived
-  // test session lets the browser Supabase client persist the same genuine
-  // session before the hard navigation, which keeps role checks deterministic
-  // across page loads without weakening production auth.
+  // The staging-only endpoint establishes the genuine Supabase session through
+  // the server client's auth cookies. The browser only needs the destination;
+  // returning/re-applying the same refresh token client-side creates a duplicate
+  // handoff path and can cause unnecessary refresh-token rotation.
   return NextResponse.json({
     success: true,
     persona: personaName,
     role: target.role,
     redirectTo,
-    accessToken: session.access_token,
-    refreshToken: session.refresh_token,
   });
 }
