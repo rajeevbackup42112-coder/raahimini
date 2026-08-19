@@ -14,7 +14,10 @@ export default function LoginPage() {
     setBusy(true);
     setError('');
     try {
-      await signInWithGoogle('/');
+      const params = new URLSearchParams(window.location.search);
+      const next = params.get('next');
+      const safeNext = next && next.startsWith('/') && !next.startsWith('//') ? next : '/';
+      await signInWithGoogle(safeNext);
     } catch (err: any) {
       setError(err?.message || 'Could not start Google sign-in.');
       setBusy(false);
