@@ -14,6 +14,19 @@ function injectTokenFromHeader(request: NextRequest): void {
   request.cookies.set(`sb-${getProjectRef()}-auth-token`, token);
 }
 
+function normalizeHost(value: string | null): string {
+  if (!value) return '';
+  return value.split(',')[0].trim().toLowerCase().replace(/:\d+$/, '');
+}
+
+function isRocketStagingHost(request: NextRequest): boolean {
+  const hosts = [
+    normalizeHost(request.headers.get('x-forwarded-host')),
+    normalizeHost(request.headers.get('host')),
+  ].filter(Boolean);
+  return hosts.some((host) => host.endsWith('.public.builtwithrocket.new'));
+}
+
 function roleHome(role?: string | null) {
   if (role === 'admin') return '/admin-panel';
   if (role === 'driver') return '/driver-route-selection';
@@ -74,9 +87,19 @@ export async function middleware(request: NextRequest) {
   const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).maybeSingle();
   const role = profile?.role || 'passenger';
   const home = roleHome(role);
-  // Staging-only deterministic personas intentionally use synthetic auth metadata.
-  // Production has RAAHI_TEST_AUTH_ENABLED=false, so real passenger/driver phone verification remains mandatory.
-  const phoneVerified = process.env.RAAHI_TEST_AUTH_ENABLED === 'true' || Boolean(user.phone && user.phone_confirmed_at);
+
+  // Deterministic test personas are allowed to bypass phone verification only
+  // on Rocket staging. The API that creates this marker is itself secret-protected
+  // and hard-blocked on production hosts, and browser cookies cannot cross from
+  // the staging domain to the production custom domain.
+  const stagingTestSession =
+    isRocketStagingHost(request) &&
+    request.cookies.get('raahi-test-session')?.value === '1';
+
+  const phoneVerified =
+    stagingTestSession ||
+    process.env.RAAHI_TEST_AUTH_ENABLED === 'true' ||
+    Boolean(user.phone && user.phone_confirmed_at);
 
   if (pathname === '/login') {
     const url = request.nextUrl.clone();
