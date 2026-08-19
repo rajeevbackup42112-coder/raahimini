@@ -58,24 +58,54 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      if (session?.user?.id) loadProfile(session.user.id);
-      setLoading(false);
-    });
+    let active = true;
+    let eventGeneration = 0;
+    let profileTimer: ReturnType<typeof setTimeout> | null = null;
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      if (session?.user?.id) loadProfile(session.user.id);
-      else setProfile(null);
+    } = supabase.auth.onAuthStateChange((_event, nextSession) => {
+      const generation = ++eventGeneration;
+      setSession(nextSession);
+      setUser(nextSession?.user ?? null);
       setLoading(false);
+
+      if (profileTimer) {
+        clearTimeout(profileTimer);
+        profileTimer = null;
+      }
+
+      if (!nextSession?.user?.id) {
+        setProfile(null);
+        return;
+      }
+
+      // Do not call another Supabase API from inside onAuthStateChange.
+      // supabase-js can hold its auth lock while this callback runs; a nested
+      // query may deadlock the client and can provoke repeated refresh attempts.
+      // Defer profile loading to the next task after the auth callback returns.
+      const userId = nextSession.user.id;
+      profileTimer = setTimeout(() => {
+        void (async () => {
+          try {
+            const { data } = await supabase
+              .from('profiles')
+              .select('*')
+              .eq('id', userId)
+              .single();
+            if (active && generation === eventGeneration) setProfile(data);
+          } catch {
+            if (active && generation === eventGeneration) setProfile(null);
+          }
+        })();
+      }, 0);
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      active = false;
+      if (profileTimer) clearTimeout(profileTimer);
+      subscription.unsubscribe();
+    };
   }, []);
 
   const signUp = async (email: string, password: string, metadata = {}) => {
