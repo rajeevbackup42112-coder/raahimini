@@ -7,8 +7,8 @@ import {
 } from 'lucide-react';
 import { getDriverActiveCar, driverConfirmPayment, driverMarkPassengerAbsent, driverAdvanceStop, driverCloseEmptySeats, startTrip, completeTrip, type DriverActiveTrip, type PassengerRequest } from '@/lib/raahiApi';
 import { useAuth } from '@/contexts/AuthContext';
-import SeatCountBadge from '@/components/ui/SeatCountBadge';
 import StatusBadge from '@/components/ui/StatusBadge';
+import UnifiedTripCard from '@/components/UnifiedTripCard';
 
 export default function DriverActiveCarContent() {
   const { user, profile, loading: authLoading } = useAuth();
@@ -85,47 +85,51 @@ export default function DriverActiveCarContent() {
   }
 
   const heldRequests = (trip.passenger_requests ?? []).filter((r) => r.status === 'HELD');
-  const confirmedRequests = (trip.passenger_requests ?? []).filter((r) => r.status === 'CONFIRMED');
-  const canCloseSeats = (trip.available_count ?? 0) > 0 && heldRequests.length === 0;
   const canStartTrip = trip.departure_eligible ?? false;
   const heldBlocking = heldRequests.length > 0;
   const stopCount = trip.stops?.length ?? 0;
   const finalStopOrder = trip.stops?.[stopCount - 1]?.stop_order;
   const atFinalStop = finalStopOrder != null && trip.current_stop_order === finalStopOrder;
+  const nextAction = trip.status === 'IN_PROGRESS'
+    ? atFinalStop ? 'Complete trip' : 'Drive to the next stop'
+    : heldBlocking
+      ? 'Confirm or resolve held passengers'
+      : canStartTrip
+        ? 'Start trip'
+        : (trip.available_count ?? 0) > 0
+          ? 'Wait for a passenger or close empty seats'
+          : 'Get ready to depart';
+  const expectedCollected = (trip.confirmed_count ?? 0) * (trip.fare_per_seat ?? 0);
 
   return (
     <div className="mobile-page space-y-3 animate-fade-in">
-      {/* Route Info */}
-      <div className="compact-card">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center flex-shrink-0">
-            <Car size={18} className="text-primary" />
+      <UnifiedTripCard
+        from={trip.from_location ?? 'Origin'}
+        to={trip.to_location ?? 'Destination'}
+        statusLabel={trip.status === 'ACTIVE_COLLECTING' ? 'Collecting passengers' : 'Trip in progress'}
+        statusTone={trip.status === 'ACTIVE_COLLECTING' ? (canStartTrip ? 'good' : 'limited') : 'transit'}
+        vehicleLabel={`${trip.vehicle_model ?? 'Raahi car'}${trip.vehicle_number ? ` · ${trip.vehicle_number}` : ''}`}
+        seatsFilled={trip.confirmed_count ?? 0}
+        seatsTotal={trip.capacity ?? 0}
+        seatsLeft={trip.available_count ?? 0}
+        farePerSeat={trip.fare_per_seat ?? null}
+        pickupLabel={trip.current_stop_name}
+        confidenceLabel={nextAction}
+      >
+        <div className="grid grid-cols-2 gap-2 border-t border-border pt-3">
+          <div className="rounded-xl bg-muted/60 px-3 py-2.5">
+            <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Expected collected</p>
+            <p className="mt-0.5 text-sm font-bold text-foreground">₹{expectedCollected}</p>
           </div>
-          <div>
-            <p className="text-xs text-muted-foreground font-medium">{trip.route_code} · {trip.vehicle_number}</p>
-            <p className="text-sm font-bold text-foreground">{trip.route_label}</p>
-            <p className="text-xs text-muted-foreground">{trip.vehicle_model} · {trip.vehicle_type}</p>
-          </div>
-          <div className="ml-auto">
-            <StatusBadge status={trip.status === 'ACTIVE_COLLECTING' ? 'collecting' : 'in-progress'} />
+          <div className="rounded-xl bg-secondary/70 px-3 py-2.5">
+            <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Next action</p>
+            <p className="mt-0.5 text-sm font-bold text-primary">{nextAction}</p>
           </div>
         </div>
-      </div>
-
-      {/* Seat Stats */}
-      <div className="compact-card">
-        <div className="mb-2 flex items-center justify-between gap-3">
-          <p className="section-label">Seats</p>
-          <p className="text-xs text-muted-foreground">
-            {trip.capacity ?? 0} total{(trip.driver_closed_count ?? 0) > 0 ? ` · ${trip.driver_closed_count} closed` : ''}
-          </p>
-        </div>
-        <div className="grid grid-cols-3 gap-2">
-          <SeatCountBadge label="Confirmed" count={trip.confirmed_count ?? 0} variant="confirmed" />
-          <SeatCountBadge label="Held" count={trip.held_count ?? 0} variant="held" />
-          <SeatCountBadge label="Available" count={trip.available_count ?? 0} variant="available" />
-        </div>
-      </div>
+        {(trip.held_count ?? 0) > 0 && (
+          <p className="text-xs text-muted-foreground">{trip.held_count} held seat{trip.held_count === 1 ? '' : 's'} still need attention.</p>
+        )}
+      </UnifiedTripCard>
 
       {/* Departure Eligibility */}
       {!canStartTrip && trip.status === 'ACTIVE_COLLECTING' && (
