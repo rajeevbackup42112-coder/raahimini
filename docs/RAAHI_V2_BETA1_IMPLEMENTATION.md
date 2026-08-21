@@ -18,6 +18,8 @@ Base: `v2.0-beta1-design`
 ### Scheduled travel intent
 - `demandApi` supports `SCHEDULED` intent creation with an explicit earliest/latest window
 - `/plan-ride?route_id=...` provides a lightweight future travel-interest screen
+- no-driver route experience now links directly to `Plan a ride for later`
+- route summary can show upcoming scheduled-interest count alongside live NOW interest
 - default UI window is tomorrow 08:00–09:00 local time and remains editable
 - invalid/past/reversed windows are rejected client-side before RPC submission
 - scheduled interest never auto-books
@@ -68,17 +70,16 @@ Beta1 does not change:
 
 ## Validation
 
-Completed before this document:
+Completed before the scheduled-intent slice:
 - Beta1 foundation type-check PASS
 - production build PASS
 - GitHub workflow #150 SUCCESS
 
-Current scheduled-intent slice is covered by the same stacked validation workflow; latest run must be green before the slice is considered code-complete.
+The latest scheduled-intent/no-driver slice is covered by the same stacked validation workflow and must be green before this slice is considered code-complete.
 
 ## Next implementation slices
 
-1. Surface `Plan a ride for later` from the no-driver route experience.
-2. Add driver reverse-route/return-demand presentation.
-3. Add admin unserved-demand projection UI.
-4. Add canonical SQL only in a safe isolated database workflow.
-5. Add invariant tests and browser acceptance once backend exists.
+1. Add reverse-route/return-demand context to Driver Home.
+2. Add admin unserved-demand projection UI.
+3. Add canonical SQL only in a safe isolated database workflow.
+4. Add invariant tests and browser acceptance once backend exists.
