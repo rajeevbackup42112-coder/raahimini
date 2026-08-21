@@ -59,6 +59,7 @@ export default function ActiveCarContent() {
   const isCollecting = car.status === 'ACTIVE_COLLECTING';
   const from = car.stops?.[0]?.name ?? 'Raahi pickup';
   const to = car.stops?.[(car.stops?.length ?? 1) - 1]?.name ?? 'Destination';
+  const occupiedSeats = (car.confirmed_count ?? 0) + (car.held_count ?? 0);
 
   return (
     <div className="max-w-screen-2xl mx-auto px-4 py-4 space-y-4 animate-fade-in">
@@ -68,7 +69,7 @@ export default function ActiveCarContent() {
         statusLabel={isCollecting ? 'Collecting now' : 'Trip started'}
         statusTone={isCollecting ? ((car.available_count ?? 0) <= 1 ? 'limited' : 'good') : 'transit'}
         vehicleLabel={`${car.vehicle_model ?? 'Raahi car'}${car.vehicle_number ? ` · ${car.vehicle_number}` : ''}`}
-        seatsFilled={Math.max(0, (car.capacity ?? 0) - (car.available_count ?? 0))}
+        seatsFilled={occupiedSeats}
         seatsTotal={car.capacity ?? 0}
         seatsLeft={car.available_count ?? 0}
         farePerSeat={car.fare_per_seat ?? null}
