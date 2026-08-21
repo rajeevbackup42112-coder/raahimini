@@ -37,6 +37,12 @@ export default function ActiveCarContent() {
 
   useEffect(() => { fetchCar(); }, [fetchCar]);
 
+  useEffect(() => {
+    if (!intentId) return;
+    const timer = window.setInterval(() => { fetchCar(); }, 15000);
+    return () => window.clearInterval(timer);
+  }, [intentId, fetchCar]);
+
   const createDemand = async () => {
     if (!routeId) return;
     if (!user) {
@@ -115,7 +121,7 @@ export default function ActiveCarContent() {
                   <BellRing size={17} className="mt-0.5 shrink-0 text-green-700" />
                   <div>
                     <p className="text-sm font-bold text-green-800">We’re checking with Raahi drivers</p>
-                    <p className="mt-1 text-xs text-green-700">Stay here or come back later. You will still need to book explicitly when a car opens.</p>
+                    <p className="mt-1 text-xs text-green-700">Keep this screen open and Raahi will check about every 15 seconds. You will still need to book explicitly when a car opens.</p>
                   </div>
                 </div>
               </div>
