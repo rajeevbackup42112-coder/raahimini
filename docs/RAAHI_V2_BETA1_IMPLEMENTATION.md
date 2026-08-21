@@ -14,6 +14,7 @@ Base: `v2.0-beta1-design`
 - route UI shows aggregate interest only
 - demand is explicitly described as interest, not a booking or capacity reservation
 - passenger can cancel the live intent
+- while a NOW intent is active and the screen stays open, Raahi rechecks supply about every 15 seconds; this is an in-app check only, not push notification
 
 ### Scheduled travel intent
 - `demandApi` supports `SCHEDULED` intent creation with an explicit earliest/latest window
@@ -23,6 +24,7 @@ Base: `v2.0-beta1-design`
 - default UI window is tomorrow 08:00–09:00 local time and remains editable
 - invalid/past/reversed windows are rejected client-side before RPC submission
 - scheduled interest never auto-books
+- the Next.js search-params route is wrapped in Suspense so production prerendering remains valid
 
 ### Driver demand visibility
 - Driver Home route cards fetch aggregate outbound demand
@@ -80,8 +82,8 @@ Beta1 does not change:
 ## Validation
 
 - Beta1 foundation workflow #150: SUCCESS
-- later return/admin slice exposed a type mismatch between the API snake_case shape and the driver-card camelCase draft type
-- that mismatch has been corrected so `DriverRouteCard` now consumes `RouteDemandSummary` directly
+- return/admin slice exposed a snake_case/camelCase type mismatch; fixed by consuming `RouteDemandSummary` directly
+- subsequent production build exposed missing Suspense around `/plan-ride` search params; fixed
 - latest stacked validation must pass before Beta1 frontend is considered code-complete
 
 ## Next implementation slices
