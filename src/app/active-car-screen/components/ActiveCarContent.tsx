@@ -3,7 +3,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { toast } from 'sonner';
-import { Car, User, CheckCircle2, Clock, MapPin, RefreshCw, Loader2, BellRing, X } from 'lucide-react';
+import { Car, User, CheckCircle2, Clock, MapPin, RefreshCw, Loader2, BellRing, X, CalendarClock } from 'lucide-react';
 import { getPublicActiveCar, type ActiveCarPublic, type StopWithEta } from '@/lib/raahiApi';
 import { cancelDemandIntent, createNowDemandIntent, getRouteDemandSummary, type RouteDemandSummary } from '@/lib/demandApi';
 import { useAuth } from '@/contexts/AuthContext';
@@ -89,6 +89,7 @@ export default function ActiveCarContent() {
 
   if (!car?.has_active_car) {
     const interested = demandSummary?.now_count ?? 0;
+    const scheduled = demandSummary?.scheduled_count ?? 0;
     return (
       <div className="max-w-screen-sm mx-auto px-4 py-8 space-y-4 animate-fade-in">
         <div className="rounded-3xl border border-border bg-card p-6 text-center card-shadow">
@@ -98,10 +99,11 @@ export default function ActiveCarContent() {
           <p className="mt-4 text-lg font-bold text-foreground">No driver is available right now</p>
           <p className="mt-2 text-sm text-muted-foreground">Raahi can collect passenger interest and show drivers that this route needs a car.</p>
 
-          {interested > 0 && (
+          {(interested > 0 || scheduled > 0) && (
             <div className="mt-4 rounded-2xl bg-secondary/70 px-4 py-3">
-              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Live demand</p>
-              <p className="mt-1 text-sm font-bold text-primary">{interested} passenger{interested === 1 ? '' : 's'} interested now</p>
+              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Route demand</p>
+              {interested > 0 && <p className="mt-1 text-sm font-bold text-primary">{interested} passenger{interested === 1 ? '' : 's'} interested now</p>}
+              {scheduled > 0 && <p className="mt-1 text-xs font-semibold text-foreground">{scheduled} upcoming travel plan{scheduled === 1 ? '' : 's'}</p>}
               <p className="mt-1 text-xs text-muted-foreground">Interest does not reserve a seat. Booking starts only when a car becomes available.</p>
             </div>
           )}
@@ -126,6 +128,12 @@ export default function ActiveCarContent() {
               {demandBusy ? <Loader2 size={18} className="animate-spin" /> : <BellRing size={18} />}
               {demandBusy ? 'Saving request…' : user ? 'I need a ride' : 'Sign in & request a ride'}
             </button>
+          )}
+
+          {routeId && (
+            <Link href={`/plan-ride?route_id=${routeId}`} className="quiet-action mt-2 w-full">
+              <CalendarClock size={17} /> Plan a ride for later
+            </Link>
           )}
 
           <button onClick={() => fetchCar(true)} className="btn-outline mx-auto mt-3">
