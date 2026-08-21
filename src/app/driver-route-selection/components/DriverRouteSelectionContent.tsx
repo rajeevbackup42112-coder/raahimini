@@ -157,11 +157,11 @@ export default function DriverRouteSelectionContent() {
   const selected = locations.find(l => l.id === locationId);
 
   return (
-    <div className="max-w-screen-sm mx-auto px-4 py-5 space-y-5">
-      <div className="rounded-3xl border border-green-100 bg-gradient-to-br from-green-50 to-card p-5">
+    <div className="mx-auto max-w-screen-lg space-y-5 px-4 py-5 sm:px-6">
+      <div className="hero-surface">
         <p className="text-xs font-bold uppercase tracking-wide text-primary">Driver home</p>
-        <h1 className="mt-2 text-2xl font-bold text-foreground">{profile?.display_name ? `Ready, ${profile.display_name}?` : 'Ready to drive?'}</h1>
-        <p className="mt-1 text-sm text-muted-foreground">Choose where you are. Raahi will show your next action, outbound demand and possible return demand.</p>
+        <h1 className="mt-2 text-2xl font-extrabold text-white">{profile?.display_name ? `Ready, ${profile.display_name}?` : 'Ready to drive?'}</h1>
+        <p className="mt-1 text-sm text-white/75">Choose where you are. Raahi will show your next action, outbound demand and possible return demand.</p>
       </div>
 
       <div className="grid grid-cols-2 gap-2">

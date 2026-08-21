@@ -44,7 +44,7 @@ export default function UnifiedTripCard({
   const hasSeatStats = typeof seatsFilled === 'number' || typeof seatsLeft === 'number';
 
   return (
-    <div className="rounded-3xl border border-border bg-card p-5 card-shadow">
+    <div className="feature-card">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Live Raahi</p>

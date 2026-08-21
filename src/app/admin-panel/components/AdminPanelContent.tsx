@@ -57,9 +57,16 @@ export default function AdminPanelContent() {
             <span className="font-bold text-base text-foreground">Raahi Admin</span>
           </div>
           <div className="ml-auto flex items-center gap-2">
-            <span className="text-xs font-semibold px-2.5 py-1 bg-red-50 text-red-700 rounded-lg border border-red-200">
-              Admin Access
-            </span>
+            <div className="hidden items-center gap-2 rounded-xl bg-muted px-2.5 py-1.5 sm:flex">
+              <span className="gradient-primary flex h-7 w-7 items-center justify-center rounded-full text-[11px] font-bold text-white">
+                {(profile.display_name || 'A').slice(0, 1).toUpperCase()}
+              </span>
+              <div className="leading-tight">
+                <p className="max-w-[140px] truncate text-xs font-bold text-foreground">{profile.display_name || 'Raahi Admin'}</p>
+                <p className="text-[10px] text-muted-foreground">Admin</p>
+              </div>
+            </div>
+            <span className="rounded-lg border border-amber-200 bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-800">Admin Access</span>
           </div>
         </div>
         <div className="flex overflow-x-auto border-t border-border px-2 gap-0 scrollbar-hide">

@@ -52,10 +52,10 @@ function PlanRideContent() {
     <div className="min-h-screen bg-background">
       <AppHeader title="Plan a ride" showBack />
       <main className="mx-auto max-w-md px-4 py-6 space-y-4">
-        <div className="rounded-3xl border border-green-100 bg-gradient-to-br from-green-50 to-card p-5">
+        <div className="hero-surface">
           <p className="text-xs font-bold uppercase tracking-wide text-primary">Scheduled interest</p>
-          <h1 className="mt-2 text-xl font-bold text-foreground">Tell Raahi when you may travel</h1>
-          <p className="mt-2 text-sm text-muted-foreground">This helps drivers and Raahi understand upcoming demand. It never reserves or auto-books a seat.</p>
+          <h1 className="mt-2 text-xl font-extrabold text-white">Tell Raahi when you may travel</h1>
+          <p className="mt-2 text-sm text-white/75">This helps drivers and Raahi understand upcoming demand. It never reserves or auto-books a seat.</p>
         </div>
         {user && profile?.role !== 'passenger' ? (
           <div className="card p-5 text-sm text-muted-foreground">Scheduled ride interest is available to passenger accounts.</div>

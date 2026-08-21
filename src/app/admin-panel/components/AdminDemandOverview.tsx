@@ -32,7 +32,7 @@ export default function AdminDemandOverview() {
 
   return (
     <section className="mx-auto max-w-screen-2xl px-4 pt-4">
-      <div className="rounded-3xl border border-border bg-card p-4 card-shadow">
+      <div className="feature-card p-4">
         <div className="flex items-start justify-between gap-3">
           <div>
             <p className="text-xs font-bold uppercase tracking-wide text-primary">Unserved demand</p>

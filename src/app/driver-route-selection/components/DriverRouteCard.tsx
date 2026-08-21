@@ -26,7 +26,7 @@ export default function DriverRouteCard({ route, joining, onJoin, demand, return
     <button
       disabled={joining}
       onClick={onJoin}
-      className="w-full rounded-3xl border border-border bg-card p-4 text-left card-shadow transition-all active:scale-[0.99] disabled:opacity-60"
+      className="feature-card w-full p-4 text-left active:scale-[0.99] disabled:opacity-60"
     >
       <div className="flex items-start gap-3">
         <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-secondary">

@@ -97,8 +97,8 @@ export default function ActiveCarContent() {
     const interested = demandSummary?.now_count ?? 0;
     const scheduled = demandSummary?.scheduled_count ?? 0;
     return (
-      <div className="max-w-screen-sm mx-auto px-4 py-8 space-y-4 animate-fade-in">
-        <div className="rounded-3xl border border-border bg-card p-6 text-center card-shadow">
+      <div className="mx-auto max-w-screen-md space-y-4 px-4 py-8 sm:px-6 animate-fade-in">
+        <div className="feature-card p-6 text-center">
           <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-secondary">
             <Car size={22} className="text-primary" />
           </div>
@@ -156,7 +156,7 @@ export default function ActiveCarContent() {
   const occupiedSeats = (car.confirmed_count ?? 0) + (car.held_count ?? 0);
 
   return (
-    <div className="max-w-screen-2xl mx-auto px-4 py-4 space-y-4 animate-fade-in">
+    <div className="page-shell space-y-4 animate-fade-in">
       <UnifiedTripCard
         from={from}
         to={to}

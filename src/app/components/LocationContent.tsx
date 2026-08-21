@@ -72,25 +72,25 @@ export default function LocationContent() {
   const comingTo = routes.filter((r) => selectedLoc && r.to_location_name === selectedLoc.name);
 
   return (
-    <div className="max-w-screen-2xl mx-auto px-4 py-5 space-y-6 animate-fade-in">
-      <div className="rounded-3xl border border-green-100 bg-gradient-to-br from-green-50 to-card p-5">
+    <div className="page-shell space-y-6 animate-fade-in">
+      <div className="hero-surface">
         <div className="inline-flex items-center gap-2 rounded-full bg-white/80 px-3 py-1.5">
           <Navigation size={14} className="text-primary" />
           <span className="text-xs font-bold text-primary">Clear fare · No platform fee</span>
         </div>
-        <h1 className="mt-4 text-2xl font-bold text-foreground">
+        <h1 className="mt-4 text-2xl font-extrabold text-white">
           {user && profile?.display_name ? `Hi, ${profile.display_name}` : 'Find your Raahi'}
         </h1>
-        <p className="mt-1 text-sm text-muted-foreground">
+        <p className="mt-1 text-sm text-white/75">
           {activeRequest ? 'Your current ride is live below. Raahi will keep the next step clear.' : 'Choose where you are. Raahi will show the clearest live ride option first.'}
         </p>
-        {selectedLoc && !activeRequest && <p className="mt-3 text-xs font-semibold text-primary">Your current choice: {selectedLoc.name}</p>}
+        {selectedLoc && !activeRequest && <p className="mt-3 text-xs font-semibold text-amber-200">Your current choice: {selectedLoc.name}</p>}
       </div>
 
       {activeRequest && (
         <button
           onClick={() => router.push('/request-status-screen')}
-          className="w-full rounded-3xl border border-primary/20 bg-card p-5 text-left card-shadow transition-all active:scale-[0.99]"
+          className="feature-card w-full text-left active:scale-[0.99]"
         >
           <div className="flex items-start justify-between gap-3">
             <div>
