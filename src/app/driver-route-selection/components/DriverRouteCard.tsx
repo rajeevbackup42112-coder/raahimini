@@ -1,22 +1,31 @@
 'use client';
 
-import { ArrowRight, BellRing, Car, Loader2, Users } from 'lucide-react';
+import { ArrowRight, Car, Loader2, RotateCcw, Users } from 'lucide-react';
 import type { DriverDepartingRoute } from '@/lib/raahiApi';
-import type { RouteDemandSummary } from '@/lib/demandApi';
+
+interface DemandContext {
+  nowCount: number;
+  scheduledCount: number;
+  label: string;
+}
 
 interface Props {
   route: DriverDepartingRoute;
-  demand?: RouteDemandSummary;
   joining: boolean;
   onJoin: () => void;
+  demand?: DemandContext;
+  returnDemand?: DemandContext;
 }
 
-export default function DriverRouteCard({ route, demand, joining, onJoin }: Props) {
+export default function DriverRouteCard({ route, joining, onJoin, demand, returnDemand }: Props) {
   const nextAction = route.has_active_car ? 'Join queue' : 'Go available now';
   const queueText = route.has_active_car
     ? `${route.waiting_drivers} driver${route.waiting_drivers === 1 ? '' : 's'} waiting`
     : 'No active car — you can become current';
-  const interested = demand?.now_count ?? 0;
+  const interested = demand?.nowCount ?? 0;
+  const planned = demand?.scheduledCount ?? 0;
+  const returnInterested = returnDemand?.nowCount ?? 0;
+  const returnPlanned = returnDemand?.scheduledCount ?? 0;
 
   return (
     <button
@@ -36,10 +45,18 @@ export default function DriverRouteCard({ route, demand, joining, onJoin }: Prop
             <span className="truncate">{route.to_location_name}</span>
           </div>
           <p className="mt-1 flex items-center gap-1.5 text-xs text-muted-foreground"><Users size={12} /> {queueText}</p>
-          {interested > 0 && (
-            <p className="mt-1 flex items-center gap-1.5 text-xs font-semibold text-primary">
-              <BellRing size={12} /> {interested} passenger{interested === 1 ? '' : 's'} looking for this route
+          {(interested > 0 || planned > 0) && (
+            <p className="mt-1 text-xs font-semibold text-primary">
+              Passenger demand: {interested} now{planned > 0 ? ` · ${planned} planned` : ''}{demand?.label ? ` · ${demand.label.toLowerCase()}` : ''}
             </p>
+          )}
+          {(returnInterested > 0 || returnPlanned > 0) && (
+            <div className="mt-2 flex items-start gap-1.5 rounded-xl bg-muted/60 px-2.5 py-2">
+              <RotateCcw size={12} className="mt-0.5 shrink-0 text-primary" />
+              <p className="text-[11px] text-muted-foreground">
+                Return demand: <strong className="text-foreground">{returnInterested} now{returnPlanned > 0 ? ` · ${returnPlanned} planned` : ''}</strong>. Advisory only — FIFO is unchanged.
+              </p>
+            </div>
           )}
         </div>
       </div>
