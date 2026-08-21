@@ -40,31 +40,31 @@ Base: `v2.0-beta1-design`
 - no passenger identity is exposed
 - admin view is observational only and does not mutate queue/trip state
 
-## Backend contract still pending
+## Isolated backend now active
 
-The frontend currently expects these canonical RPCs:
+A fresh Supabase project named `Raahi V2 Dev` is connected and reserved for V2 development only.
+
+Project ref: `euqonxznewasaymdzach`.
+
+Applied in the isolated project:
+- V10 core schema
+- V10 operational tables
+- V10 Gomoh/Dhanbad seed locations/routes/stops/vehicles
+- Beta1 demand migration `20260821162000_v2_beta1_demand_intents.sql`
+
+Beta1 backend surface now includes:
+- `demand_intents` with RLS
+- one active NOW intent per passenger+route
+- bounded wait tolerance
+- scheduled window validation
 - `create_demand_intent`
 - `cancel_my_demand_intent`
+- `expire_demand_intents`
 - `get_route_demand_summary`
+- audit rows for create/cancel actions
+- aggregate-only public demand projection
 
-The SQL migration has not been added or applied because the tool safety layer blocked the write. This block has not been bypassed.
-
-No Supabase project has been modified for Beta1.
-
-A read-only inspection of the separate Supabase project named `Raahi` showed that it contains the older pre-V2 queue/matcher architecture, including legacy operational tables and duplicate historical RPCs. It is therefore not being treated as a safe V2 development database and no writes were made to it.
-
-## Required isolated-backend implementation
-
-When a safe isolated database environment is available, implement:
-- `demand_intents` table with RLS
-- one active equivalent NOW intent per passenger/route
-- bounded wait tolerance
-- scheduled earliest/latest constraints
-- canonical create/cancel functions acting only on `auth.uid()`
-- aggregate public summary with no passenger identity
-- expiry function/job
-- audit/business events
-- explicit EXECUTE grants and PUBLIC/anon revocation where appropriate
+The production-linked `Raahi Mini` project and the historical `Raahi` project were not modified.
 
 ## Preserved invariants
 
@@ -81,15 +81,42 @@ Beta1 does not change:
 
 ## Validation
 
+Frontend/build:
 - Beta1 foundation workflow #150: SUCCESS
-- return/admin slice exposed a snake_case/camelCase type mismatch; fixed by consuming `RouteDemandSummary` directly
-- subsequent production build exposed missing Suspense around `/plan-ride` search params; fixed
-- workflow #170 after those code repairs: SUCCESS
-- the latest auto-supply-watcher and documentation/test-matrix slice is validating in workflow #173
+- return/admin slice exposed a snake_case/camelCase type mismatch; repaired
+- `/plan-ride` missing-Suspense production-build failure found and repaired
+- workflow #170: SUCCESS
+- workflow #175: SUCCESS
+
+Isolated database:
+- core schema migration: PASS
+- operational tables migration: PASS
+- Beta1 demand migration: PASS
+- seed routes present: 2 locations, 2 routes
+- `demand_intents` RLS enabled: PASS
+- NOW create: PASS
+- repeated NOW create returns same intent with `deduplicated=true`: PASS
+- aggregate summary reflects active NOW intent and LOW label: PASS
+- cross-passenger cancellation denied: PASS
+- owner cancellation: PASS
+- repeated cancellation idempotent: PASS
+- valid future scheduled intent: PASS
+- past scheduled window rejected: PASS
+- reversed scheduled window rejected: PASS
+- expiry function marks stale ACTIVE intent expired: PASS
+- temporary SQL test users/intents/audit rows cleaned up after validation: PASS
+- security advisor reviewed
+- performance advisor reviewed
+
+Advisor notes:
+- SECURITY DEFINER warnings on the canonical Beta1 RPC surface are expected and must remain bounded by explicit grants and in-function caller checks
+- anonymous `get_route_demand_summary` intentionally exposes aggregate counts/labels only; underlying rows remain protected by RLS
+- early V10 bootstrap helper warnings remain until the later V10 hardening migrations are replayed into this fresh environment
 
 ## Next implementation slices
 
-1. Add canonical SQL only in a safe isolated database workflow.
-2. Add SQL invariant tests for create/dedupe/cancel/expiry/privacy/FIFO isolation.
-3. Add browser acceptance once the backend exists.
-4. Add notification dedup/threshold behavior after the core demand lifecycle is green.
+1. Replay remaining V10 hardening/read-projection migrations into `Raahi V2 Dev` until the environment reaches production-parity for the preserved V1 engine.
+2. Verify Beta1 function privileges and no trip/queue/seat mutations under demand operations.
+3. Point a non-production V2 app configuration at `Raahi V2 Dev` without committing secrets.
+4. Run browser acceptance for passenger NOW demand, scheduled demand, driver return demand and admin unserved demand.
+5. Add notification dedup/threshold behavior only after the core demand lifecycle remains green.
