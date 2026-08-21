@@ -1,6 +1,6 @@
 # Raahi V2 Alpha2 — Passenger, Driver and Live Status
 
-Status: implementation active
+Status: code implementation complete; validation active
 Branch: `v2.0-alpha2`
 Base: `v2.0-alpha1`
 Source of truth: `docs/RAAHI_V2_BIBLE.md`
@@ -39,6 +39,14 @@ The driver route-selection surface now acts as a driver home:
 - states the next action clearly
 - preserves current queue/FIFO behavior
 
+The active-trip surface now uses the same `UnifiedTripCard` language and shows:
+- route and vehicle
+- confirmed seats and seats left
+- fare per seat
+- expected amount collected from confirmed passengers
+- held-seat attention state
+- one plain-language next action
+
 No dispatch rule is inferred from UI state.
 
 ## Unified live card
@@ -55,7 +63,7 @@ It can present:
 - confidence / next-action message
 - role-specific child actions
 
-Passenger active-car and passenger booking-status surfaces use this shared language.
+Passenger active-car, passenger booking-status, and driver active-trip surfaces now use this shared language.
 
 ## Explicit invariants preserved
 
@@ -80,10 +88,16 @@ Before Alpha2 can leave draft:
 - passenger live-card flow renders correctly
 - passenger booking-status flow renders correctly
 - driver route/home flow renders correctly
-- driver active-trip card is aligned with the unified presentation
+- driver active-trip flow renders correctly
 - mobile regression review passes
 - V1 booking/queue/trip invariants remain unchanged
 
+## Automated acceptance alignment
+
+`tests/e2e-staging/public-active-car.spec.mjs` has been updated for the Alpha2 live-card contract. It accepts either the explicit no-active-car state or the V2 `Live Raahi` projection, and when a car is collecting it requires a clear `Book Seat` or full-car outcome.
+
+The validation workflow now also runs for stacked pull requests targeting `v2.0-alpha1`, so Alpha2 receives type-check and production-build CI before Alpha1 is merged to `main`.
+
 ## Current limitation
 
-The local-machine validation channel is temporarily handled outside this chat. GitHub remains the source of truth for branch and PR state.
+Browser/mobile and real authenticated role-flow validation still requires the temporary local-machine channel. GitHub remains the source of truth for branch and PR state.
