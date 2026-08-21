@@ -45,6 +45,24 @@ export async function createNowDemandIntent(routeId: string, waitToleranceMinute
   return error ? { success: false, error: error.message } : data as DemandIntentResult;
 }
 
+export async function createScheduledDemandIntent(
+  routeId: string,
+  earliestAt: Date,
+  latestAt: Date
+): Promise<DemandIntentResult> {
+  if (latestAt.getTime() <= earliestAt.getTime()) {
+    return { success: false, error: 'Travel window must end after it starts.' };
+  }
+  const { data, error } = await rpc('create_demand_intent', {
+    p_route_id: routeId,
+    p_intent_kind: 'SCHEDULED',
+    p_earliest_at: earliestAt.toISOString(),
+    p_latest_at: latestAt.toISOString(),
+    p_wait_tolerance_minutes: null,
+  });
+  return error ? { success: false, error: error.message } : data as DemandIntentResult;
+}
+
 export async function cancelDemandIntent(intentId: string): Promise<DemandIntentResult> {
   const { data, error } = await rpc('cancel_my_demand_intent', { p_intent_id: intentId });
   return error ? { success: false, error: error.message } : data as DemandIntentResult;
