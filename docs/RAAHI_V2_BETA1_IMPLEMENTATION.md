@@ -49,6 +49,8 @@ The SQL migration has not been added or applied because the tool safety layer bl
 
 No Supabase project has been modified for Beta1.
 
+A read-only inspection of the separate Supabase project named `Raahi` showed that it contains the older pre-V2 queue/matcher architecture, including legacy operational tables and duplicate historical RPCs. It is therefore not being treated as a safe V2 development database and no writes were made to it.
+
 ## Required isolated-backend implementation
 
 When a safe isolated database environment is available, implement:
