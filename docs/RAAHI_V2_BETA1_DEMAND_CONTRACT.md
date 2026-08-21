@@ -73,7 +73,7 @@ Responsibilities:
 - emit invalidation
 
 ### `get_route_demand_summary(p_route_id)`
-Safe projection for public/passenger UI.
+Safe aggregate projection for passenger, driver and admin UI.
 
 Returns aggregate only:
 - active `NOW` interest count
@@ -81,17 +81,7 @@ Returns aggregate only:
 - coarse demand label such as `LOW`, `MEDIUM`, `HIGH`
 - no passenger identity
 
-### `get_driver_demand_context()`
-Authenticated eligible driver projection.
-
-Returns route-level demand relevant to the driver's current/likely return location:
-- route
-- active interest count
-- scheduled-near-term count
-- coarse urgency
-- potential gross fare based on current route fare × interest count, clearly labelled estimate
-
-This projection is advisory. It cannot change queue order.
+This same aggregate projection may be reused by driver and admin surfaces because it contains no passenger identity and has no mutation capability. A separate driver-only projection is optional later if richer driver-specific context is needed.
 
 ## Demand lifecycle
 
@@ -117,6 +107,17 @@ Rules:
 - does not create a return trip automatically
 - does not skip FIFO
 - does not alter an active outbound trip
+
+## Admin unserved-demand view
+
+Admin may see route-level aggregate demand where no active car exists.
+
+Rules:
+- counts/labels only
+- no passenger identity
+- observational by default
+- no direct table mutation
+- any future admin supply intervention must use an invariant-preserving command, not queue-table edits
 
 ## Demand labels
 
@@ -152,7 +153,7 @@ External push/SMS/WhatsApp is deferred unless later justified and explicitly app
 
 - public projections expose counts/labels only
 - passenger identity is never exposed through route demand summary
-- driver projection receives only aggregate demand
+- driver sees aggregate demand only
 - self-service commands act only on `auth.uid()`
 - RLS enabled on the table even though normal client behavior should use canonical RPCs
 - revoke default PUBLIC function execution; grant only intended roles
@@ -172,14 +173,14 @@ Beta1 must not change:
 
 ## Implementation sequence
 
-1. Add `demand_intents` migration and enums/check constraints.
+1. Add `demand_intents` migration and constraints in an isolated database workflow.
 2. Add canonical create/cancel/expire functions.
-3. Add public aggregate demand projection.
-4. Add authenticated driver demand projection.
-5. Add deterministic expiry job/function without requiring a paid external service.
-6. Add Passenger no-driver `I need a ride` UX.
-7. Add passenger waiting-demand state and cancellation.
-8. Add Driver Home demand/return-demand card.
+3. Add aggregate demand projection.
+4. Add deterministic expiry job/function without requiring a paid external service.
+5. Add Passenger no-driver `I need a ride` UX.
+6. Add passenger waiting-demand state and cancellation.
+7. Add scheduled travel-interest UX.
+8. Add Driver Home outbound and return-demand context.
 9. Add Admin unserved-demand visibility.
 10. Add SQL invariant tests and browser acceptance tests.
 
