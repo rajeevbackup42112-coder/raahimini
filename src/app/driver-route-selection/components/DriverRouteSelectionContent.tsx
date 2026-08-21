@@ -2,7 +2,7 @@
 
 import React, { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Car, ChevronRight, Clock3, Loader2, MapPin, RefreshCw, ShieldCheck, Users } from 'lucide-react';
+import { Clock3, Loader2, MapPin, RefreshCw, ShieldCheck } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import {
@@ -15,6 +15,7 @@ import {
   type DriverHomeContext,
   type Location,
 } from '@/lib/raahiApi';
+import DriverRouteCard from './DriverRouteCard';
 
 export default function DriverRouteSelectionContent() {
   const router = useRouter();
@@ -32,12 +33,10 @@ export default function DriverRouteSelectionContent() {
     const [locs, ctx] = await Promise.all([getActiveLocations(), getDriverHomeContext()]);
     setLocations(locs);
     setContext(ctx);
-
     if (ctx.has_active_trip) {
       router.replace('/driver-active-car-screen');
       return;
     }
-
     const saved = localStorage.getItem('raahi_driver_location_id');
     const preferred = ctx.suggested_location_id || saved || locs[0]?.id || '';
     setLocationId(preferred);
@@ -78,7 +77,6 @@ export default function DriverRouteSelectionContent() {
       toast.error(result.error || 'Could not join queue');
       return;
     }
-
     const ctx = await getDriverHomeContext();
     setContext(ctx);
     if (ctx.has_active_trip) {
@@ -110,9 +108,7 @@ export default function DriverRouteSelectionContent() {
     return (
       <div className="max-w-screen-sm mx-auto px-4 py-8 space-y-4">
         <div className="card p-5 text-center space-y-3">
-          <div className="w-12 h-12 rounded-2xl bg-secondary mx-auto flex items-center justify-center">
-            <Clock3 size={22} className="text-primary" />
-          </div>
+          <div className="w-12 h-12 rounded-2xl bg-secondary mx-auto flex items-center justify-center"><Clock3 size={22} className="text-primary" /></div>
           <div>
             <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Driver Queue</p>
             <h1 className="text-xl font-bold mt-1">You are waiting</h1>
@@ -125,7 +121,7 @@ export default function DriverRouteSelectionContent() {
           <p className="text-sm text-muted-foreground">This updates automatically. When your turn starts, Raahi will open your active car.</p>
           <div className="flex gap-2">
             <button className="btn-outline flex-1" onClick={refreshContext}><RefreshCw size={16}/>Refresh</button>
-            <button className="btn-outline flex-1" disabled={leaving} onClick={leaveQueue}>{leaving?<Loader2 size={16} className="animate-spin"/>:null}Leave Queue</button>
+            <button className="btn-outline flex-1" disabled={leaving} onClick={leaveQueue}>{leaving ? <Loader2 size={16} className="animate-spin"/> : null}Leave Queue</button>
           </div>
         </div>
       </div>
@@ -136,10 +132,10 @@ export default function DriverRouteSelectionContent() {
 
   return (
     <div className="max-w-screen-sm mx-auto px-4 py-5 space-y-5">
-      <div>
-        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Driver</p>
-        <h1 className="text-xl font-bold text-foreground">Where are you now?</h1>
-        <p className="text-sm text-muted-foreground mt-1">Choose your current location. Raahi will show only routes departing from there.</p>
+      <div className="rounded-3xl border border-green-100 bg-gradient-to-br from-green-50 to-card p-5">
+        <p className="text-xs font-bold uppercase tracking-wide text-primary">Driver home</p>
+        <h1 className="mt-2 text-2xl font-bold text-foreground">{profile?.display_name ? `Ready, ${profile.display_name}?` : 'Ready to drive?'}</h1>
+        <p className="mt-1 text-sm text-muted-foreground">Choose where you are. Raahi will show your next operational action clearly.</p>
       </div>
 
       <div className="grid grid-cols-2 gap-2">
@@ -158,20 +154,15 @@ export default function DriverRouteSelectionContent() {
             <p className="section-label">Going from {selected.name}</p>
             <button onClick={() => getDriverDepartingRoutes(locationId).then(setRoutes)} aria-label="Refresh routes"><RefreshCw size={15} className="text-muted-foreground" /></button>
           </div>
-          <div className="space-y-2">
+          <div className="space-y-3">
             {routes.length === 0 && <div className="card p-5 text-center text-sm text-muted-foreground">No active routes depart from {selected.name} right now.</div>}
             {routes.map(route => (
-              <button key={route.route_id} disabled={!!joining} onClick={() => join(route)} className="card p-4 w-full text-left flex items-center gap-3 active:scale-[.99] transition-transform">
-                <div className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center"><Car size={18} className="text-primary" /></div>
-                <div className="flex-1 min-w-0">
-                  <p className="font-bold text-sm">{route.from_location_name} → {route.to_location_name}</p>
-                  <div className="flex gap-3 mt-1 text-xs text-muted-foreground">
-                    <span className="flex items-center gap-1"><Users size={12}/>{route.waiting_drivers} waiting</span>
-                    <span>{route.has_active_car ? 'Car collecting now' : 'You can become active now'}</span>
-                  </div>
-                </div>
-                {joining === route.route_id ? <Loader2 size={18} className="animate-spin"/> : <ChevronRight size={18} className="text-muted-foreground"/>}
-              </button>
+              <DriverRouteCard
+                key={route.route_id}
+                route={route}
+                joining={joining === route.route_id}
+                onJoin={() => join(route)}
+              />
             ))}
           </div>
         </div>
