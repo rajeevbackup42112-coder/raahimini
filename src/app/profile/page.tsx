@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { AlertTriangle, CheckCircle2, Loader2, Phone, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -10,7 +10,9 @@ import { useAuth } from '@/contexts/AuthContext';
 function ProfileContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { user, loading: authLoading, requestPhoneVerification, verifyPhoneChange, removePhone } = useAuth();
+  const { user, profile, loading: authLoading, requestPhoneVerification, verifyPhoneChange, removePhone, updateDisplayName } = useAuth();
+  const [displayName, setDisplayName] = useState('');
+  const [savingName, setSavingName] = useState(false);
   const [phone, setPhone] = useState('');
   const [otp, setOtp] = useState('');
   const [step, setStep] = useState<'phone' | 'otp'>('phone');
@@ -19,6 +21,25 @@ function ProfileContent() {
   const nextParam = searchParams.get('next');
   const next = nextParam?.startsWith('/') ? nextParam : null;
   const isVerified = Boolean(user?.phone && user?.phone_confirmed_at);
+
+  useEffect(() => {
+    if (profile?.display_name) setDisplayName(profile.display_name);
+  }, [profile?.display_name]);
+
+  const saveDisplayName = async () => {
+    const normalized = displayName.trim();
+    if (normalized.length < 2 || normalized.length > 40) return;
+    setSavingName(true);
+    setError('');
+    try {
+      await updateDisplayName(normalized);
+      toast.success('Raahi name updated');
+    } catch (err: any) {
+      setError(err.message || 'Could not update your Raahi name.');
+    } finally {
+      setSavingName(false);
+    }
+  };
 
   if (authLoading) {
     return <div className="flex justify-center py-20"><Loader2 className="animate-spin text-primary" /></div>;
@@ -86,12 +107,30 @@ function ProfileContent() {
   return (
     <div className="max-w-md mx-auto px-4 py-6 space-y-5">
       <div className="card p-5 space-y-2">
-        <p className="text-xs text-muted-foreground">Signed in as</p>
-        <p className="font-semibold break-all">{user.email || 'Passenger'}</p>
+        <p className="text-xs text-muted-foreground">Your Raahi identity</p>
+        <p className="text-lg font-semibold">{profile?.display_name || user.user_metadata?.full_name || 'Passenger'}</p>
+        <p className="text-xs text-muted-foreground">{profile?.role ? `${profile.role.charAt(0).toUpperCase()}${profile.role.slice(1)}` : 'Passenger'} · {user.email || user.phone || ''}</p>
         <div className="flex items-center gap-2 text-sm">
           {isVerified ? <CheckCircle2 size={17} className="text-green-600" /> : <AlertTriangle size={17} className="text-amber-500" />}
           <span>{isVerified ? `Verified phone: ${user.phone}` : 'Phone verification required before booking'}</span>
         </div>
+      </div>
+
+      <div className="card p-5 space-y-3">
+        <div>
+          <h2 className="font-bold">What should Raahi call you?</h2>
+          <p className="text-sm text-muted-foreground mt-1">This is the name passengers, drivers and admins will see in Raahi.</p>
+        </div>
+        <input
+          value={displayName}
+          onChange={(event) => setDisplayName(event.target.value.slice(0, 40))}
+          placeholder="Your Raahi name"
+          className="input-field"
+        />
+        <button type="button" onClick={saveDisplayName} disabled={savingName || displayName.trim().length < 2 || displayName.trim() === (profile?.display_name || '')} className="btn-primary w-full">
+          {savingName && <Loader2 size={18} className="animate-spin" />}
+          {savingName ? 'Saving…' : 'Save Raahi name'}
+        </button>
       </div>
 
       {error && <div className="bg-red-50 border border-red-200 rounded-xl px-3 py-2 text-sm text-red-700">{error}</div>}

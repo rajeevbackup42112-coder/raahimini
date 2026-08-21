@@ -5,10 +5,10 @@
 :root {
   --background: #F8F7F4;
   --foreground: #1C1917;
-  --primary: #E8650A;
+  --primary: #166534;
   --primary-foreground: #FFFFFF;
-  --secondary: #FFF3E8;
-  --secondary-foreground: #9A3412;
+  --secondary: #ECFDF3;
+  --secondary-foreground: #166534;
   --accent: #0F766E;
   --accent-foreground: #FFFFFF;
   --muted: #F5F4F1;
@@ -17,7 +17,7 @@
   --card-foreground: #1C1917;
   --border: #E7E5E4;
   --input: #F5F4F1;
-  --ring: #E8650A;
+  --ring: #166534;
   --radius: 12px;
   --font-sans: var(--font-dm-sans), sans-serif;
 
@@ -144,7 +144,7 @@
 
   @keyframes pulseHighlight {
     0% { background-color: transparent; }
-    40% { background-color: #FFF3E8; }
+    40% { background-color: #ECFDF3; }
     100% { background-color: transparent; }
   }
 }
@@ -155,7 +155,7 @@
   }
 
   .btn-secondary {
-    @apply inline-flex items-center justify-center gap-2 bg-secondary text-secondary-foreground font-semibold rounded-xl px-5 py-3 text-base transition-all duration-150 active:scale-95 hover:bg-orange-100 disabled:opacity-50 disabled:cursor-not-allowed;
+    @apply inline-flex items-center justify-center gap-2 bg-secondary text-secondary-foreground font-semibold rounded-xl px-5 py-3 text-base transition-all duration-150 active:scale-95 hover:bg-green-100 disabled:opacity-50 disabled:cursor-not-allowed;
   }
 
   .btn-outline {
@@ -187,7 +187,7 @@
   }
 
   .stop-dot-active {
-    @apply w-3 h-3 rounded-full bg-primary ring-4 ring-orange-200 flex-shrink-0;
+    @apply w-3 h-3 rounded-full bg-primary ring-4 ring-green-200 flex-shrink-0;
   }
 
   .stop-dot-passed {

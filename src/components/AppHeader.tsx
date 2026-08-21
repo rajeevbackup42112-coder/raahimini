@@ -31,7 +31,7 @@ export default function AppHeader({ title, showBack = false }: AppHeaderProps) {
           <div className="relative">
             <button onClick={() => setShowUserMenu(!showUserMenu)} className={`flex items-center gap-2 rounded-xl px-2.5 h-9 ${user?'bg-primary/10':'bg-muted'}`} aria-label="Account">
               <User size={18} className={user?'text-primary':'text-muted-foreground'}/>
-              {user && <div className="hidden sm:block text-left leading-tight max-w-[130px]"><p className="text-xs font-semibold truncate">{displayName}</p><p className="text-[10px] text-muted-foreground">{roleLabel}</p></div>}
+              {user && <div className="text-left leading-tight max-w-[130px]"><p className="text-xs font-semibold truncate">Hi, {displayName}</p><p className="text-[10px] text-muted-foreground">{roleLabel}</p></div>}
             </button>
             {showUserMenu && <div className="absolute right-0 top-11 w-60 bg-card border border-border rounded-2xl shadow-lg z-50 overflow-hidden">
               {user ? <>
@@ -41,8 +41,8 @@ export default function AppHeader({ title, showBack = false }: AppHeaderProps) {
                 {profile?.role === 'admin' && <Link href="/admin-panel" onClick={()=>setShowUserMenu(false)} className="flex items-center gap-2 px-4 py-3 text-sm hover:bg-muted"><ShieldCheck size={14}/>Admin panel</Link>}
                 <button onClick={handleSignOut} className="w-full flex items-center gap-2 px-4 py-3 text-sm text-red-600 hover:bg-red-50"><LogOut size={14}/>Sign Out</button>
               </> : <>
-                <div className="px-4 py-3 border-b"><p className="text-xs font-semibold">Passenger</p><p className="text-xs text-muted-foreground mt-0.5">Browse without signing in. Sign in only when you request a seat.</p></div>
-                <Link href="/driver-login" onClick={()=>setShowUserMenu(false)} className="flex items-center gap-2 px-4 py-3 text-sm font-medium hover:bg-muted"><Car size={14}/>Driver sign in</Link>
+                <div className="px-4 py-3 border-b"><p className="text-xs font-semibold">Welcome to Raahi</p><p className="text-xs text-muted-foreground mt-0.5">Browse without signing in. Sign in when you want to use your Raahi account.</p></div>
+                <Link href="/login" onClick={()=>setShowUserMenu(false)} className="flex items-center gap-2 px-4 py-3 text-sm font-medium hover:bg-muted"><User size={14}/>Sign in</Link>
               </>}
             </div>}
           </div>

@@ -21,6 +21,7 @@ interface AuthContextType {
   isEmailVerified: () => boolean;
   getUserProfile: () => Promise<any>;
   refreshProfile: () => Promise<void>;
+  updateDisplayName: (displayName: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType>({} as AuthContextType);
@@ -54,6 +55,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const refreshProfile = async () => {
+    if (user?.id) await loadProfile(user.id);
+  };
+
+  const updateDisplayName = async (displayName: string) => {
+    const normalized = displayName.trim();
+    const { error } = await supabase.rpc('set_my_display_name', {
+      p_display_name: normalized,
+    });
+    if (error) throw error;
     if (user?.id) await loadProfile(user.id);
   };
 
@@ -229,6 +239,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     isEmailVerified,
     getUserProfile,
     refreshProfile,
+    updateDisplayName,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

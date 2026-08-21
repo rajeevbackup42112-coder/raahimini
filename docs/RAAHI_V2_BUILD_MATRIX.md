@@ -1,7 +1,7 @@
 # Raahi V2 Scope & Build Matrix
 
-Status: scope-freeze draft
-Branch: `v2-scope-freeze`
+Status: scope frozen; Alpha1 implementation active
+Branch: `v2.0-alpha1`
 Source of truth: `docs/RAAHI_V2_BIBLE.md`
 
 ## Governing rule
@@ -44,7 +44,7 @@ Raahi V2 is an evolution of the proven V1 engine, not a rewrite.
 | Raahi display name / nickname | V2.0 Launch | alpha1 | profile editor + display everywhere | add/normalize `display_name`; canonical update RPC | Low | create/update/read, fallback behavior |
 | Shallow profile menu | V2.0 Launch | alpha1 | profile, support, logout, role | profile read/update RPCs | Low | role boundary, validation |
 | Progressive profile completion | V2.0 Launch | alpha1 | ask only when action requires data | validation by action/RPC | Medium | browse without completion; booking/driver requirements |
-| Green V2 design system | V2.0 Launch | alpha2 | global tokens/components | none | Low | visual smoke, responsive |
+| Green V2 design system | V2.0 Launch | alpha1 | global tokens/components | none | Low | visual smoke, responsive |
 | Passenger Home redesign | V2.0 Launch | alpha2 | action-first live route card | existing projections preferred | Medium | no booking-state regression |
 | Driver Home redesign | V2.0 Launch | alpha2 | one operational card / next action | existing driver/trip projections preferred | High | all driver lifecycle actions |
 | Unified trip/status card | V2.0 Launch | alpha2 | passenger/driver/admin shared visual model | read projection only where possible | Medium | status consistency by role |
@@ -88,18 +88,18 @@ Raahi V2 is an evolution of the proven V1 engine, not a rewrite.
 
 ## Milestones
 
-### v2.0-alpha1 — Identity + unified login
+### v2.0-alpha1 — Identity + unified login + design tokens
 Exit criteria:
 - one public login path;
 - correct automatic role routing;
 - logged-in display name visible;
 - nickname editable through canonical backend command;
+- V2 green design tokens applied consistently to the shared design system;
 - profile/logout flow stable;
 - V1 passenger/driver/admin smoke suite remains green.
 
 ### v2.0-alpha2 — Core UI redesign
 Exit criteria:
-- V2 green design system applied;
 - Passenger Home, Driver Home, and Live Trip/Booking Status redesigned;
 - unified trip card/state language;
 - seat booking semantics unchanged;
