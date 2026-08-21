@@ -53,7 +53,7 @@ function PlanRideContent() {
       <AppHeader title="Plan a ride" showBack />
       <main className="mx-auto max-w-md px-4 py-6 space-y-4">
         <div className="hero-surface">
-          <p className="text-xs font-bold uppercase tracking-wide text-primary">Scheduled interest</p>
+          <p className="text-xs font-bold uppercase tracking-wide text-amber-200">Scheduled interest</p>
           <h1 className="mt-2 text-xl font-extrabold text-white">Tell Raahi when you may travel</h1>
           <p className="mt-2 text-sm text-white/75">This helps drivers and Raahi understand upcoming demand. It never reserves or auto-books a seat.</p>
         </div>

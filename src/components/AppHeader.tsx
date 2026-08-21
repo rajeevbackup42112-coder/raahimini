@@ -69,7 +69,7 @@ export default function AppHeader({ title, showBack = false }: AppHeaderProps) {
           ) : null}
 
           {!user ? (
-            <Link href="/login" className="btn-primary px-4 py-2 text-sm">Sign in</Link>
+            pathname === '/login' ? null : <Link href="/login" className="btn-primary px-4 py-2 text-sm">Sign in</Link>
           ) : (
             <div className="relative">
               <button onClick={() => setShowUserMenu(!showUserMenu)} className="flex items-center gap-2 rounded-xl bg-muted px-2 py-1.5 transition-colors hover:bg-secondary" aria-label="Account">
