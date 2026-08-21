@@ -1,36 +1,64 @@
 # Raahi V2 Beta1 — Backend Gate
 
-Status: BLOCKED pending a safe isolated database target
+Status: ISOLATED DEV BACKEND AVAILABLE; validation in progress
 
-## Why this gate exists
+## Current safe environment
 
-Beta1 frontend now depends on demand-intent RPCs, but Raahi production must remain untouched and the existing separate Supabase project named `Raahi` is not a clean V2 development database.
+A fresh Supabase project named `Raahi V2 Dev` is now connected under a separate Supabase account and is being used only for V2 development. Production-linked `Raahi Mini` remains untouched.
 
-Read-only inspection shows that project contains the older queue/matcher architecture and legacy historical RPC surface. It must not be repurposed implicitly.
+Current project ref: `euqonxznewasaymdzach`.
 
-## Safe next backend options
+The project began empty. The V10 core schema and operational tables were applied first, followed by the Beta1 demand-intent migration. No production project or historical `Raahi` project was modified.
 
-Only one of these should be used:
+## Beta1 backend now present
 
-1. A fresh isolated Supabase development project explicitly designated for Raahi V2.
-2. A paid Supabase branch later, when the user approves the cost.
-3. A local Supabase stack when Docker or another supported local Postgres workflow is available.
+- `demand_intents` table with RLS
+- one active NOW intent per passenger+route
+- bounded NOW wait tolerance
+- bounded future scheduled window
+- `create_demand_intent`
+- `cancel_my_demand_intent`
+- `expire_demand_intents`
+- `get_route_demand_summary`
+- aggregate-only public route demand projection
+- explicit function grants/revocations for the Beta1 RPC surface
+- audit rows for create/cancel actions
 
-Until one exists:
-- do not apply Beta1 DDL to `Raahi Mini` production-linked Supabase
-- do not repurpose the older `Raahi` project without explicit approval
-- do not fake demand RPC responses in production code
-- keep Beta1 PR draft
+The migration is committed at:
+`supabase/migrations/20260821162000_v2_beta1_demand_intents.sql`
 
-## Backend acceptance before Beta1 can progress to release testing
+## Validation status
 
-- migration applies cleanly to isolated Postgres
-- RLS and EXECUTE grants verified
-- NOW intent dedupe verified
-- scheduled window validation verified
-- cancellation ownership verified
-- expiry verified
-- public summaries expose aggregate counts only
-- demand functions do not mutate trips, driver queue, seat requests or trip seats
-- FIFO behavior remains unchanged under concurrent demand
-- security/performance advisors reviewed after DDL
+Completed:
+- fresh isolated database target confirmed
+- core schema migration applied cleanly
+- operational-table migration applied cleanly
+- Beta1 demand migration applied cleanly
+- `demand_intents` confirmed with RLS enabled
+- foreign keys to passenger profile and route confirmed
+- security advisor run completed
+
+Still required before Beta1 backend is considered release-ready:
+- authenticated NOW create/dedupe test
+- scheduled-window boundary tests
+- cancellation ownership/idempotency tests
+- expiry test
+- aggregate privacy test
+- explicit function privilege verification
+- FIFO/trip/seat non-mutation checks
+- performance advisor review
+- browser acceptance against the isolated project
+
+## Security-advisor notes
+
+The advisor flags SECURITY DEFINER functions that are intentionally exposed as canonical RPCs. These warnings are not being ignored: each function must have a documented caller boundary and explicit grants. `get_route_demand_summary` intentionally exposes only aggregate counts/labels to anonymous browsing while the underlying demand rows remain hidden by RLS.
+
+The baseline bootstrap also exposes some helper-function warnings inherited from early V10 migrations; these will be reconciled with the later V10 hardening migrations before this environment is considered production-parity.
+
+## Guardrails
+
+- do not apply V2 development DDL to production-linked Supabase
+- do not repurpose the historical `Raahi` project
+- do not merge Beta1 until isolated SQL/invariant/browser gates pass
+- demand must never mutate trips, driver queue, seat requests or trip seats
+- demand must never bypass FIFO or reserve capacity
