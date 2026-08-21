@@ -1,7 +1,7 @@
 # Raahi V2 Scope & Build Matrix
 
-Status: scope frozen; Alpha1 implementation active
-Branch: `v2.0-alpha1`
+Status: Beta1 implementation active; isolated V2 dev backend established
+Branch: `v2.0-beta1`
 Source of truth: `docs/RAAHI_V2_BIBLE.md`
 
 ## Governing rule
@@ -9,6 +9,16 @@ Source of truth: `docs/RAAHI_V2_BIBLE.md`
 Raahi V2 is an evolution of the proven V1 engine, not a rewrite.
 
 **V1 business invariants remain unchanged unless a V2 requirement explicitly needs a new rule and that rule is approved, isolated, and tested.**
+
+## Environment strategy
+
+Raahi V2 uses an isolated two-environment model:
+
+- **Development:** Supabase project `Raahi V2 Dev`; all migrations, SQL invariants, browser acceptance and pre-release validation happen here first.
+- **Production:** a second Supabase project will be created later from the same migration history only when the V2 release candidate is green and production deployment is approved.
+- **Source control:** GitHub remains the canonical source of truth for application code, migrations and release tags. Environment isolation should be done with repositories/branches and credentials, not by fragmenting history unnecessarily across unrelated identities.
+- **Hosting:** Rocket is the preferred deployment host while it provides staging/production separation, version history/rollback and custom-domain deployment without a separate hosting-credit burden. Hosting must consume environment-specific Supabase credentials; dev credentials must never be used by production.
+- **Production V1:** the current Version-10 production system stays untouched until explicit V2 production GO.
 
 ## Locked V1 invariants
 
@@ -141,20 +151,10 @@ Exit criteria:
 
 For every milestone:
 
-`branch → build → automated tests → staging → smoke/E2E → production approval → tag`
+`branch → build → automated tests → isolated dev → staging → smoke/E2E → production approval → tag`
 
 No milestone may trade ride reliability for UI polish, ads, polls, or analytics.
 
 ## Immediate next implementation task
 
-Start `v2.0-alpha1` by auditing the current auth/profile implementation and documenting:
-
-1. current public login entry points;
-2. current role-detection logic;
-3. current `profiles`/driver/admin identity fields;
-4. every UI location that renders auth/account name;
-5. every direct profile table write;
-6. exact schema/RPC delta needed for `display_name`;
-7. regression tests required before changing login routing.
-
-Only after that audit should alpha1 code changes begin.
+Continue Beta1 on the isolated V2 dev backend by replaying the remaining frozen V10 migrations, validating production-parity invariants, and then running browser acceptance against the dev Supabase project. Do not create the V2 production Supabase project until the release candidate is green and production deployment is explicitly approved.
