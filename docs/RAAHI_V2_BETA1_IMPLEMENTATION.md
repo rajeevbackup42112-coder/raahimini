@@ -26,13 +26,13 @@ Base: `v2.0-beta1-design`
 
 ### Driver demand visibility
 - Driver Home route cards fetch aggregate outbound demand
-- reverse-route demand is also projected for the candidate return journey
+- reverse-route demand is projected for the candidate return journey
 - return demand is advisory only and cannot change queue order
 - queue join / availability action remains the existing FIFO action
 - no driver is promoted, reordered or auto-activated because of demand
 
 ### Admin unserved-demand visibility
-- Admin Home now includes an aggregate unserved-demand overview
+- Admin Home includes an aggregate unserved-demand overview
 - only routes with demand and no active car are highlighted
 - NOW and scheduled interest counts are shown separately
 - no passenger identity is exposed
@@ -58,7 +58,6 @@ When a safe isolated database environment is available, implement:
 - scheduled earliest/latest constraints
 - canonical create/cancel functions acting only on `auth.uid()`
 - aggregate public summary with no passenger identity
-- driver aggregate projection
 - expiry function/job
 - audit/business events
 - explicit EXECUTE grants and PUBLIC/anon revocation where appropriate
