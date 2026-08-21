@@ -84,7 +84,8 @@ Beta1 does not change:
 - Beta1 foundation workflow #150: SUCCESS
 - return/admin slice exposed a snake_case/camelCase type mismatch; fixed by consuming `RouteDemandSummary` directly
 - subsequent production build exposed missing Suspense around `/plan-ride` search params; fixed
-- latest stacked validation is still running and must pass before Beta1 frontend is considered code-complete
+- workflow #170 after those code repairs: SUCCESS
+- the latest auto-supply-watcher and documentation/test-matrix slice is validating in workflow #173
 
 ## Next implementation slices
 
