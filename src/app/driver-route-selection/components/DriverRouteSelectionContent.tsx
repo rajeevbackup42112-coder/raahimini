@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Clock3, Loader2, MapPin, RefreshCw, ShieldCheck } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
+import { getRouteDemandSummary, type RouteDemandSummary } from '@/lib/demandApi';
 import {
   getActiveLocations,
   getDriverDepartingRoutes,
@@ -24,6 +25,7 @@ export default function DriverRouteSelectionContent() {
   const [context, setContext] = useState<DriverHomeContext>({});
   const [locationId, setLocationId] = useState('');
   const [routes, setRoutes] = useState<DriverDepartingRoute[]>([]);
+  const [demandByRoute, setDemandByRoute] = useState<Record<string, RouteDemandSummary>>({});
   const [loading, setLoading] = useState(true);
   const [joining, setJoining] = useState<string | null>(null);
   const [leaving, setLeaving] = useState(false);
@@ -49,6 +51,13 @@ export default function DriverRouteSelectionContent() {
     if (ctx.has_active_trip) router.replace('/driver-active-car-screen');
   }, [router]);
 
+  const loadRoutes = useCallback(async (selectedLocationId: string) => {
+    const nextRoutes = await getDriverDepartingRoutes(selectedLocationId);
+    setRoutes(nextRoutes);
+    const summaries = await Promise.all(nextRoutes.map(route => getRouteDemandSummary(route.route_id)));
+    setDemandByRoute(Object.fromEntries(summaries.map(summary => [summary.route_id, summary])));
+  }, []);
+
   useEffect(() => {
     if (!authLoading && user && (profile?.role === 'driver' || profile?.role === 'admin')) load();
     else if (!authLoading) setLoading(false);
@@ -63,11 +72,12 @@ export default function DriverRouteSelectionContent() {
   useEffect(() => {
     if (!locationId || context.queue_status === 'WAITING') {
       setRoutes([]);
+      setDemandByRoute({});
       return;
     }
     localStorage.setItem('raahi_driver_location_id', locationId);
-    getDriverDepartingRoutes(locationId).then(setRoutes);
-  }, [locationId, context.queue_status]);
+    loadRoutes(locationId);
+  }, [locationId, context.queue_status, loadRoutes]);
 
   const join = async (route: DriverDepartingRoute) => {
     setJoining(route.route_id);
@@ -135,7 +145,7 @@ export default function DriverRouteSelectionContent() {
       <div className="rounded-3xl border border-green-100 bg-gradient-to-br from-green-50 to-card p-5">
         <p className="text-xs font-bold uppercase tracking-wide text-primary">Driver home</p>
         <h1 className="mt-2 text-2xl font-bold text-foreground">{profile?.display_name ? `Ready, ${profile.display_name}?` : 'Ready to drive?'}</h1>
-        <p className="mt-1 text-sm text-muted-foreground">Choose where you are. Raahi will show your next operational action clearly.</p>
+        <p className="mt-1 text-sm text-muted-foreground">Choose where you are. Raahi will show your next operational action and live passenger interest.</p>
       </div>
 
       <div className="grid grid-cols-2 gap-2">
@@ -152,7 +162,7 @@ export default function DriverRouteSelectionContent() {
         <div>
           <div className="flex items-center justify-between mb-2">
             <p className="section-label">Going from {selected.name}</p>
-            <button onClick={() => getDriverDepartingRoutes(locationId).then(setRoutes)} aria-label="Refresh routes"><RefreshCw size={15} className="text-muted-foreground" /></button>
+            <button onClick={() => loadRoutes(locationId)} aria-label="Refresh routes"><RefreshCw size={15} className="text-muted-foreground" /></button>
           </div>
           <div className="space-y-3">
             {routes.length === 0 && <div className="card p-5 text-center text-sm text-muted-foreground">No active routes depart from {selected.name} right now.</div>}
@@ -160,6 +170,7 @@ export default function DriverRouteSelectionContent() {
               <DriverRouteCard
                 key={route.route_id}
                 route={route}
+                demand={demandByRoute[route.route_id]}
                 joining={joining === route.route_id}
                 onJoin={() => join(route)}
               />
