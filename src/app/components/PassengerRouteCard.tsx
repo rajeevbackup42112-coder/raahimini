@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { ArrowRight, Car, ChevronRight } from 'lucide-react';
+import { ArrowRight, Car, ChevronRight, IndianRupee } from 'lucide-react';
 import type { RouteForLocation } from '@/lib/raahiApi';
 
 export default function PassengerRouteCard({ route }: { route: RouteForLocation }) {
@@ -40,7 +40,10 @@ export default function PassengerRouteCard({ route }: { route: RouteForLocation 
             <ArrowRight size={14} className="shrink-0 text-muted-foreground" />
             <span className="truncate">{route.to_location_name}</span>
           </div>
-          <p className="mt-1 text-xs text-muted-foreground">{nextText}</p>
+          <div className="mt-1 flex items-center gap-3 text-xs text-muted-foreground">
+            <span>{nextText}</span>
+            <span className="inline-flex shrink-0 items-center gap-0.5 font-semibold text-foreground"><IndianRupee size={11} />{route.fare_per_seat}/seat</span>
+          </div>
         </div>
         <ChevronRight size={18} className="mt-7 shrink-0 text-muted-foreground transition-colors group-hover:text-primary" />
       </div>
