@@ -120,3 +120,16 @@ Advisor notes:
 3. Point a non-production V2 app configuration at `Raahi V2 Dev` without committing secrets.
 4. Run browser acceptance for passenger NOW demand, scheduled demand, driver return demand and admin unserved demand.
 5. Add notification dedup/threshold behavior only after the core demand lifecycle remains green.
+
+
+## Beta1 demand notification / rate-limit slice
+
+- Uses the existing `raahi_invalidation_events` Realtime stream; no paid/external notification provider is introduced.
+- `demand_notification_state` is internal-only, RLS-enabled, and has no anon/authenticated table grants.
+- Server triggers emit `DEMAND_LOW`, `DEMAND_MEDIUM`, `DEMAND_HIGH`, `DEMAND_URGENCY`, or `SUPPLY_AVAILABLE` only on meaningful state transitions.
+- Unchanged demand is suppressed; demand escalation and shorter NOW wait tolerance can re-alert.
+- Supply appearance stops supply-seeking alerts; if demand remains after supply later disappears, the current demand tier may signal again.
+- Driver Home listens only while an authenticated driver is choosing routes, filters events to routes departing the selected location, refetches aggregate demand before showing the alert, and keeps `Go Available` on the existing `join_driver_queue` RPC.
+- The notification layer never allocates seats, creates bookings/trips, changes driver FIFO, or mutates queue order.
+
+V2 Dev validation: notification state initialized at `NONE`, no spurious zero-demand event was emitted, internal helper/trigger functions have no anon/authenticated EXECUTE privilege, protected operational tables remained unchanged, TypeScript passed, and the production build passed.

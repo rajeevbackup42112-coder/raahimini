@@ -90,3 +90,18 @@ A clean detached Beta1 validation worktree is available at:
 - demand must never mutate trips, driver queue, seat requests or trip seats
 - demand must never bypass FIFO or reserve capacity
 - create `Raahi V2 Prod` only after release-candidate approval; do not consume the second project slot early
+
+
+## Beta1 notification/rate-limit checkpoint
+
+PASS in isolated `Raahi V2 Dev`:
+- migration `20260821235000_v2_beta1_demand_notifications.sql` applied;
+- route notification state initialized without creating operational demand/trip/queue/seat data;
+- notification events are generated only for demand-tier escalation, urgency increase, supply appearance, or renewed unmet demand after supply disappears;
+- unchanged demand is deduplicated by server-side state;
+- internal notification state has RLS and no client table grants;
+- notification helper and trigger functions are not executable by anon/authenticated roles;
+- Driver Home consumes the existing minimal Realtime invalidation stream and uses the canonical queue RPC for `Go Available`;
+- V1/V10 booking, trip, seat, fare, FIFO and role invariants remain untouched.
+
+Remaining release gate is authenticated passenger/driver/admin browser acceptance, which still requires a V2 Dev-only server-side Auth-admin/service-role capability.

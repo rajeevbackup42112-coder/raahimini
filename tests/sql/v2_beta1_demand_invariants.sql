@@ -111,7 +111,8 @@ begin
   end if;
 
   update public.demand_intents
-  set latest_at = now() - interval '1 minute'
+  set earliest_at = now() - interval '6 minutes',
+      latest_at = now() - interval '1 minute'
   where id = (v_expire_candidate->>'intent_id')::uuid;
 
   select public.expire_demand_intents() into v_expired;

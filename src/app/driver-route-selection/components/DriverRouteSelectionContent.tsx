@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Clock3, Loader2, MapPin, RefreshCw, ShieldCheck } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
+import { createClient } from '@/lib/supabase/client';
 import { getRouteDemandSummary, type RouteDemandSummary } from '@/lib/demandApi';
 import {
   getActiveLocations,
@@ -113,6 +114,36 @@ export default function DriverRouteSelectionContent() {
     }
   };
 
+  useEffect(() => {
+    if (!user || profile?.role !== 'driver' || !locationId || context.queue_status === 'WAITING' || routes.length === 0) return;
+
+    const routeById = new Map(routes.map(route => [route.route_id, route]));
+    const supabase = createClient();
+    const channel = supabase
+      .channel(`driver_demand_notifications_${user.id}_${locationId}`)
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'raahi_invalidation_events' }, async payload => {
+        const event = payload.new as { route_id?: string; source_table?: string; event_kind?: string };
+        if (event.source_table !== 'demand_notification' || !event.route_id || !event.event_kind) return;
+        if (!['DEMAND_LOW', 'DEMAND_MEDIUM', 'DEMAND_HIGH', 'DEMAND_URGENCY'].includes(event.event_kind)) return;
+
+        const route = routeById.get(event.route_id);
+        if (!route || route.has_active_car) return;
+
+        const summary = await getRouteDemandSummary(route.route_id);
+        if (summary.now_count < 1) return;
+        setDemandByRoute(previous => ({ ...previous, [route.route_id]: summary }));
+
+        const passengerText = `${summary.now_count} passenger${summary.now_count === 1 ? '' : 's'} ${summary.now_count === 1 ? 'is' : 'are'} looking for ${route.from_location_name} -> ${route.to_location_name}.`;
+        const message = event.event_kind === 'DEMAND_URGENCY' ? `Demand is getting more urgent. ${passengerText}` : passengerText;
+        toast(message, {
+          action: { label: 'Go Available', onClick: () => { void join(route); } },
+        });
+      })
+      .subscribe();
+
+    return () => { void supabase.removeChannel(channel); };
+  }, [context.queue_status, locationId, profile?.role, routes, user]);
+
   const leaveQueue = async () => {
     if (!context.queue_route_id) return;
     setLeaving(true);
@@ -159,7 +190,7 @@ export default function DriverRouteSelectionContent() {
   return (
     <div className="mx-auto max-w-screen-lg space-y-5 px-4 py-5 sm:px-6">
       <div className="hero-surface">
-        <p className="text-xs font-bold uppercase tracking-wide text-primary">Driver home</p>
+        <p className="text-xs font-bold uppercase tracking-wide text-amber-200">Driver home</p>
         <h1 className="mt-2 text-2xl font-extrabold text-white">{profile?.display_name ? `Ready, ${profile.display_name}?` : 'Ready to drive?'}</h1>
         <p className="mt-1 text-sm text-white/75">Choose where you are. Raahi will show your next action, outbound demand and possible return demand.</p>
       </div>
