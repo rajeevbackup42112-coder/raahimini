@@ -18,17 +18,25 @@ Base: `v2.0-beta1-design`
 ### Scheduled travel intent
 - `demandApi` supports `SCHEDULED` intent creation with an explicit earliest/latest window
 - `/plan-ride?route_id=...` provides a lightweight future travel-interest screen
-- no-driver route experience now links directly to `Plan a ride for later`
+- no-driver route experience links directly to `Plan a ride for later`
 - route summary can show upcoming scheduled-interest count alongside live NOW interest
 - default UI window is tomorrow 08:00–09:00 local time and remains editable
 - invalid/past/reversed windows are rejected client-side before RPC submission
 - scheduled interest never auto-books
 
 ### Driver demand visibility
-- Driver Home route cards fetch aggregate demand context
-- demand count/label is advisory only
+- Driver Home route cards fetch aggregate outbound demand
+- reverse-route demand is also projected for the candidate return journey
+- return demand is advisory only and cannot change queue order
 - queue join / availability action remains the existing FIFO action
 - no driver is promoted, reordered or auto-activated because of demand
+
+### Admin unserved-demand visibility
+- Admin Home now includes an aggregate unserved-demand overview
+- only routes with demand and no active car are highlighted
+- NOW and scheduled interest counts are shown separately
+- no passenger identity is exposed
+- admin view is observational only and does not mutate queue/trip state
 
 ## Backend contract still pending
 
@@ -70,16 +78,16 @@ Beta1 does not change:
 
 ## Validation
 
-Completed before the scheduled-intent slice:
+Completed before the latest demand slices:
 - Beta1 foundation type-check PASS
 - production build PASS
 - GitHub workflow #150 SUCCESS
 
-The latest scheduled-intent/no-driver slice is covered by the same stacked validation workflow and must be green before this slice is considered code-complete.
+The latest scheduled-intent, return-demand and admin-demand slices are covered by the same stacked validation workflow and must be green before Beta1 frontend is considered code-complete.
 
 ## Next implementation slices
 
-1. Add reverse-route/return-demand context to Driver Home.
-2. Add admin unserved-demand projection UI.
-3. Add canonical SQL only in a safe isolated database workflow.
-4. Add invariant tests and browser acceptance once backend exists.
+1. Add canonical SQL only in a safe isolated database workflow.
+2. Add SQL invariant tests for create/dedupe/cancel/expiry/privacy/FIFO isolation.
+3. Add browser acceptance once the backend exists.
+4. Add notification dedup/threshold behavior after the core demand lifecycle is green.
