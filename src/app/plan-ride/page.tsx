@@ -1,13 +1,33 @@
 'use client';
 
+import { Suspense } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { CalendarClock } from 'lucide-react';
+import { CalendarClock, Loader2 } from 'lucide-react';
 import AppHeader from '@/components/AppHeader';
 import { useAuth } from '@/contexts/AuthContext';
 import ScheduledDemandForm from '@/app/active-car-screen/components/ScheduledDemandForm';
 
 export default function PlanRidePage() {
+  return (
+    <Suspense fallback={<PlanRideLoading />}>
+      <PlanRideContent />
+    </Suspense>
+  );
+}
+
+function PlanRideLoading() {
+  return (
+    <div className="min-h-screen bg-background">
+      <AppHeader title="Plan a ride" showBack />
+      <main className="mx-auto max-w-md px-4 py-16 flex justify-center">
+        <Loader2 className="animate-spin text-primary" />
+      </main>
+    </div>
+  );
+}
+
+function PlanRideContent() {
   const searchParams = useSearchParams();
   const routeId = searchParams.get('route_id');
   const { user, profile, signInWithGoogle } = useAuth();
