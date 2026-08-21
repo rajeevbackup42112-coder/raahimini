@@ -77,12 +77,10 @@ Beta1 does not change:
 
 ## Validation
 
-Completed before the latest demand slices:
-- Beta1 foundation type-check PASS
-- production build PASS
-- GitHub workflow #150 SUCCESS
-
-The latest scheduled-intent, return-demand and admin-demand slices are covered by the same stacked validation workflow and must be green before Beta1 frontend is considered code-complete.
+- Beta1 foundation workflow #150: SUCCESS
+- later return/admin slice exposed a type mismatch between the API snake_case shape and the driver-card camelCase draft type
+- that mismatch has been corrected so `DriverRouteCard` now consumes `RouteDemandSummary` directly
+- latest stacked validation must pass before Beta1 frontend is considered code-complete
 
 ## Next implementation slices
 
