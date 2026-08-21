@@ -105,7 +105,7 @@ begin
     raise exception 'Reversed scheduled window unexpectedly succeeded: %', v_bad_reverse;
   end if;
 
-  select public.create_demand_intent(v_route, 'NOW', null, null, 1) into v_expire_candidate;
+  select public.create_demand_intent(v_route, 'NOW', null, null, 5) into v_expire_candidate;
   if coalesce((v_expire_candidate->>'success')::boolean, false) is not true then
     raise exception 'Expiry fixture create failed: %', v_expire_candidate;
   end if;
