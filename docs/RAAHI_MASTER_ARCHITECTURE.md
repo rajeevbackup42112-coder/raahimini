@@ -86,6 +86,12 @@ There is no user-facing role switcher. Client metadata can never self-promote a 
 - Legacy `/driver-login` and `/admin-login` routes may remain temporarily for compatibility/deep links, but they are not normal public role selectors and cannot grant role authority.
 - Successful authentication into driver/admin operations is accepted only when the server-side profile already has the trusted role and is unrestricted.
 
+### Self-service identity commands
+
+- set_my_display_name(display_name) may update only the authenticated user's profiles.display_name; it cannot mutate role, restriction state, phone authority or admin fields.
+- Supabase Auth remains phone authority. After a verified phone change/removal, sync_my_profile_phone() mirrors the current Auth phone into the caller's own profile; browser-supplied phone values are never trusted for this mirror.
+- Both commands require an authenticated caller and expose no role-selection capability.
+
 ## 6. Passenger lifecycle
 
 ```mermaid

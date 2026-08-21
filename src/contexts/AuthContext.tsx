@@ -154,7 +154,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     if (userError) throw userError;
     setUser(userData.user);
     if (userData.user?.id) {
-      await supabase.from('profiles').update({ phone: userData.user.phone || '' }).eq('id', userData.user.id);
+      const { error: syncError } = await supabase.rpc('sync_my_profile_phone');
+      if (syncError) throw syncError;
       await loadProfile(userData.user.id);
     }
     return data;
@@ -176,7 +177,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     if (userError) throw userError;
     setUser(userData.user);
     if (userData.user?.id) {
-      await supabase.from('profiles').update({ phone: '' }).eq('id', userData.user.id);
+      const { error: syncError } = await supabase.rpc('sync_my_profile_phone');
+      if (syncError) throw syncError;
       await loadProfile(userData.user.id);
     }
   };
