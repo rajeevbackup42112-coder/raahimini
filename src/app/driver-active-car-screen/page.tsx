@@ -3,6 +3,7 @@ import AppLayout from '@/components/AppLayout';
 import DriverActiveCarContent from './components/DriverActiveCarContent';
 import DriverCancelTripPanel from './components/DriverCancelTripPanel';
 import DriverSupportPanel from './components/DriverSupportPanel';
+import DriverTripLocationPanel from './components/DriverTripLocationPanel';
 import DriverFareBanner from '@/components/DriverFareBanner';
 import RealtimeRefreshBoundary from '@/components/RealtimeRefreshBoundary';
 
@@ -11,6 +12,7 @@ export default function DriverActiveCarPage() {
     <AppLayout headerTitle="Driver — Active Car" headerBack>
       <RealtimeRefreshBoundary>
         <DriverFareBanner />
+        <DriverTripLocationPanel />
         <DriverActiveCarContent />
         <DriverSupportPanel />
         <DriverCancelTripPanel />
