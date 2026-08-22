@@ -34,6 +34,8 @@ jobs:
         run: node tests/contracts/structured-support-contract.cjs
       - name: Active-trip GPS contract
         run: node tests/contracts/active-trip-gps-contract.cjs
+      - name: Share My Raahi contract
+        run: node tests/contracts/share-my-raahi-contract.cjs
       - name: Type check
         run: npm run type-check
       - name: Production build
