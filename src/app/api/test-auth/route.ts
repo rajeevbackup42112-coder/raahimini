@@ -20,6 +20,9 @@ type PersonaConfig = {
 type PersonaMap = Record<string, PersonaConfig>;
 
 const LOGIN_PERSONAS: PersonaMap = {
+  'beta1-admin': { userId: 'e3a870d5-7708-4290-9ab8-8a8e1c413c98', role: 'admin' },
+  'beta1-driver': { userId: '8abbebb5-8d1d-4891-a1a3-76eb5d70bd45', role: 'driver' },
+  'beta1-passenger': { userId: '4c4fda8c-7533-4fe8-aadb-ab4325176768', role: 'passenger' },
   'ajit-admin': { userId: 'cb7f0d46-e909-4a75-ab0f-20eae6ab089d', role: 'admin' },
   'dipti-driver': { userId: '90883c8e-ffe6-4854-9ff1-c5f80cc445e7', role: 'driver' },
   'rajeev4-driver': { userId: 'b4318eff-f019-4631-a82d-34da3435b6e4', role: 'driver' },
