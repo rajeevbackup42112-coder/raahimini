@@ -91,6 +91,7 @@ export default function RequestStatusContent() {
           : 'Seat held';
   const liveStatusTone = isExpired ? 'none' : isConfirmed ? 'good' : 'limited';
   const journeyStep = isTripCompleted ? 4 : req.trip_status === 'IN_PROGRESS' ? 3 : isConfirmed ? 1 : 0;
+  const seatLabel = req.seat_numbers?.length ? `Seat ${req.seat_numbers.join(', ')}` : `${req.seat_count} seat${req.seat_count === 1 ? '' : 's'}`;
 
   return (
     <div className="mobile-page space-y-3 animate-fade-in">
@@ -104,7 +105,10 @@ export default function RequestStatusContent() {
         confidenceLabel={pickupProgressText}
       >
         <div className="flex items-center justify-between gap-3">
-          <p className="text-sm font-bold text-foreground">{req.seat_count} seat{req.seat_count === 1 ? '' : 's'} for you</p>
+          <div>
+            <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Your seat{req.seat_count === 1 ? '' : 's'}</p>
+            <p className="text-sm font-bold text-foreground">{seatLabel}</p>
+          </div>
           <button onClick={fetchStatus} className="btn-outline px-3 py-2" aria-label="Refresh ride status"><RefreshCw size={14} /> Refresh</button>
         </div>
         <div className="grid grid-cols-5 gap-1.5" aria-label="Journey progress">
@@ -121,7 +125,7 @@ export default function RequestStatusContent() {
         <div className="space-y-2">
           <PayWarningBanner />
           <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
-            <p className="text-xs font-semibold text-amber-800">Your seat is held until the driver passes your pickup stop.</p>
+            <p className="text-xs font-semibold text-amber-800">Your selected seat{req.seat_count === 1 ? ' is' : 's are'} held until the driver passes your pickup stop.</p>
             <p className="text-xs text-amber-700 mt-1">Meet the driver and pay directly. If you no longer need the ride, withdraw before your stop so the seat can be offered to someone else.</p>
           </div>
         </div>
@@ -133,7 +137,7 @@ export default function RequestStatusContent() {
           <div>
             <p className="text-sm font-bold text-green-800">{isTripCompleted ? 'Trip Completed' : 'Booking Confirmed'}</p>
             <p className="text-xs text-green-700 mt-0.5">
-              {isTripCompleted ? 'You have arrived at the destination. Thank you for riding with Raahi!' : 'Your seat is confirmed. The driver has received your payment. Enjoy your ride!'}
+              {isTripCompleted ? 'You have arrived at the destination. Thank you for riding with Raahi!' : `${seatLabel} confirmed. The driver has received your payment. Enjoy your ride!`}
             </p>
           </div>
         </div>
