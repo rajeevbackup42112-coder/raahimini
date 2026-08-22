@@ -1,0 +1,23 @@
+const fs = require('node:fs');
+const path = require('node:path');
+const root = path.resolve(__dirname, '../..');
+const migration = fs.readFileSync(path.join(root, 'supabase/migrations/20260823002000_v2_beta2_demand_recovery.sql'), 'utf8');
+const watch = fs.readFileSync(path.join(root, 'src/lib/demandWatch.ts'), 'utf8');
+const home = fs.readFileSync(path.join(root, 'src/app/components/LocationContent.tsx'), 'utf8');
+const activeCar = fs.readFileSync(path.join(root, 'src/app/active-car-screen/components/ActiveCarContent.tsx'), 'utf8');
+const requestSeat = fs.readFileSync(path.join(root, 'src/app/request-seat-screen/components/RequestSeatContent.tsx'), 'utf8');
+const must = (condition, message) => { if (!condition) throw new Error(message); };
+
+must(migration.includes("status='SATISFIED'"), 'explicit booking must satisfy matching NOW demand');
+must(migration.includes("intent_kind='NOW'"), 'scheduled demand must not be auto-satisfied by this trigger');
+must(migration.includes('after insert on public.seat_requests'), 'demand satisfaction must happen only after explicit seat request creation');
+must(!/update public\.(trips|driver_queue|trip_seats)/i.test(migration), 'demand recovery must not mutate trip, FIFO or seat allocation');
+must(watch.includes('localStorage'), 'demand watch should persist locally across navigation');
+must(!watch.includes('supabase'), 'local demand watch must not own backend business transitions');
+must(home.includes('A Raahi car is available'), 'Passenger Home recovery card missing');
+must(home.includes('Nothing is booked until you choose a seat.'), 'recovery card must preserve explicit booking');
+must(home.includes('getPublicActiveCar'), 'Home recovery must use read-only availability projection');
+must(activeCar.includes('You can leave this screen.'), 'no-driver flow must not require keeping screen open');
+must(activeCar.includes('You will still need to book explicitly.'), 'no-driver copy must preserve explicit booking');
+must(requestSeat.includes('clearDemandWatch(user.id)'), 'successful booking must clear remembered browser watch');
+console.log('Demand recovery contract: PASS');

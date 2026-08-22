@@ -1,11 +1,12 @@
 'use client';
 import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { MapPin, Car, Navigation, CheckCircle2, Loader2, ArrowRight, RotateCcw } from 'lucide-react';
-import { getActiveLocations, getRoutesForLocation, getMyActiveRequest, type Location, type RouteForLocation, type PassengerRideStatus } from '@/lib/raahiApi';
+import { MapPin, Car, Navigation, CheckCircle2, Loader2, ArrowRight, RotateCcw, BellRing } from 'lucide-react';
+import { getActiveLocations, getRoutesForLocation, getMyActiveRequest, getPublicActiveCar, type Location, type RouteForLocation, type PassengerRideStatus } from '@/lib/raahiApi';
 import PassengerRouteCard from './PassengerRouteCard';
 import { RouteListSkeleton } from '@/components/ui/LoadingSkeleton';
 import { useAuth } from '@/contexts/AuthContext';
+import { readDemandWatch } from '@/lib/demandWatch';
 
 export default function LocationContent() {
   const router = useRouter();
@@ -17,6 +18,9 @@ export default function LocationContent() {
   const [recentTrip, setRecentTrip] = useState<PassengerRideStatus | null>(null);
   const [loadingLocations, setLoadingLocations] = useState(true);
   const [loadingRoutes, setLoadingRoutes] = useState(false);
+  const [watchedRouteId, setWatchedRouteId] = useState<string | null>(null);
+  const [watchedCarAvailable, setWatchedCarAvailable] = useState(false);
+  const [watchedSeatsAvailable, setWatchedSeatsAvailable] = useState(0);
 
   useEffect(() => {
     if (authLoading || !user || profile?.role !== 'passenger') return;
@@ -39,6 +43,31 @@ export default function LocationContent() {
     });
     return () => { alive = false; };
   }, [authLoading, user, profile?.role]);
+
+  useEffect(() => {
+    if (authLoading || !user?.id || profile?.role !== 'passenger' || activeRequest) {
+      setWatchedRouteId(null);
+      setWatchedCarAvailable(false);
+      setWatchedSeatsAvailable(0);
+      return;
+    }
+    let alive = true;
+    const refreshWatch = async () => {
+      const watch = readDemandWatch(user.id);
+      if (!watch) {
+        if (alive) { setWatchedRouteId(null); setWatchedCarAvailable(false); setWatchedSeatsAvailable(0); }
+        return;
+      }
+      const car = await getPublicActiveCar(watch.routeId);
+      if (!alive) return;
+      setWatchedRouteId(watch.routeId);
+      setWatchedCarAvailable(Boolean(car.has_active_car && car.status === 'ACTIVE_COLLECTING' && (car.available_count ?? 0) > 0));
+      setWatchedSeatsAvailable(car.available_count ?? 0);
+    };
+    void refreshWatch();
+    const timer = window.setInterval(() => { void refreshWatch(); }, 15000);
+    return () => { alive = false; window.clearInterval(timer); };
+  }, [authLoading, user?.id, profile?.role, activeRequest]);
 
   useEffect(() => {
     getActiveLocations().then((data) => {
@@ -109,7 +138,21 @@ export default function LocationContent() {
         </button>
       )}
 
-      {!activeRequest && recentTrip?.route_id && recentFrom && recentTo && (
+      {!activeRequest && watchedRouteId && (
+        <button onClick={() => router.push(`/active-car-screen?route_id=${watchedRouteId}`)} className={`feature-card w-full text-left active:scale-[0.99] ${watchedCarAvailable ? 'border-green-200 bg-green-50' : ''}`}>
+          <div className="flex items-start gap-3">
+            <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${watchedCarAvailable ? 'bg-green-100' : 'bg-secondary'}`}><BellRing size={18} className={watchedCarAvailable ? 'text-green-700' : 'text-primary'} /></div>
+            <div className="min-w-0 flex-1">
+              <p className={`text-[11px] font-bold uppercase tracking-wide ${watchedCarAvailable ? 'text-green-700' : 'text-primary'}`}>My Raahi · Ride request</p>
+              <h2 className="mt-1 text-base font-bold text-foreground">{watchedCarAvailable ? 'A Raahi car is available' : 'Raahi is watching this route'}</h2>
+              <p className="mt-1 text-xs text-muted-foreground">{watchedCarAvailable ? `${watchedSeatsAvailable} seat${watchedSeatsAvailable === 1 ? '' : 's'} available now. Nothing is booked until you choose a seat.` : 'You can continue using Raahi. This request will expire automatically if no car becomes available.'}</p>
+            </div>
+          </div>
+          <div className={`mt-3 flex items-center justify-between rounded-2xl px-3 py-2.5 ${watchedCarAvailable ? 'bg-green-100/70' : 'bg-secondary/60'}`}><div><p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Next</p><p className={`text-sm font-bold ${watchedCarAvailable ? 'text-green-800' : 'text-primary'}`}>{watchedCarAvailable ? 'View car & book a seat' : 'Check this route'}</p></div><ArrowRight size={18} className={watchedCarAvailable ? 'text-green-700' : 'text-primary'} /></div>
+        </button>
+      )}
+
+      {!activeRequest && !watchedRouteId && recentTrip?.route_id && recentFrom && recentTo && (
         <button onClick={() => router.push(`/active-car-screen?route_id=${recentTrip.route_id}`)} className="feature-card w-full text-left active:scale-[0.99]">
           <div className="flex items-start gap-3">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-secondary"><RotateCcw size={18} className="text-primary" /></div>

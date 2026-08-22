@@ -7,6 +7,7 @@ import { getPublicActiveCar, requestSeats, type ActiveCarPublic, type PublicTrip
 import { useAuth } from '@/contexts/AuthContext';
 import PayWarningBanner from '@/components/ui/PayWarningBanner';
 import SeatCountBadge from '@/components/ui/SeatCountBadge';
+import { clearDemandWatch } from '@/lib/demandWatch';
 
 const MAX_SEATS_PER_REQUEST = 4;
 
@@ -72,6 +73,7 @@ export default function RequestSeatContent() {
       const actualSeats = (result.seat_numbers as number[] | undefined) ?? selectedSeats;
       toast.success(`${actualSeats.length} seat${actualSeats.length > 1 ? 's' : ''} held · Seat ${actualSeats.join(', ')}`);
       if (result.request_id) localStorage.setItem('raahi_active_request_id', result.request_id);
+      if (user?.id) clearDemandWatch(user.id);
       clearPendingContext();
       router.push('/request-status-screen');
       return;

@@ -8,6 +8,7 @@ import { getPublicActiveCar, type ActiveCarPublic, type StopWithEta } from '@/li
 import { cancelDemandIntent, createNowDemandIntent, getRouteDemandSummary, type RouteDemandSummary } from '@/lib/demandApi';
 import { useAuth } from '@/contexts/AuthContext';
 import UnifiedTripCard from '@/components/UnifiedTripCard';
+import { clearDemandWatch, readDemandWatch, saveDemandWatch } from '@/lib/demandWatch';
 
 export default function ActiveCarContent() {
   const searchParams = useSearchParams();
@@ -38,6 +39,12 @@ export default function ActiveCarContent() {
   useEffect(() => { fetchCar(); }, [fetchCar]);
 
   useEffect(() => {
+    if (!routeId || !user?.id || profile?.role !== 'passenger') return;
+    const watch = readDemandWatch(user.id);
+    if (watch?.routeId === routeId) setIntentId(watch.intentId);
+  }, [routeId, user?.id, profile?.role]);
+
+  useEffect(() => {
     if (!intentId) return;
     const timer = window.setInterval(() => { fetchCar(); }, 15000);
     return () => window.clearInterval(timer);
@@ -61,6 +68,7 @@ export default function ActiveCarContent() {
       return;
     }
     setIntentId(result.intent_id);
+    saveDemandWatch(user.id, routeId, result.intent_id, 30);
     setDemandSummary(await getRouteDemandSummary(routeId));
     toast.success('Raahi is now watching this route for you.');
   };
@@ -74,6 +82,7 @@ export default function ActiveCarContent() {
       toast.error(result.error || 'Could not cancel ride request');
       return;
     }
+    if (user?.id) clearDemandWatch(user.id, intentId);
     setIntentId(null);
     if (routeId) setDemandSummary(await getRouteDemandSummary(routeId));
     toast.success('Ride request cancelled.');
@@ -121,7 +130,7 @@ export default function ActiveCarContent() {
                   <BellRing size={17} className="mt-0.5 shrink-0 text-green-700" />
                   <div>
                     <p className="text-sm font-bold text-green-800">We’re checking with Raahi drivers</p>
-                    <p className="mt-1 text-xs text-green-700">Keep this screen open and Raahi will check about every 15 seconds. You will still need to book explicitly when a car opens.</p>
+                    <p className="mt-1 text-xs text-green-700">You can leave this screen. Raahi will remember this request until it expires and Home will show you when a car is available. You will still need to book explicitly.</p>
                   </div>
                 </div>
               </div>
@@ -157,6 +166,17 @@ export default function ActiveCarContent() {
 
   return (
     <div className="page-shell space-y-4 animate-fade-in">
+      {intentId && isCollecting && (car.available_count ?? 0) > 0 && (
+        <div className="rounded-2xl border border-green-200 bg-green-50 px-4 py-3">
+          <div className="flex items-start gap-3">
+            <BellRing size={18} className="mt-0.5 shrink-0 text-green-700" />
+            <div>
+              <p className="text-sm font-bold text-green-900">A Raahi car is available</p>
+              <p className="mt-1 text-xs text-green-800">This is the route you asked Raahi to watch. Nothing is booked yet — choose a seat below when you are ready.</p>
+            </div>
+          </div>
+        </div>
+      )}
       <UnifiedTripCard
         from={from}
         to={to}
