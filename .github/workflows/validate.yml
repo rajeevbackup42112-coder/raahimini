@@ -22,6 +22,8 @@ jobs:
           cache-dependency-path: package.json
       - name: Install dependencies
         run: npm install --no-audit --no-fund
+      - name: Sequential dispatch contract
+        run: node tests/contracts/sequential-dispatch-contract.cjs
       - name: Type check
         run: npm run type-check
       - name: Production build
