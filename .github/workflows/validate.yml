@@ -32,6 +32,8 @@ jobs:
         run: node tests/contracts/admin-route-health-contract.cjs
       - name: Structured support contract
         run: node tests/contracts/structured-support-contract.cjs
+      - name: Active-trip GPS contract
+        run: node tests/contracts/active-trip-gps-contract.cjs
       - name: Type check
         run: npm run type-check
       - name: Production build
