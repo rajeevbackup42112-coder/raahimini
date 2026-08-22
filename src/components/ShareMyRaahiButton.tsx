@@ -68,7 +68,7 @@ export default function ShareMyRaahiButton({ requestId }: { requestId: string })
             <div className="rounded-xl bg-muted px-3 py-3 text-xs text-muted-foreground break-all">{shareUrl}</div>
             <button type="button" onClick={share} className="btn-primary w-full"><Copy size={17} />Share / Copy Link</button>
             <button type="button" onClick={revoke} disabled={busy} className="btn-outline w-full text-red-600">{busy ? <Loader2 size={16} className="animate-spin" /> : <X size={16} />}Revoke this link</button>
-            <p className="text-center text-[11px] text-muted-foreground">The link expires automatically after the trip ends. You can revoke it earlier at any time.</p>
+            <p className="text-center text-[11px] text-muted-foreground">The link stays available for up to 30 minutes after arrival, then expires automatically. You can revoke it earlier at any time.</p>
           </div>
         </div>
       )}
