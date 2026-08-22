@@ -106,7 +106,7 @@ function ProfileContent() {
 
   return (
     <div className="max-w-md mx-auto px-4 py-6 space-y-5">
-      <div className="card p-5 space-y-2">
+      <div className="feature-card p-5 space-y-2">
         <p className="text-xs text-muted-foreground">Your Raahi identity</p>
         <p className="text-lg font-semibold">{profile?.display_name || user.user_metadata?.full_name || 'Passenger'}</p>
         <p className="text-xs text-muted-foreground">{profile?.role ? `${profile.role.charAt(0).toUpperCase()}${profile.role.slice(1)}` : 'Passenger'} · {user.email || user.phone || ''}</p>
@@ -116,7 +116,7 @@ function ProfileContent() {
         </div>
       </div>
 
-      <div className="card p-5 space-y-3">
+      <div className="feature-card p-5 space-y-3">
         <div>
           <h2 className="font-bold">What should Raahi call you?</h2>
           <p className="text-sm text-muted-foreground mt-1">This is the name passengers, drivers and admins will see in Raahi.</p>
@@ -136,7 +136,7 @@ function ProfileContent() {
       {error && <div className="bg-red-50 border border-red-200 rounded-xl px-3 py-2 text-sm text-red-700">{error}</div>}
 
       {step === 'phone' ? (
-        <div className="card p-5 space-y-4">
+        <div className="feature-card p-5 space-y-4">
           <div>
             <h2 className="font-bold">{isVerified ? 'Change phone number' : 'Add phone number'}</h2>
             <p className="text-sm text-muted-foreground mt-1">We will send a six-digit verification code.</p>
@@ -162,7 +162,7 @@ function ProfileContent() {
           )}
         </div>
       ) : (
-        <div className="card p-5 space-y-4">
+        <div className="feature-card p-5 space-y-4">
           <div>
             <h2 className="font-bold">Enter verification code</h2>
             <p className="text-sm text-muted-foreground mt-1">Sent to +91 {phone}</p>

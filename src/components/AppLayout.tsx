@@ -18,7 +18,7 @@ export default function AppLayout({
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <AppHeader title={headerTitle} showBack={headerBack} />
-      <main className="flex-1 pb-20">
+      <main className="flex-1 pb-20 sm:pb-0">
         {children}
       </main>
       {showBottomNav && <BottomNav />}

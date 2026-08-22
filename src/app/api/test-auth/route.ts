@@ -44,6 +44,16 @@ function safeEqual(left: string, right: string): boolean {
   return a.length === b.length && timingSafeEqual(a, b);
 }
 
+function parseAllowedHosts(): Set<string> {
+  const raw = process.env.RAAHI_TEST_AUTH_ALLOWED_HOSTS || '';
+  return new Set(
+    raw
+      .split(',')
+      .map((host) => normalizeHost(host))
+      .filter(Boolean),
+  );
+}
+
 function parsePersonas(): PersonaMap {
   const raw = process.env.RAAHI_TEST_PERSONAS_JSON;
   if (!raw) return {};
@@ -71,11 +81,15 @@ export async function POST(request: NextRequest) {
   ].filter(Boolean);
 
   const hitsBlockedHost = candidateHosts.some((host) => HARD_BLOCKED_HOSTS.has(host));
+  const allowedHosts = parseAllowedHosts();
+  const hitsAllowedHost = candidateHosts.some((host) => allowedHosts.has(host));
 
   if (
     process.env.RAAHI_TEST_AUTH_ENABLED !== 'true' ||
     candidateHosts.length === 0 ||
-    hitsBlockedHost
+    allowedHosts.size === 0 ||
+    hitsBlockedHost ||
+    !hitsAllowedHost
   ) {
     return disabled();
   }

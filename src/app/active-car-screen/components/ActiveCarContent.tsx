@@ -2,17 +2,24 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { Car, User, CheckCircle2, Clock, MapPin, RefreshCw, Loader2 } from 'lucide-react';
+import { toast } from 'sonner';
+import { Car, User, CheckCircle2, Clock, MapPin, RefreshCw, Loader2, BellRing, X, CalendarClock } from 'lucide-react';
 import { getPublicActiveCar, type ActiveCarPublic, type StopWithEta } from '@/lib/raahiApi';
+import { cancelDemandIntent, createNowDemandIntent, getRouteDemandSummary, type RouteDemandSummary } from '@/lib/demandApi';
+import { useAuth } from '@/contexts/AuthContext';
 import UnifiedTripCard from '@/components/UnifiedTripCard';
 
 export default function ActiveCarContent() {
   const searchParams = useSearchParams();
   const routeId = searchParams.get('route_id');
+  const { user, profile, signInWithGoogle } = useAuth();
   const [car, setCar] = useState<ActiveCarPublic | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [demandSummary, setDemandSummary] = useState<RouteDemandSummary | null>(null);
+  const [demandBusy, setDemandBusy] = useState(false);
+  const [intentId, setIntentId] = useState<string | null>(null);
 
   const fetchCar = useCallback(async (showRefreshing = false) => {
     if (!routeId) {
@@ -23,11 +30,54 @@ export default function ActiveCarContent() {
     if (showRefreshing) setRefreshing(true);
     const data = await getPublicActiveCar(routeId);
     setCar(data);
+    if (!data.has_active_car) setDemandSummary(await getRouteDemandSummary(routeId));
     setLoading(false);
     setRefreshing(false);
   }, [routeId]);
 
   useEffect(() => { fetchCar(); }, [fetchCar]);
+
+  useEffect(() => {
+    if (!intentId) return;
+    const timer = window.setInterval(() => { fetchCar(); }, 15000);
+    return () => window.clearInterval(timer);
+  }, [intentId, fetchCar]);
+
+  const createDemand = async () => {
+    if (!routeId) return;
+    if (!user) {
+      await signInWithGoogle(`/active-car-screen?route_id=${routeId}`);
+      return;
+    }
+    if (profile?.role !== 'passenger') {
+      toast.error('Demand requests are available to passenger accounts.');
+      return;
+    }
+    setDemandBusy(true);
+    const result = await createNowDemandIntent(routeId, 30);
+    setDemandBusy(false);
+    if (!result.success || !result.intent_id) {
+      toast.error(result.error || 'Could not save your ride request');
+      return;
+    }
+    setIntentId(result.intent_id);
+    setDemandSummary(await getRouteDemandSummary(routeId));
+    toast.success('Raahi is now watching this route for you.');
+  };
+
+  const cancelDemand = async () => {
+    if (!intentId) return;
+    setDemandBusy(true);
+    const result = await cancelDemandIntent(intentId);
+    setDemandBusy(false);
+    if (!result.success) {
+      toast.error(result.error || 'Could not cancel ride request');
+      return;
+    }
+    setIntentId(null);
+    if (routeId) setDemandSummary(await getRouteDemandSummary(routeId));
+    toast.success('Ride request cancelled.');
+  };
 
   if (loading) {
     return <div className="flex items-center justify-center py-20"><Loader2 size={28} className="animate-spin text-primary" /></div>;
@@ -44,14 +94,58 @@ export default function ActiveCarContent() {
   }
 
   if (!car?.has_active_car) {
+    const interested = demandSummary?.now_count ?? 0;
+    const scheduled = demandSummary?.scheduled_count ?? 0;
     return (
-      <div className="max-w-screen-2xl mx-auto px-4 py-8 text-center space-y-4">
-        <Car size={40} className="mx-auto text-muted-foreground opacity-40" />
-        <p className="text-base font-semibold text-foreground">No Active Car Right Now</p>
-        <p className="text-sm text-muted-foreground">Check back soon — a driver will join the queue shortly.</p>
-        <button onClick={() => fetchCar(true)} className="btn-outline mx-auto">
-          <RefreshCw size={16} className={refreshing ? 'animate-spin' : ''} /> Refresh
-        </button>
+      <div className="mx-auto max-w-screen-md space-y-4 px-4 py-8 sm:px-6 animate-fade-in">
+        <div className="feature-card p-6 text-center">
+          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-secondary">
+            <Car size={22} className="text-primary" />
+          </div>
+          <p className="mt-4 text-lg font-bold text-foreground">No driver is available right now</p>
+          <p className="mt-2 text-sm text-muted-foreground">Raahi can collect passenger interest and show drivers that this route needs a car.</p>
+
+          {(interested > 0 || scheduled > 0) && (
+            <div className="mt-4 rounded-2xl bg-secondary/70 px-4 py-3">
+              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Route demand</p>
+              {interested > 0 && <p className="mt-1 text-sm font-bold text-primary">{interested} passenger{interested === 1 ? '' : 's'} interested now</p>}
+              {scheduled > 0 && <p className="mt-1 text-xs font-semibold text-foreground">{scheduled} upcoming travel plan{scheduled === 1 ? '' : 's'}</p>}
+              <p className="mt-1 text-xs text-muted-foreground">Interest does not reserve a seat. Booking starts only when a car becomes available.</p>
+            </div>
+          )}
+
+          {intentId ? (
+            <div className="mt-4 space-y-3">
+              <div className="rounded-2xl border border-green-200 bg-green-50 px-4 py-3 text-left">
+                <div className="flex items-start gap-2">
+                  <BellRing size={17} className="mt-0.5 shrink-0 text-green-700" />
+                  <div>
+                    <p className="text-sm font-bold text-green-800">We’re checking with Raahi drivers</p>
+                    <p className="mt-1 text-xs text-green-700">Keep this screen open and Raahi will check about every 15 seconds. You will still need to book explicitly when a car opens.</p>
+                  </div>
+                </div>
+              </div>
+              <button onClick={cancelDemand} disabled={demandBusy} className="quiet-action w-full text-red-600 hover:bg-red-50">
+                {demandBusy ? <Loader2 size={16} className="animate-spin" /> : <X size={16} />} Cancel ride request
+              </button>
+            </div>
+          ) : (
+            <button onClick={createDemand} disabled={demandBusy} className="btn-primary mt-5 w-full">
+              {demandBusy ? <Loader2 size={18} className="animate-spin" /> : <BellRing size={18} />}
+              {demandBusy ? 'Saving request…' : user ? 'I need a ride' : 'Sign in & request a ride'}
+            </button>
+          )}
+
+          {routeId && (
+            <Link href={`/plan-ride?route_id=${routeId}`} className="quiet-action mt-2 w-full">
+              <CalendarClock size={17} /> Plan a ride for later
+            </Link>
+          )}
+
+          <button onClick={() => fetchCar(true)} className="btn-outline mx-auto mt-3">
+            <RefreshCw size={16} className={refreshing ? 'animate-spin' : ''} /> Refresh route
+          </button>
+        </div>
       </div>
     );
   }
@@ -62,7 +156,7 @@ export default function ActiveCarContent() {
   const occupiedSeats = (car.confirmed_count ?? 0) + (car.held_count ?? 0);
 
   return (
-    <div className="max-w-screen-2xl mx-auto px-4 py-4 space-y-4 animate-fade-in">
+    <div className="page-shell space-y-4 animate-fade-in">
       <UnifiedTripCard
         from={from}
         to={to}

@@ -38,7 +38,7 @@ export default function LoginPage() {
             <Loader2 className="animate-spin text-primary" />
           </div>
         ) : (
-          <div className="card space-y-5 p-6">
+          <div className="feature-card space-y-5 p-6">
             <div className="text-center">
               <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-secondary">
                 <ShieldCheck className="text-primary" />
