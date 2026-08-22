@@ -7,6 +7,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import PayWarningBanner from '@/components/ui/PayWarningBanner';
 import UnifiedTripCard from '@/components/UnifiedTripCard';
 import SupportIssueButton from '@/components/SupportIssueButton';
+import ShareMyRaahiButton from '@/components/ShareMyRaahiButton';
 import PassengerLiveLocationStatus from './PassengerLiveLocationStatus';
 
 export default function RequestStatusContent() {
@@ -97,6 +98,7 @@ export default function RequestStatusContent() {
 
       <div className="space-y-3">
         {req.driver_phone && !isTripCompleted && <a href={`tel:+91${req.driver_phone.replace(/\D/g, '')}`} className="btn-accent w-full min-h-12"><Phone size={18} /> Call Driver</a>}
+        {isConfirmed && !isTripCompleted && <ShareMyRaahiButton requestId={req.request_id} />}
         {isHeld && <button onClick={() => setShowWithdrawConfirm(true)} className="quiet-action w-full text-red-600 hover:bg-red-50"><X size={18} /> Withdraw Request</button>}
         <SupportIssueButton role="passenger" tripId={req.trip_id} requestId={req.request_id} />
       </div>
