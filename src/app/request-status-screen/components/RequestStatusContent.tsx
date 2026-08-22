@@ -7,6 +7,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import PayWarningBanner from '@/components/ui/PayWarningBanner';
 import UnifiedTripCard from '@/components/UnifiedTripCard';
 import SupportIssueButton from '@/components/SupportIssueButton';
+import PassengerLiveLocationStatus from './PassengerLiveLocationStatus';
 
 export default function RequestStatusContent() {
   const { user, loading: authLoading } = useAuth();
@@ -76,6 +77,8 @@ export default function RequestStatusContent() {
           {['Held', 'Confirmed', 'Ready', 'Started', 'Arrived'].map((label, index) => <div key={label} className="text-center"><div className={`h-1.5 rounded-full ${index <= journeyStep ? 'bg-primary' : 'bg-border'}`} /><p className={`mt-1 text-[9px] font-semibold ${index <= journeyStep ? 'text-primary' : 'text-muted-foreground'}`}>{label}</p></div>)}
         </div>
       </UnifiedTripCard>
+
+      <PassengerLiveLocationStatus tripId={req.trip_id} active={req.trip_status === 'IN_PROGRESS' && !isTripCompleted} />
 
       {isHeld && <div className="space-y-2"><PayWarningBanner /><div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3"><p className="text-xs font-semibold text-amber-800">Your selected seat{req.seat_count === 1 ? ' is' : 's are'} held until the driver passes your pickup stop.</p><p className="text-xs text-amber-700 mt-1">Meet the driver and pay directly. If you no longer need the ride, withdraw before your stop so the seat can be offered to someone else.</p></div></div>}
 
