@@ -28,6 +28,8 @@ jobs:
         run: node tests/contracts/visual-seat-selection-contract.cjs
       - name: Driver economics contract
         run: node tests/contracts/driver-economics-contract.cjs
+      - name: Admin route health contract
+        run: node tests/contracts/admin-route-health-contract.cjs
       - name: Type check
         run: npm run type-check
       - name: Production build
