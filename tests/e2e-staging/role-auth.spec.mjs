@@ -72,6 +72,16 @@ test('driver role is blocked from admin operations', async ({ page }) => {
   await expect(page.getByText('Admin Access Required', { exact: true })).toBeVisible();
 });
 
+test('Admin role is blocked from driver operations', async ({ page }) => {
+  await loginAs(page, 'ajit-admin');
+
+  await page.goto('/driver-route-selection');
+  await expect(page.getByText('Driver Access Only', { exact: true })).toBeVisible();
+
+  await page.goto('/driver-active-car-screen');
+  await expect(page.getByText('Driver Access Only', { exact: true })).toBeVisible();
+});
+
 test('ajit-admin lands in admin panel', async ({ page }) => {
   await loginAs(page, 'ajit-admin');
   await expect(page).toHaveURL(/\/admin-panel(?:\?.*)?$/);
