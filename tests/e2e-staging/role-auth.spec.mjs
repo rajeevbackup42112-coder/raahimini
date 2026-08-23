@@ -25,15 +25,27 @@ async function loginAs(page, loginId) {
   }
 
   const result = await response.json();
-  if (!result?.redirectTo) throw new Error(`Test auth returned no redirect for ${loginId}`);
+  if (!result?.redirectTo || !result?.accessToken || !result?.refreshToken) {
+    throw new Error(`Test auth returned an incomplete session for ${loginId}`);
+  }
+
+  await page.goto('/test-login');
+  await page.evaluate(async ({ accessToken, refreshToken }) => {
+    const key = Object.keys(localStorage).find((name) => name.startsWith('sb-') && name.endsWith('-auth-token'));
+    if (key) localStorage.removeItem(key);
+    localStorage.setItem('raahi_staging_session_handoff', JSON.stringify({ accessToken, refreshToken }));
+  }, { accessToken: result.accessToken, refreshToken: result.refreshToken });
+
+  // The server response also carries the genuine SSR session cookie. Navigate only
+  // after the API call has completed so role checks see the same authenticated user.
   await page.goto(result.redirectTo);
 }
 
 test('anonymous passenger discovery loads without login', async ({ page }) => {
   await page.goto('/');
-  await expect(page.getByRole('heading', { name: 'Where are you?' })).toBeVisible();
-  await expect(page.getByText('Dhanbad', { exact: true })).toBeVisible();
-  await expect(page.getByText('Gomoh', { exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Find your Raahi' })).toBeVisible();
+  await expect(page.getByRole('button', { name: /Dhanbad/ })).toBeVisible();
+  await expect(page.getByRole('button', { name: /Gomoh/ })).toBeVisible();
 });
 
 test('anonymous route discovery exposes both pilot directions', async ({ page }) => {
