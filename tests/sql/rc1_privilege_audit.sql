@@ -25,8 +25,9 @@ left join allowed_anon ok on ok.name=a.name and ok.args=a.args
 where ok.name is null
 order by a.name,a.args;
 
--- 2) Core operational tables must not be directly writable by client roles.
-with core_tables(table_name) as (
+-- 2) Existing core operational tables must not be directly writable by client roles.
+-- The wanted list intentionally includes historical names; retired tables are ignored.
+with wanted(table_name) as (
   values
     ('trips'),
     ('trip_seats'),
@@ -37,6 +38,11 @@ with core_tables(table_name) as (
     ('trip_live_locations'),
     ('trip_share_links'),
     ('support_cases')
+), core_tables as (
+  select c.relname as table_name, c.oid
+  from wanted w
+  join pg_class c on c.relname=w.table_name and c.relkind='r'
+  join pg_namespace n on n.oid=c.relnamespace and n.nspname='public'
 ), roles(role_name) as (
   values ('anon'),('authenticated')
 )
@@ -44,12 +50,12 @@ select 'direct_core_table_write' as violation,
        r.role_name,
        c.table_name,
        concat_ws(',',
-         case when has_table_privilege(r.role_name,format('public.%I',c.table_name),'INSERT') then 'INSERT' end,
-         case when has_table_privilege(r.role_name,format('public.%I',c.table_name),'UPDATE') then 'UPDATE' end,
-         case when has_table_privilege(r.role_name,format('public.%I',c.table_name),'DELETE') then 'DELETE' end
+         case when has_table_privilege(r.role_name,c.oid,'INSERT') then 'INSERT' end,
+         case when has_table_privilege(r.role_name,c.oid,'UPDATE') then 'UPDATE' end,
+         case when has_table_privilege(r.role_name,c.oid,'DELETE') then 'DELETE' end
        ) as write_privileges
 from core_tables c cross join roles r
-where has_table_privilege(r.role_name,format('public.%I',c.table_name),'INSERT')
-   or has_table_privilege(r.role_name,format('public.%I',c.table_name),'UPDATE')
-   or has_table_privilege(r.role_name,format('public.%I',c.table_name),'DELETE')
+where has_table_privilege(r.role_name,c.oid,'INSERT')
+   or has_table_privilege(r.role_name,c.oid,'UPDATE')
+   or has_table_privilege(r.role_name,c.oid,'DELETE')
 order by c.table_name,r.role_name;
