@@ -687,3 +687,58 @@ Do not assume a separate coding agent will complete implementation work. The ass
 Continuity rule: before ending a long chat or at any major checkpoint, update this Bible and release-readiness/handover material with the current branch/head, what is green, what is pending, known risks, and the single next action.
 
 Real-world standard: optimize for a Raahi V2 that is understandable to passengers, economically sensible for drivers, low-touch for Admin, operationally safe, privacy-conscious, resilient to real connectivity/device conditions, and straightforward to support and roll back.
+
+
+---
+
+## 27. Canonical Release-State Snapshot — 2026-08-23
+
+Raahi 2.0 is now in **pre-RC1 hardening**. The major launch experience is built; the primary remaining work is acceptance, clean-room replay, staging and rollback proof.
+
+Validated implementation checkpoint: `636ce21` on branch `v2.0-beta1`.
+PR #68 remains **draft, open and unmerged**.
+Validate Raahi Mini #299 is **SUCCESS**.
+
+### 27.1 Launch capabilities now materially built/proven
+
+- unified login, role routing, display identity and progressive profile;
+- action-first Passenger / Driver / Admin V2 experience;
+- exact numbered seat selection backed by PostgreSQL seat ownership;
+- no-driver demand intent, aggregation and recovery without auto-booking;
+- driver current-trip economics;
+- directional pipelined FIFO dispatch with Start Trip as handoff;
+- post-start-only reverse-demand Low/Medium/High signal;
+- Admin route health, exceptions and structured support;
+- active-trip-only GPS, Start Trip location gate, fallback and terminal cleanup;
+- Share My Raahi secure loved-one visibility;
+- My Raahi recent-route reuse and Driver Daily Summary;
+- current cancellation/no-show/Admin queue invariant hardening;
+- isolated V2 Dev, staging-safety/auth/role contracts and RLS/RPC audits.
+### 27.2 What remains before production consideration
+
+- headed passenger demand-recovery E2E;
+- headed wait-tolerance persistence E2E;
+- final responsive authenticated Passenger / Driver / Admin sweep, including post-start return-demand display;
+- clean-room migration replay on an isolated disposable RC database;
+- guaranteed non-production staging E2E;
+- rollback rehearsal on staging;
+- explicit user approval for merge and every production action.
+
+These are real gates. Do not convert them to PASS from code review, memory or unit/contract tests alone.
+
+### 27.3 Current product posture
+
+Do not start another broad V2 redesign. The correct strategy is **close the remaining proof/release gaps while preserving the working engine**.
+
+Stretch work such as loved-one push notifications, family labels, extended Insights, Local Offers and idea voting must not delay the launch gates above.
+
+### 27.4 Companion control documents
+
+Future chats must use these together:
+- `docs/RAAHI_V2_HANDOVER.md` — exact restart point and single next action;
+- `docs/RAAHI_V2_DECISIONS.md` — locked product/engineering decisions;
+- `docs/RAAHI_V2_BUILD_MATRIX.md` — status by capability and remaining gates;
+- `docs/RAAHI_V2_RELEASE_READINESS.md` — production GO checklist and evidence;
+- this Bible — enduring product intent and operating doctrine.
+
+If any of these disagree with code or live V2 Dev state, verify the repository/database and correct the documentation rather than guessing.

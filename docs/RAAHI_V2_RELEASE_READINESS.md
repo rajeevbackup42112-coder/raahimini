@@ -40,7 +40,7 @@ Raahi V2 may move toward production only when the proven V1/V10 booking, seat, F
 - Wait-tolerance UI visual acceptance and restored selection after navigation/reload.
 - Final responsive sweep on representative passenger, driver and Admin screens after the latest changes.
 
-These gates are pending because the authorized Windows validation machine is temporarily unavailable. They must not be silently converted to PASS from code review alone.
+These gates remain pending because they have not yet been rerun to completion on the current headed Windows validation setup. Dipti is available again; resume them there. They must not be silently converted to PASS from code review alone.
 
 ## Staging gate
 
