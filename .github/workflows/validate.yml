@@ -40,6 +40,8 @@ jobs:
         run: node tests/contracts/driver-daily-summary-contract.cjs
       - name: Demand recovery contract
         run: node tests/contracts/demand-recovery-contract.cjs
+      - name: Wait-tolerance urgency contract
+        run: node tests/contracts/wait-tolerance-urgency-contract.cjs
       - name: Type check
         run: npm run type-check
       - name: Production build
