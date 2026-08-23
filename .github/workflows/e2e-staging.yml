@@ -18,11 +18,23 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     env:
-      RAAHI_STAGING_URL: https://raahimini-x1xy611.public.builtwithrocket.new
+      RAAHI_STAGING_URL: ${{ vars.RAAHI_STAGING_URL }}
       RAAHI_TEST_PASSWORD: ${{ secrets.RAAHI_TEST_PASSWORD }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Validate staging target
+        shell: bash
+        run: |
+          if [ -z "$RAAHI_STAGING_URL" ]; then
+            echo "RAAHI_STAGING_URL repository variable is required. Refusing to use a fallback target."
+            exit 1
+          fi
+          case "$RAAHI_STAGING_URL" in
+            https://*) ;;
+            *) echo "RAAHI_STAGING_URL must use HTTPS."; exit 1 ;;
+          esac
 
       - name: Setup Node
         uses: actions/setup-node@v4
