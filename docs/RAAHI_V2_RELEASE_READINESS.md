@@ -137,8 +137,8 @@ Validated in isolated Raahi V2 Dev after migration 20260823071332_v2_rc1_pipelin
 ## Current validation checkpoint
 
 - Git head before this documentation refresh: `7eb6e881d5f24d2916973bc4e142b5d190534ce2`.
-- Validate Raahi Mini workflow #269: **SUCCESS**.
-- Sequential dispatch, visual seat selection, driver economics, Admin route health, structured support, active-trip GPS, Share My Raahi, driver daily summary, demand recovery, wait-tolerance urgency and staging-target safety contracts: **PASS**.
+- Validate Raahi Mini workflow #299: **SUCCESS**.
+- All 17 business / safety contracts, including corrected pipelined dispatch and Windows-safe test-auth guard: **PASS**.
 - TypeScript: **PASS**.
 - Production build: **PASS**.
 
