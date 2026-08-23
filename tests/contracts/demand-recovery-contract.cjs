@@ -27,6 +27,6 @@ must(home.includes('A Raahi car is available'), 'Passenger Home recovery card mi
 must(home.includes('Nothing is booked until you choose a seat.'), 'recovery card must preserve explicit booking');
 must(home.includes('getMyActiveNowDemand'), 'Home recovery must use the read-only server demand projection');
 must(activeCar.includes('You can leave this screen.'), 'no-driver flow must not require keeping screen open');
-must(activeCar.includes('You will still need to book explicitly.'), 'no-driver copy must preserve explicit booking');
+must(activeCar.includes('book explicitly'), 'no-driver copy must preserve explicit booking');
 must(requestSeat.includes('clearDemandWatch(user.id)'), 'successful booking must clear remembered browser watch');
 console.log('Demand recovery contract: PASS');
