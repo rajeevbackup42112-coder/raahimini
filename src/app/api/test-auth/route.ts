@@ -143,16 +143,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Configured test user does not exist' }, { status: 503 });
   }
 
-  const { data: profile, error: profileError } = await admin
-    .from('profiles')
-    .select('role,is_restricted')
-    .eq('id', target.userId)
-    .single();
-
-  if (profileError || !profile || profile.is_restricted || profile.role !== target.role) {
-    return NextResponse.json({ error: 'Configured test persona no longer matches its trusted Raahi role' }, { status: 409 });
-  }
-
   const { data: linkData, error: linkError } = await admin.auth.admin.generateLink({
     type: 'magiclink',
     email: user.email,
@@ -174,6 +164,23 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Could not establish test session' }, { status: 500 });
   }
 
+  const { data: profile, error: profileError } = await supabase
+    .from('profiles')
+    .select('role,is_restricted')
+    .eq('id', session.user.id)
+    .single();
+
+  if (
+    profileError ||
+    !profile ||
+    session.user.id !== target.userId ||
+    profile.is_restricted ||
+    profile.role !== target.role
+  ) {
+    await supabase.auth.signOut();
+    return NextResponse.json({ error: 'Configured test persona no longer matches its trusted Raahi role' }, { status: 409 });
+  }
+
   const redirectTo = target.role === 'admin'
     ? '/admin-panel'
     : target.role === 'driver'
@@ -181,9 +188,8 @@ export async function POST(request: NextRequest) {
       : '/';
 
   // The endpoint is staging-only and secret-protected. Returning the short-lived
-  // test session lets the browser Supabase client persist the same genuine
-  // session before the hard navigation, which keeps role checks deterministic
-  // across page loads without weakening production auth.
+  // genuine Supabase session lets the browser persist the same session before
+  // navigation while the role check still runs through normal authenticated RLS.
   return NextResponse.json({
     success: true,
     persona: personaName,
