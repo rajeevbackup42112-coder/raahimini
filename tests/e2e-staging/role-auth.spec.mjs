@@ -5,35 +5,20 @@ const password = process.env.RAAHI_TEST_PASSWORD;
 async function loginAs(page, loginId) {
   if (!password) throw new Error('RAAHI_TEST_PASSWORD is not configured');
 
-  let response;
-  let lastError;
-  for (let attempt = 1; attempt <= 3; attempt += 1) {
-    try {
-      response = await page.context().request.post('/api/test-auth', {
-        data: { loginId, password },
-      });
-      break;
-    } catch (error) {
-      lastError = error;
-      if (attempt < 3) await page.waitForTimeout(750 * attempt);
-    }
-  }
-
-  if (!response) throw lastError;
-  if (!response.ok()) {
-    throw new Error(`Test auth failed for ${loginId}: ${response.status()}`);
-  }
-
-  const result = await response.json();
-  if (!result?.redirectTo) throw new Error(`Test auth returned no redirect for ${loginId}`);
-  await page.goto(result.redirectTo);
+  await page.goto('/test-login');
+  await expect(page.getByRole('heading', { name: 'Raahi Test Login' })).toBeVisible();
+  await page.getByLabel('Login ID').fill(loginId);
+  await page.getByLabel('Password').fill(password);
+  await page.getByRole('button', { name: 'Sign in' }).click();
+  await expect(page.getByRole('button', { name: 'Signing in…' })).toHaveCount(0, { timeout: 30_000 });
+  await page.waitForLoadState('domcontentloaded');
 }
 
 test('anonymous passenger discovery loads without login', async ({ page }) => {
   await page.goto('/');
-  await expect(page.getByRole('heading', { name: 'Where are you?' })).toBeVisible();
-  await expect(page.getByText('Dhanbad', { exact: true })).toBeVisible();
-  await expect(page.getByText('Gomoh', { exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Find your Raahi' })).toBeVisible();
+  await expect(page.getByRole('button', { name: /Dhanbad/ })).toBeVisible();
+  await expect(page.getByRole('button', { name: /Gomoh/ })).toBeVisible();
 });
 
 test('anonymous route discovery exposes both pilot directions', async ({ page }) => {
@@ -85,6 +70,16 @@ test('driver role is blocked from admin operations', async ({ page }) => {
   await loginAs(page, 'dipti-driver');
   await page.goto('/admin-panel');
   await expect(page.getByText('Admin Access Required', { exact: true })).toBeVisible();
+});
+
+test('Admin role is blocked from driver operations', async ({ page }) => {
+  await loginAs(page, 'ajit-admin');
+
+  await page.goto('/driver-route-selection');
+  await expect(page.getByText('Driver Access Only', { exact: true })).toBeVisible();
+
+  await page.goto('/driver-active-car-screen');
+  await expect(page.getByText('Driver Access Only', { exact: true })).toBeVisible();
 });
 
 test('ajit-admin lands in admin panel', async ({ page }) => {

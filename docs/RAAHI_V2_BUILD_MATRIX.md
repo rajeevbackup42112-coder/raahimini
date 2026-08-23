@@ -1,160 +1,99 @@
 # Raahi V2 Scope & Build Matrix
 
-Status: scope frozen; Alpha1 implementation active
-Branch: `v2.0-alpha1`
-Source of truth: `docs/RAAHI_V2_BIBLE.md`
+Updated: 2026-08-23
+Phase: **pre-RC1 hardening**
+Branch: `v2.0-beta1`
+PR: #68 — draft/open/unmerged
+Source of truth: Bible + Decision Log + Release Readiness
+
+Status legend:
+- **DONE** — implemented and materially validated.
+- **BUILT** — implemented; a named acceptance/release gate remains.
+- **PENDING** — required launch/release work not yet completed.
+- **STRETCH** — useful but not required for V2 production.
+- **DEFERRED** — intentionally post-V2.
 
 ## Governing rule
 
-Raahi V2 is an evolution of the proven V1 engine, not a rewrite.
+Raahi V2 evolves the proven V1/V10 engine. Booking, exact seat ownership, fare snapshots, trip lifecycle, role boundaries and directional FIFO may change only through explicitly approved, isolated and regression-tested rules.
 
-**V1 business invariants remain unchanged unless a V2 requirement explicitly needs a new rule and that rule is approved, isolated, and tested.**
+## Core product build matrix
 
-## Locked V1 invariants
+| Area | Capability | Launch class | Status | Current evidence / remaining gate |
+|---|---|---:|---:|---|
+| Identity | One public login + trusted role routing | Launch | DONE | Auth/role contracts + browser flows previously green |
+| Identity | Display name / progressive profile | Launch | DONE | Built and used across V2 role experience |
+| UX | Green lightweight design + plain-language status | Launch | DONE | Role screens visually exercised |
+| Passenger | Action-first Home / current car | Launch | DONE | Current V2 UI accepted |
+| Passenger | Unified booking/journey status | Launch | DONE | Seat/trip lifecycle exercised end-to-end |
+| Seats | Real numbered BookMyShow-style seat selection | Launch | DONE | Deliberate Seat 3 → HELD → CONFIRMED → My Ride Seat 3 proven |
+| Demand | `I need a ride` demand intent, not booking | Launch | DONE | Invariants/contracts green |
+| Demand | Aggregation and driver/Admin visibility | Launch | DONE | Read-only projections + anti-mutation guards |
+| Demand | Persistent demand recovery | Launch | BUILT | Contracts/build green; headed leave/return/supply/explicit-book E2E pending |
+| Demand | 15/30/60 minute wait tolerance | Stretch→RC | BUILT | Advisory-only implementation; headed persistence acceptance pending |
+| Driver | Current-route economics / fare / full-car context | Launch | DONE | UI + contract validation green |
+| Driver | Directional pipelined FIFO dispatch | Launch | DONE | Live V2 Dev two-driver/two-direction proof + CI #299 |
+| Driver | Post-start reverse-demand Low/Medium/High | Launch | BUILT | Backend/live proof green; final responsive driver UI sweep pending |
+| Driver | Daily summary | Stretch | DONE | Completed-trip/fare-based implementation validated |
+| Admin | Route-health-first operations board | Launch | DONE | Current car, seats, next driver, demand, exceptions exercised |
+| Admin | Exception inbox / actionable operations | Launch | DONE | Exception-first UI built and accepted |
+| Support | Passenger/Driver structured Help + Admin resolve | Launch | DONE | Fare-issue create → Admin Inbox → resolve proven without trip mutation |
+| GPS | Start Trip usable-location prerequisite | Launch | DONE | No-GPS reject + simulated accurate fix + successful start proven |
+| GPS | Active-trip live location + graceful fallback | Launch | DONE | Active tracking/privacy UI + scoped writes/reads validated |
+| GPS | Automatic terminal tracking cleanup | Launch | DONE | Live GPS row deleted on completed trip |
+| Sharing | Share My Raahi secure one-trip token | Launch | DONE | Hashed token, create/open/revoke proven |
+| Sharing | Anonymous loved-one read-only trip page | Launch | DONE | Correct passenger/driver trip view; no phone/history exposure |
+| Sharing | Successful-arrival visibility window | Launch | DONE | Product copy aligned to up to 30 minutes after arrival |
+| Repeat use | My Raahi recent route / Ride Again | Stretch | DONE | Completed trip surfaced; no auto-book |
+| Safety | Cancellation/no-show/Admin queue invariants | Launch | DONE | Current V10 paths audited; seat/FIFO/trip isolation preserved |
+| Security | RLS/RPC privilege matrix | Launch | DONE | Current V2 tables/functions audited; no new unauthenticated mutation grants |
+| Security | Operational role boundaries + auth ingress guards | Launch | DONE | Contract suite + CI |
+| Environment | Isolated `Raahi V2 Dev` | Launch | DONE | V1 production kept untouched |
+| Staging | Positive non-production safety attestation | Release gate | BUILT | Test workflow fails closed; guaranteed staging target still required |
+| Migration | Clean-room canonical replay | Release gate | PENDING | Needs isolated disposable RC database; billable infra approval required |
+| Browser | Demand-recovery headed E2E | Release gate | PENDING | Highest-priority next acceptance |
+| Browser | Wait-tolerance headed E2E | Release gate | PENDING | Persistence/navigation/reload proof required |
+| Browser | Final responsive authenticated role sweep | Release gate | PENDING | Passenger/Driver/Admin + post-start return-demand display |
+| Staging | Authenticated staging E2E | Release gate | PENDING | Must run only against positively attested non-production target |
+| Rollback | Staging rollback rehearsal | Release gate | PENDING | Run documented app rollback + forward DB recovery process |
+| Production | Merge / V2 Prod / secrets / migrations / deploy / tag | Production | PENDING | Explicit user approval required |
 
-1. PostgreSQL remains authoritative operational state.
-2. Frontend does not directly mutate core operational tables.
-3. One canonical backend command/RPC owns each business transition.
-4. Matching owns passenger-to-driver allocation.
-5. Driver FIFO remains authoritative unless an explicitly approved deterministic rule changes it.
-6. `driver_queue` owns origin FIFO/availability state.
-7. `trips` own journey lifecycle.
-8. Seat capacity cannot be exceeded under concurrent actions.
-9. Cancellation/no-show releases seats exactly once and cannot corrupt another trip.
-10. Origin queue advancement must not block later drivers while an earlier trip is already in progress.
-11. Multiple simultaneous trips on the same corridor remain isolated.
-12. Realtime is invalidation/refetch, never a second source of truth.
-13. Core V1 booking/queue/trip behavior is regression-tested before and after every V2 milestone.
+## Explicit stretch / post-V2 scope
 
-## Classification
+| Capability | Status | Rule |
+|---|---:|---|
+| Loved-one start/arrival notifications | STRETCH | Do not delay launch reliability |
+| Family / multi-seat passenger labels | STRETCH | Seat semantics must remain exact |
+| Scheduled travel intent | STRETCH | Intent only; never auto-book |
+| Raahi Insights / demand heatmaps | STRETCH | Aggregate/privacy-first |
+| Local Offers / sponsored area | STRETCH | Separate, transparent, never interrupt booking/live trip |
+| Help Shape Raahi / idea voting | STRETCH | Only after core transport gates stay green |
+| Wallet / mandatory online payment | DEFERRED | Not V2 |
+| Surge pricing | DEFERRED | Not V2 |
+| Complex ratings/reputation | DEFERRED | Not V2 |
+| Opaque AI-controlled dispatch | DEFERRED | Conflicts with transparent FIFO discipline |
+| Heavy ad marketplace | DEFERRED | Conflicts with lightweight service character |
 
-- **V2.0 Launch** — required before production V2.
-- **V2.0 Stretch** — valuable but may slip if launch reliability would be delayed.
-- **Post-V2** — explicitly deferred.
-- **Existing V1** — preserve; do not rebuild.
-- **Modify V1 carefully** — touches a proven V1 flow and therefore requires invariant/regression testing.
+## Current validation baseline
 
-## Build matrix
+Latest validated implementation checkpoint: `636ce21`.
+Validate Raahi Mini #299: **SUCCESS**.
+17 business/safety contracts: **PASS**.
+TypeScript: **PASS**.
+Production build: **PASS**.
+Current RLS/RPC/live-invariant audit on isolated V2 Dev: **PASS**.
 
-| Capability | Classification | Target release | Frontend impact | Backend / data impact | V1 risk | Required tests |
-|---|---|---|---|---|---|---|
-| Preserve booking / queue / trip engine | Existing V1 | all | no redesign of business behavior | no semantic rewrite | Critical | full passenger, driver, admin regression |
-| One public login entry point | V2.0 Launch | alpha1 | login/header/profile routing | role resolution only | Medium | passenger/driver/admin role routing, logout/login |
-| Visible logged-in identity | V2.0 Launch | alpha1 | greeting/profile chip | profile projection | Low | auth refresh, role display |
-| Raahi display name / nickname | V2.0 Launch | alpha1 | profile editor + display everywhere | add/normalize `display_name`; canonical update RPC | Low | create/update/read, fallback behavior |
-| Shallow profile menu | V2.0 Launch | alpha1 | profile, support, logout, role | profile read/update RPCs | Low | role boundary, validation |
-| Progressive profile completion | V2.0 Launch | alpha1 | ask only when action requires data | validation by action/RPC | Medium | browse without completion; booking/driver requirements |
-| Green V2 design system | V2.0 Launch | alpha1 | global tokens/components | none | Low | visual smoke, responsive |
-| Passenger Home redesign | V2.0 Launch | alpha2 | action-first live route card | existing projections preferred | Medium | no booking-state regression |
-| Driver Home redesign | V2.0 Launch | alpha2 | one operational card / next action | existing driver/trip projections preferred | High | all driver lifecycle actions |
-| Unified trip/status card | V2.0 Launch | alpha2 | passenger/driver/admin shared visual model | read projection only where possible | Medium | status consistency by role |
-| Plain-language status copy | V2.0 Launch | alpha2 | replace internal terminology | none | Low | state-to-copy mapping |
-| Loading/empty/error states | V2.0 Launch | alpha2 | stable UX | none | Low | slow/error/offline smoke |
-| BookMyShow seat UI refinement | Modify V1 carefully | alpha2 | clearer seat states/actions | no booking semantics change | High | hold/confirm/cancel/concurrency |
-| Route health indicator | V2.0 Launch | alpha2 | good/limited/no-driver | projection/derived read | Low | threshold correctness |
-| My Raahi / repeat-user shortcuts | V2.0 Stretch | alpha2 | recent route, booking, Book Again | lightweight preference/read state | Low | no auto-book, stale-state handling |
-| Zero-fee / clear-fare trust messaging | V2.0 Launch | alpha2 | home, booking, driver fare | none | Low | fare copy matches actual fare |
-| Driver/passenger trust cards | V2.0 Launch | alpha2 | name, vehicle, seats, pickup | projection fields | Low | privacy/role visibility |
-| Structured help / mismatch reasons | V2.0 Stretch | beta1 | one-tap support categories | support event/record RPC | Low | create/read/admin visibility |
-| No-driver demand intent | V2.0 Launch | beta1 | “I need a ride” state | new demand-intent records + RPCs | Medium | must not create booking/queue state |
-| Demand aggregation | V2.0 Launch | beta1 | passenger/driver/admin counts | aggregate demand projection | Medium | dedupe, expiry, concurrency |
-| Wait-tolerance / urgency | V2.0 Stretch | beta1 | optional wait window | demand-intent field/RPC | Low | expiry/validation |
-| Driver demand notifications | V2.0 Launch | beta1 | notification CTA: Go Available | notification events, rate limits | Medium | eligible drivers only, anti-spam |
-| Admin unserved-demand alert | V2.0 Launch | beta1 | route exception card | demand projection/event | Low | aggregation accuracy |
-| Demand activation loop | V2.0 Launch | beta1 | waiting state updates when supply appears | transition from demand intent to normal booking availability only | High | no fake booking; no duplicate activation |
-| Return-demand visibility | V2.0 Launch | beta1 | return-demand card on driver home | route-direction demand projection | Medium | no FIFO/dispatch mutation |
-| Return fill likelihood | V2.0 Stretch | beta1 | simple Low/Good/High signal | deterministic derived metric | Low | deterministic thresholds |
-| Driver daily summary | V2.0 Stretch | rc1 | trips, passengers, earnings, fill/return | aggregate reads | Low | totals/isolation/date ranges |
-| Scheduled travel intent | V2.0 Stretch | rc1 | future time-window intent | new intent records/RPCs | Low | no auto-book; expiry |
-| Live GPS prerequisite at Start Trip | V2.0 Launch | beta2 | permission/fix gate | start-trip command validates usable location context | High | location on/off/no-fix; trip not stranded later |
-| Active-trip location updates | V2.0 Launch | beta2 | live map/progress | temporary trip-location state + secure update RPC | Medium | active trip only; stop after complete |
-| GPS graceful fallback | V2.0 Launch | beta2 | “temporarily unavailable” + route progress | last-known location / freshness | Low | signal loss and recovery |
-| Share My Raahi token | V2.0 Launch | beta2 | share action | scoped, revocable, expiring token | Medium | expiry, revoke, cross-trip isolation |
-| Loved-one tracking page | V2.0 Launch | beta2 | read-only trip view | secure token-based projection | Medium | no auth required; no mutation; privacy |
-| Loved-one start/arrival notifications | V2.0 Stretch | rc1 | opt-in controls | notification subscriptions/events | Low | opt-in/out and trip scoping |
-| Family / multi-seat labels | V2.0 Stretch | rc1 | Me/Wife/Child/Parent labels | booking metadata only | Medium | seat count semantics unchanged |
-| Admin operations board | V2.0 Launch | rc1 | route cards instead of table-first | operational projections | Medium | reflects authoritative state |
-| Admin exception inbox | V2.0 Launch | rc1 | only actionable exceptions | derived exception events/projections | Medium | no direct core-table mutation |
-| Raahi Insights core metrics | V2.0 Stretch | rc1 | admin analytics | event/aggregate model | Low | metric correctness/privacy |
-| Demand heat/time-of-day | V2.0 Stretch | rc1 | simple time-band view | aggregates | Low | date/timezone correctness |
-| Local Offers | V2.0 Stretch | rc1 | dedicated non-intrusive area | promotions table + CRUD/RPC + expiry | Low | start/end dates, no live-trip interruption |
-| Sponsored transparency message | V2.0 Stretch | rc1 | “helps keep Raahi free” | none | Low | copy/placement |
-| Idea voting / Help Shape Raahi | V2.0 Stretch | rc1 | Yes/Maybe/No + optional comment | poll/vote RPCs | Low | one-user vote rules, aggregation |
-| Complex wallet/payments | Post-V2 | post-v2 | none | none | — | — |
-| Surge pricing | Post-V2 | post-v2 | none | none | — | — |
-| Complex ratings/reputation | Post-V2 | post-v2 | none | none | — | — |
-| AI/opaque dispatch | Post-V2 | post-v2 | none | none | Critical if introduced | — |
-| Heavy ad marketplace | Post-V2 | post-v2 | none | none | — | — |
+## Recommended completion order
 
-## Milestones
+1. Demand-recovery headed E2E.
+2. Wait-tolerance persistence headed E2E.
+3. Final responsive Passenger / Driver / Admin sweep, including post-start return-demand signal.
+4. Obtain user approval for billable disposable RC database if required; run clean-room migration replay.
+5. Establish positively attested non-production staging; run authenticated staging E2E.
+6. Rehearse rollback on staging.
+7. Update Release Readiness; request explicit production GO.
+8. Only after GO: merge PR #68 → create/configure V2 Production → migrate → deploy → smoke → tag `v2.0.0`.
 
-### v2.0-alpha1 — Identity + unified login + design tokens
-Exit criteria:
-- one public login path;
-- correct automatic role routing;
-- logged-in display name visible;
-- nickname editable through canonical backend command;
-- V2 green design tokens applied consistently to the shared design system;
-- profile/logout flow stable;
-- V1 passenger/driver/admin smoke suite remains green.
+## Release principle
 
-### v2.0-alpha2 — Core UI redesign
-Exit criteria:
-- Passenger Home, Driver Home, and Live Trip/Booking Status redesigned;
-- unified trip card/state language;
-- seat booking semantics unchanged;
-- no V1 journey regression.
-
-### v2.0-beta1 — Demand activation + return logic
-Exit criteria:
-- demand intent is explicitly separate from booking;
-- no-driver state creates aggregated demand safely;
-- eligible driver/admin notifications are rate-limited;
-- supply appearing re-enables normal booking flow;
-- return-demand visibility is read-only with respect to FIFO/matching.
-
-### v2.0-beta2 — GPS + loved-one tracking
-Exit criteria:
-- usable GPS is required only to start an active trip;
-- tracking runs only during active trip state;
-- temporary GPS loss does not strand the trip;
-- share link is read-only, scoped, revocable and expiring;
-- trip completion ends active tracking.
-
-### v2.0-rc1 — Admin/supporting features
-Exit criteria:
-- admin operations board and exception inbox;
-- driver summary/insights where ready;
-- promotions and polls only if transport reliability is already green;
-- complete regression + staging E2E.
-
-### v2.0.0 — Production
-Exit criteria:
-- release checklist complete;
-- staging smoke suite green;
-- database invariant suite green;
-- rollback path verified;
-- production approval;
-- immutable release tag created.
-
-## Release discipline
-
-For every milestone:
-
-`branch → build → automated tests → staging → smoke/E2E → production approval → tag`
-
-No milestone may trade ride reliability for UI polish, ads, polls, or analytics.
-
-## Immediate next implementation task
-
-Start `v2.0-alpha1` by auditing the current auth/profile implementation and documenting:
-
-1. current public login entry points;
-2. current role-detection logic;
-3. current `profiles`/driver/admin identity fields;
-4. every UI location that renders auth/account name;
-5. every direct profile table write;
-6. exact schema/RPC delta needed for `display_name`;
-7. regression tests required before changing login routing.
-
-Only after that audit should alpha1 code changes begin.
+**Do not trade proven ride reliability for feature count.** The remaining work is acceptance and release discipline, not another broad redesign.

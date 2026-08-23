@@ -2,17 +2,28 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { Car, User, CheckCircle2, Clock, MapPin, RefreshCw, Loader2 } from 'lucide-react';
+import { toast } from 'sonner';
+import { Car, User, CheckCircle2, Clock, MapPin, RefreshCw, Loader2, BellRing, X, CalendarClock } from 'lucide-react';
 import { getPublicActiveCar, type ActiveCarPublic, type StopWithEta } from '@/lib/raahiApi';
+import { cancelDemandIntent, createNowDemandIntent, getMyActiveNowDemand, getRouteDemandSummary, type RouteDemandSummary } from '@/lib/demandApi';
+import { useAuth } from '@/contexts/AuthContext';
 import UnifiedTripCard from '@/components/UnifiedTripCard';
+import { clearDemandWatch, saveDemandWatch } from '@/lib/demandWatch';
+
+const WAIT_OPTIONS = [15, 30, 60] as const;
 
 export default function ActiveCarContent() {
   const searchParams = useSearchParams();
   const routeId = searchParams.get('route_id');
+  const { user, profile, signInWithGoogle } = useAuth();
   const [car, setCar] = useState<ActiveCarPublic | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [demandSummary, setDemandSummary] = useState<RouteDemandSummary | null>(null);
+  const [demandBusy, setDemandBusy] = useState(false);
+  const [intentId, setIntentId] = useState<string | null>(null);
+  const [waitTolerance, setWaitTolerance] = useState<number>(30);
 
   const fetchCar = useCallback(async (showRefreshing = false) => {
     if (!routeId) {
@@ -23,15 +34,70 @@ export default function ActiveCarContent() {
     if (showRefreshing) setRefreshing(true);
     const data = await getPublicActiveCar(routeId);
     setCar(data);
+    if (!data.has_active_car) setDemandSummary(await getRouteDemandSummary(routeId));
     setLoading(false);
     setRefreshing(false);
   }, [routeId]);
 
   useEffect(() => { fetchCar(); }, [fetchCar]);
 
-  if (loading) {
-    return <div className="flex items-center justify-center py-20"><Loader2 size={28} className="animate-spin text-primary" /></div>;
-  }
+  useEffect(() => {
+    if (!routeId || !user?.id || profile?.role !== 'passenger') return;
+    let alive = true;
+    getMyActiveNowDemand().then((demand) => {
+      if (!alive) return;
+      const matchesRoute = demand.has_active_demand && demand.route_id === routeId && demand.intent_id;
+      setIntentId(matchesRoute ? demand.intent_id! : null);
+      if (matchesRoute && demand.wait_tolerance_minutes) setWaitTolerance(demand.wait_tolerance_minutes);
+    });
+    return () => { alive = false; };
+  }, [routeId, user?.id, profile?.role]);
+
+  useEffect(() => {
+    if (!intentId) return;
+    const timer = window.setInterval(() => { fetchCar(); }, 15000);
+    return () => window.clearInterval(timer);
+  }, [intentId, fetchCar]);
+
+  const createDemand = async () => {
+    if (!routeId) return;
+    if (!user) {
+      await signInWithGoogle(`/active-car-screen?route_id=${routeId}`);
+      return;
+    }
+    if (profile?.role !== 'passenger') {
+      toast.error('Demand requests are available to passenger accounts.');
+      return;
+    }
+    setDemandBusy(true);
+    const result = await createNowDemandIntent(routeId, waitTolerance);
+    setDemandBusy(false);
+    if (!result.success || !result.intent_id) {
+      toast.error(result.error || 'Could not save your ride request');
+      return;
+    }
+    setIntentId(result.intent_id);
+    saveDemandWatch(user.id, routeId, result.intent_id, waitTolerance);
+    setDemandSummary(await getRouteDemandSummary(routeId));
+    toast.success(`Raahi will watch this route for up to ${waitTolerance} minutes.`);
+  };
+
+  const cancelDemand = async () => {
+    if (!intentId) return;
+    setDemandBusy(true);
+    const result = await cancelDemandIntent(intentId);
+    setDemandBusy(false);
+    if (!result.success) {
+      toast.error(result.error || 'Could not cancel ride request');
+      return;
+    }
+    if (user?.id) clearDemandWatch(user.id, intentId);
+    setIntentId(null);
+    if (routeId) setDemandSummary(await getRouteDemandSummary(routeId));
+    toast.success('Ride request cancelled.');
+  };
+
+  if (loading) return <div className="flex items-center justify-center py-20"><Loader2 size={28} className="animate-spin text-primary" /></div>;
 
   if (error) {
     return (
@@ -44,14 +110,60 @@ export default function ActiveCarContent() {
   }
 
   if (!car?.has_active_car) {
+    const interested = demandSummary?.now_count ?? 0;
+    const scheduled = demandSummary?.scheduled_count ?? 0;
     return (
-      <div className="max-w-screen-2xl mx-auto px-4 py-8 text-center space-y-4">
-        <Car size={40} className="mx-auto text-muted-foreground opacity-40" />
-        <p className="text-base font-semibold text-foreground">No Active Car Right Now</p>
-        <p className="text-sm text-muted-foreground">Check back soon — a driver will join the queue shortly.</p>
-        <button onClick={() => fetchCar(true)} className="btn-outline mx-auto">
-          <RefreshCw size={16} className={refreshing ? 'animate-spin' : ''} /> Refresh
-        </button>
+      <div className="mx-auto max-w-screen-md space-y-4 px-4 py-8 sm:px-6 animate-fade-in">
+        <div className="feature-card p-6 text-center">
+          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-secondary"><Car size={22} className="text-primary" /></div>
+          <p className="mt-4 text-lg font-bold text-foreground">No driver is available right now</p>
+          <p className="mt-2 text-sm text-muted-foreground">Raahi can collect passenger interest and show drivers that this route needs a car.</p>
+
+          {(interested > 0 || scheduled > 0) && (
+            <div className="mt-4 rounded-2xl bg-secondary/70 px-4 py-3">
+              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Route demand</p>
+              {interested > 0 && <p className="mt-1 text-sm font-bold text-primary">{interested} passenger{interested === 1 ? '' : 's'} interested now</p>}
+              {scheduled > 0 && <p className="mt-1 text-xs font-semibold text-foreground">{scheduled} upcoming travel plan{scheduled === 1 ? '' : 's'}</p>}
+              <p className="mt-1 text-xs text-muted-foreground">Interest does not reserve a seat. Booking starts only when a car becomes available.</p>
+            </div>
+          )}
+
+          {intentId ? (
+            <div className="mt-4 space-y-3">
+              <div className="rounded-2xl border border-green-200 bg-green-50 px-4 py-3 text-left">
+                <div className="flex items-start gap-2">
+                  <BellRing size={17} className="mt-0.5 shrink-0 text-green-700" />
+                  <div>
+                    <p className="text-sm font-bold text-green-800">We’re checking with Raahi drivers</p>
+                    <p className="mt-1 text-xs text-green-700">Raahi will remember this request for up to {waitTolerance} minutes. You can leave this screen. You will still need to book explicitly when a car opens.</p>
+                  </div>
+                </div>
+              </div>
+              <button onClick={cancelDemand} disabled={demandBusy} className="quiet-action w-full text-red-600 hover:bg-red-50">{demandBusy ? <Loader2 size={16} className="animate-spin" /> : <X size={16} />} Cancel ride request</button>
+            </div>
+          ) : (
+            <div className="mt-5 space-y-3">
+              <div className="text-left">
+                <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">How long can you wait?</p>
+                <div className="mt-2 grid grid-cols-3 gap-2">
+                  {WAIT_OPTIONS.map((minutes) => (
+                    <button key={minutes} type="button" onClick={() => setWaitTolerance(minutes)} className={`rounded-xl border px-3 py-2.5 text-sm font-bold transition-colors ${waitTolerance === minutes ? 'border-primary bg-secondary text-primary' : 'border-border bg-card text-foreground'}`}>
+                      {minutes} min
+                    </button>
+                  ))}
+                </div>
+                <p className="mt-2 text-xs text-muted-foreground">Drivers see only the shortest stated wait on this route as an advisory urgency signal. It never changes FIFO.</p>
+              </div>
+              <button onClick={createDemand} disabled={demandBusy} className="btn-primary w-full">
+                {demandBusy ? <Loader2 size={18} className="animate-spin" /> : <BellRing size={18} />}
+                {demandBusy ? 'Saving request…' : user ? 'I need a ride' : 'Sign in & request a ride'}
+              </button>
+            </div>
+          )}
+
+          {routeId && <Link href={`/plan-ride?route_id=${routeId}`} className="quiet-action mt-2 w-full"><CalendarClock size={17} /> Plan a ride for later</Link>}
+          <button onClick={() => fetchCar(true)} className="btn-outline mx-auto mt-3"><RefreshCw size={16} className={refreshing ? 'animate-spin' : ''} /> Refresh route</button>
+        </div>
       </div>
     );
   }
@@ -62,7 +174,15 @@ export default function ActiveCarContent() {
   const occupiedSeats = (car.confirmed_count ?? 0) + (car.held_count ?? 0);
 
   return (
-    <div className="max-w-screen-2xl mx-auto px-4 py-4 space-y-4 animate-fade-in">
+    <div className="page-shell space-y-4 animate-fade-in">
+      {intentId && isCollecting && (car.available_count ?? 0) > 0 && (
+        <div className="rounded-2xl border border-green-200 bg-green-50 px-4 py-3">
+          <div className="flex items-start gap-3">
+            <BellRing size={18} className="mt-0.5 shrink-0 text-green-700" />
+            <div><p className="text-sm font-bold text-green-900">A Raahi car is available</p><p className="mt-1 text-xs text-green-800">This is the route you asked Raahi to watch. Nothing is booked yet — choose a seat below when you are ready.</p></div>
+          </div>
+        </div>
+      )}
       <UnifiedTripCard
         from={from}
         to={to}
@@ -79,42 +199,26 @@ export default function ActiveCarContent() {
         <div className="flex items-center justify-between gap-3 border-t border-border pt-3">
           <div className="flex min-w-0 items-center gap-2">
             <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-secondary"><User size={16} className="text-primary" /></div>
-            <div className="min-w-0">
-              <p className="truncate text-sm font-bold text-foreground">{car.driver_display_name}</p>
-              <p className="text-xs text-muted-foreground">Your Raahi driver</p>
-            </div>
+            <div className="min-w-0"><p className="truncate text-sm font-bold text-foreground">{car.driver_display_name}</p><p className="text-xs text-muted-foreground">Your Raahi driver</p></div>
           </div>
-          <button onClick={() => fetchCar(true)} className="btn-outline px-3 py-2" aria-label="Refresh live ride">
-            <RefreshCw size={14} className={refreshing ? 'animate-spin' : ''} /> Refresh
-          </button>
+          <button onClick={() => fetchCar(true)} className="btn-outline px-3 py-2" aria-label="Refresh live ride"><RefreshCw size={14} className={refreshing ? 'animate-spin' : ''} /> Refresh</button>
         </div>
       </UnifiedTripCard>
 
       <div className="card p-4">
         <div className="flex items-center justify-between mb-3">
           <p className="section-label">Pickup Route</p>
-          <div className="flex items-center gap-1 text-xs text-muted-foreground">
-            <MapPin size={12} />
-            <span>Driver at <strong className="text-foreground">{car.current_stop_name}</strong></span>
-          </div>
+          <div className="flex items-center gap-1 text-xs text-muted-foreground"><MapPin size={12} /><span>Driver at <strong className="text-foreground">{car.current_stop_name}</strong></span></div>
         </div>
-        <div className="space-y-0">
-          {(car.stops ?? []).map((stop, idx) => <StopRow key={stop.stop_id} stop={stop} isLast={idx === (car.stops?.length ?? 0) - 1} />)}
-        </div>
+        <div className="space-y-0">{(car.stops ?? []).map((stop, idx) => <StopRow key={stop.stop_id} stop={stop} isLast={idx === (car.stops?.length ?? 0) - 1} />)}</div>
       </div>
 
       {isCollecting && (car.available_count ?? 0) > 0 ? (
-        <Link href={`/request-seat-screen?route_id=${routeId}&trip_id=${car.trip_id}`} className="btn-primary w-full text-center">
-          <Car size={18} /> Book Seat
-        </Link>
+        <Link href={`/request-seat-screen?route_id=${routeId}&trip_id=${car.trip_id}`} className="btn-primary w-full text-center"><Car size={18} /> Book Seat</Link>
       ) : isCollecting && (car.available_count ?? 0) === 0 ? (
-        <div className="flex items-center justify-center gap-2 bg-muted rounded-2xl px-5 py-4 text-muted-foreground text-sm font-semibold">
-          <CheckCircle2 size={18} /> Car is Full — Next car coming soon
-        </div>
+        <div className="flex items-center justify-center gap-2 bg-muted rounded-2xl px-5 py-4 text-muted-foreground text-sm font-semibold"><CheckCircle2 size={18} /> Car is Full — Next car coming soon</div>
       ) : (
-        <div className="flex items-center justify-center gap-2 bg-blue-50 rounded-2xl px-5 py-4 text-blue-700 text-sm font-semibold">
-          <Car size={18} /> Car is En Route — Check back for next departure
-        </div>
+        <div className="flex items-center justify-center gap-2 bg-blue-50 rounded-2xl px-5 py-4 text-blue-700 text-sm font-semibold"><Car size={18} /> Car is En Route — Check back for next departure</div>
       )}
 
       <p className="text-center text-xs text-muted-foreground pb-2">Live updates · Tap <RefreshCw size={10} className="inline" /> to refresh manually</p>
@@ -130,17 +234,8 @@ function StopRow({ stop, isLast }: { stop: StopWithEta; isLast: boolean }) {
         {!isLast && <div className={stop.is_passed ? 'stop-line-passed' : 'stop-line'} />}
       </div>
       <div className={`flex-1 flex items-start justify-between pb-4 ${isLast ? 'pb-0' : ''}`}>
-        <div>
-          <p className={`text-sm font-semibold leading-tight ${stop.is_current ? 'text-primary' : stop.is_passed ? 'text-muted-foreground line-through' : 'text-foreground'}`}>{stop.name}</p>
-          {stop.is_current && <span className="text-[10px] font-bold text-primary uppercase tracking-wide">Driver Here Now</span>}
-          {stop.is_passed && !stop.is_current && <span className="text-[10px] text-muted-foreground">Passed</span>}
-        </div>
-        <div className="text-right">
-          {stop.is_current && <span className="text-xs font-bold text-primary">Now</span>}
-          {!stop.is_current && !stop.is_passed && stop.eta_minutes !== null && (
-            <div className="flex items-center gap-1 text-xs text-muted-foreground"><Clock size={11} /><span>~{stop.eta_minutes} min</span></div>
-          )}
-        </div>
+        <div><p className={`text-sm font-semibold leading-tight ${stop.is_current ? 'text-primary' : stop.is_passed ? 'text-muted-foreground line-through' : 'text-foreground'}`}>{stop.name}</p>{stop.is_current && <span className="text-[10px] font-bold text-primary uppercase tracking-wide">Driver Here Now</span>}{stop.is_passed && !stop.is_current && <span className="text-[10px] text-muted-foreground">Passed</span>}</div>
+        <div className="text-right">{stop.is_current && <span className="text-xs font-bold text-primary">Now</span>}{!stop.is_current && !stop.is_passed && stop.eta_minutes !== null && <div className="flex items-center gap-1 text-xs text-muted-foreground"><Clock size={11} /><span>~{stop.eta_minutes} min</span></div>}</div>
       </div>
     </div>
   );

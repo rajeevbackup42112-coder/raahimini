@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation';
 import { Clock3, Loader2, MapPin, RefreshCw, ShieldCheck } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
+import { createClient } from '@/lib/supabase/client';
+import { getRouteDemandSummary, type RouteDemandSummary } from '@/lib/demandApi';
 import {
   getActiveLocations,
   getDriverDepartingRoutes,
@@ -24,6 +26,7 @@ export default function DriverRouteSelectionContent() {
   const [context, setContext] = useState<DriverHomeContext>({});
   const [locationId, setLocationId] = useState('');
   const [routes, setRoutes] = useState<DriverDepartingRoute[]>([]);
+  const [demandByRoute, setDemandByRoute] = useState<Record<string, RouteDemandSummary>>({});
   const [loading, setLoading] = useState(true);
   const [joining, setJoining] = useState<string | null>(null);
   const [leaving, setLeaving] = useState(false);
@@ -49,6 +52,15 @@ export default function DriverRouteSelectionContent() {
     if (ctx.has_active_trip) router.replace('/driver-active-car-screen');
   }, [router]);
 
+  const loadRoutes = useCallback(async (selectedLocationId: string) => {
+    const nextRoutes = await getDriverDepartingRoutes(selectedLocationId);
+    setRoutes(nextRoutes);
+
+    const summaries = await Promise.all(nextRoutes.map(route => getRouteDemandSummary(route.route_id)));
+    setDemandByRoute(Object.fromEntries(summaries.map(summary => [summary.route_id, summary])));
+
+  }, []);
+
   useEffect(() => {
     if (!authLoading && user && (profile?.role === 'driver' || profile?.role === 'admin')) load();
     else if (!authLoading) setLoading(false);
@@ -63,11 +75,12 @@ export default function DriverRouteSelectionContent() {
   useEffect(() => {
     if (!locationId || context.queue_status === 'WAITING') {
       setRoutes([]);
+      setDemandByRoute({});
       return;
     }
     localStorage.setItem('raahi_driver_location_id', locationId);
-    getDriverDepartingRoutes(locationId).then(setRoutes);
-  }, [locationId, context.queue_status]);
+    loadRoutes(locationId);
+  }, [locationId, context.queue_status, loadRoutes]);
 
   const join = async (route: DriverDepartingRoute) => {
     setJoining(route.route_id);
@@ -86,6 +99,36 @@ export default function DriverRouteSelectionContent() {
       toast.success(`Joined queue for ${route.direction_label}`);
     }
   };
+
+  useEffect(() => {
+    if (!user || profile?.role !== 'driver' || !locationId || context.queue_status === 'WAITING' || routes.length === 0) return;
+
+    const routeById = new Map(routes.map(route => [route.route_id, route]));
+    const supabase = createClient();
+    const channel = supabase
+      .channel(`driver_demand_notifications_${user.id}_${locationId}`)
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'raahi_invalidation_events' }, async payload => {
+        const event = payload.new as { route_id?: string; source_table?: string; event_kind?: string };
+        if (event.source_table !== 'demand_notification' || !event.route_id || !event.event_kind) return;
+        if (!['DEMAND_LOW', 'DEMAND_MEDIUM', 'DEMAND_HIGH', 'DEMAND_URGENCY'].includes(event.event_kind)) return;
+
+        const route = routeById.get(event.route_id);
+        if (!route || route.has_active_car) return;
+
+        const summary = await getRouteDemandSummary(route.route_id);
+        if (summary.now_count < 1) return;
+        setDemandByRoute(previous => ({ ...previous, [route.route_id]: summary }));
+
+        const passengerText = `${summary.now_count} passenger${summary.now_count === 1 ? '' : 's'} ${summary.now_count === 1 ? 'is' : 'are'} looking for ${route.from_location_name} -> ${route.to_location_name}.`;
+        const message = event.event_kind === 'DEMAND_URGENCY' ? `Demand is getting more urgent. ${passengerText}` : passengerText;
+        toast(message, {
+          action: { label: 'Go Available', onClick: () => { void join(route); } },
+        });
+      })
+      .subscribe();
+
+    return () => { void supabase.removeChannel(channel); };
+  }, [context.queue_status, locationId, profile?.role, routes, user]);
 
   const leaveQueue = async () => {
     if (!context.queue_route_id) return;
@@ -131,11 +174,11 @@ export default function DriverRouteSelectionContent() {
   const selected = locations.find(l => l.id === locationId);
 
   return (
-    <div className="max-w-screen-sm mx-auto px-4 py-5 space-y-5">
-      <div className="rounded-3xl border border-green-100 bg-gradient-to-br from-green-50 to-card p-5">
-        <p className="text-xs font-bold uppercase tracking-wide text-primary">Driver home</p>
-        <h1 className="mt-2 text-2xl font-bold text-foreground">{profile?.display_name ? `Ready, ${profile.display_name}?` : 'Ready to drive?'}</h1>
-        <p className="mt-1 text-sm text-muted-foreground">Choose where you are. Raahi will show your next operational action clearly.</p>
+    <div className="mx-auto max-w-screen-lg space-y-5 px-4 py-5 sm:px-6">
+      <div className="hero-surface">
+        <p className="text-xs font-bold uppercase tracking-wide text-amber-200">Driver home</p>
+        <h1 className="mt-2 text-2xl font-extrabold text-white">{profile?.display_name ? `Ready, ${profile.display_name}?` : 'Ready to drive?'}</h1>
+        <p className="mt-1 text-sm text-white/75">Choose where you are. Raahi will show your next action, current-route demand and earning context.</p>
       </div>
 
       <div className="grid grid-cols-2 gap-2">
@@ -152,7 +195,7 @@ export default function DriverRouteSelectionContent() {
         <div>
           <div className="flex items-center justify-between mb-2">
             <p className="section-label">Going from {selected.name}</p>
-            <button onClick={() => getDriverDepartingRoutes(locationId).then(setRoutes)} aria-label="Refresh routes"><RefreshCw size={15} className="text-muted-foreground" /></button>
+            <button onClick={() => loadRoutes(locationId)} aria-label="Refresh routes"><RefreshCw size={15} className="text-muted-foreground" /></button>
           </div>
           <div className="space-y-3">
             {routes.length === 0 && <div className="card p-5 text-center text-sm text-muted-foreground">No active routes depart from {selected.name} right now.</div>}
@@ -160,6 +203,7 @@ export default function DriverRouteSelectionContent() {
               <DriverRouteCard
                 key={route.route_id}
                 route={route}
+                demand={demandByRoute[route.route_id]}
                 joining={joining === route.route_id}
                 onJoin={() => join(route)}
               />

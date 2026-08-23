@@ -1,5 +1,15 @@
 import { defineConfig } from '@playwright/test';
 
+const baseURL = process.env.RAAHI_STAGING_URL;
+if (!baseURL) {
+  throw new Error('RAAHI_STAGING_URL must be explicitly configured for staging E2E. Refusing to use a fallback target.');
+}
+
+const parsed = new URL(baseURL);
+if (parsed.protocol !== 'https:') {
+  throw new Error('RAAHI_STAGING_URL must use HTTPS.');
+}
+
 export default defineConfig({
   testDir: './tests/e2e-staging',
   timeout: 45_000,
@@ -9,7 +19,7 @@ export default defineConfig({
   workers: 1,
   reporter: [['list'], ['html', { outputFolder: 'playwright-report', open: 'never' }]],
   use: {
-    baseURL: process.env.RAAHI_STAGING_URL || 'https://raahimini-x1xy611.public.builtwithrocket.new',
+    baseURL,
     ignoreHTTPSErrors: true,
     trace: 'retain-on-failure',
     screenshot: 'only-on-failure',

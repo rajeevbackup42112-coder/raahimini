@@ -2,7 +2,7 @@ name: Validate Raahi Mini
 
 on:
   pull_request:
-    branches: [main, v2.0-alpha1]
+    branches: [main, v2.0-alpha1, v2.0-alpha2, v2.0-beta1-design]
   push:
     branches: [main]
 
@@ -22,6 +22,40 @@ jobs:
           cache-dependency-path: package.json
       - name: Install dependencies
         run: npm install --no-audit --no-fund
+      - name: Sequential dispatch contract
+        run: node tests/contracts/sequential-dispatch-contract.cjs
+      - name: Visual seat selection contract
+        run: node tests/contracts/visual-seat-selection-contract.cjs
+      - name: Driver economics contract
+        run: node tests/contracts/driver-economics-contract.cjs
+      - name: Admin route health contract
+        run: node tests/contracts/admin-route-health-contract.cjs
+      - name: Structured support contract
+        run: node tests/contracts/structured-support-contract.cjs
+      - name: Active-trip GPS contract
+        run: node tests/contracts/active-trip-gps-contract.cjs
+      - name: Share My Raahi contract
+        run: node tests/contracts/share-my-raahi-contract.cjs
+      - name: Driver daily summary contract
+        run: node tests/contracts/driver-daily-summary-contract.cjs
+      - name: Demand recovery contract
+        run: node tests/contracts/demand-recovery-contract.cjs
+      - name: Wait-tolerance urgency contract
+        run: node tests/contracts/wait-tolerance-urgency-contract.cjs
+      - name: Staging target safety contract
+        run: node tests/contracts/staging-target-safety-contract.cjs
+      - name: Test auth safety contract
+        run: node tests/contracts/test-auth-safety-contract.cjs
+      - name: Core mutation boundary contract
+        run: node tests/contracts/core-mutation-boundary-contract.cjs
+      - name: No mock production imports contract
+        run: node tests/contracts/no-mock-production-imports-contract.cjs
+      - name: Operational role boundary contract
+        run: node tests/contracts/operational-role-boundary-contract.cjs
+      - name: Environment file safety contract
+        run: node tests/contracts/environment-file-safety-contract.cjs
+      - name: Auth ingress contract
+        run: node tests/contracts/auth-ingress-contract.cjs
       - name: Type check
         run: npm run type-check
       - name: Production build

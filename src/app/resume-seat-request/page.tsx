@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { AlertTriangle, CheckCircle2, Loader2 } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { requestSeats } from '@/lib/raahiApi';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -12,6 +12,14 @@ export default function ResumeSeatRequestPage() {
   const started = useRef(false);
   const [error, setError] = useState('');
 
+  const clearPending = () => {
+    localStorage.removeItem('raahi_pending_route_id');
+    localStorage.removeItem('raahi_pending_trip_id');
+    localStorage.removeItem('raahi_pending_stop_id');
+    localStorage.removeItem('raahi_pending_seat_count');
+    localStorage.removeItem('raahi_pending_seat_numbers');
+  };
+
   const run = async () => {
     if (started.current) return;
     started.current = true;
@@ -19,24 +27,29 @@ export default function ResumeSeatRequestPage() {
 
     const tripId = localStorage.getItem('raahi_pending_trip_id');
     const stopId = localStorage.getItem('raahi_pending_stop_id');
-    const seatCount = Number(localStorage.getItem('raahi_pending_seat_count') || '1');
+    const seatCount = Number(localStorage.getItem('raahi_pending_seat_count') || '0');
+    let seatNumbers: number[] = [];
+    try {
+      const raw = localStorage.getItem('raahi_pending_seat_numbers');
+      const parsed = raw ? JSON.parse(raw) : [];
+      if (Array.isArray(parsed)) seatNumbers = parsed.filter((value) => Number.isInteger(value)).map(Number);
+    } catch {
+      seatNumbers = [];
+    }
 
-    if (!tripId || !stopId || !Number.isInteger(seatCount) || seatCount < 1) {
-      setError('Your saved seat request could not be restored. Please choose the ride again.');
+    if (!tripId || !stopId || !Number.isInteger(seatCount) || seatCount < 1 || seatNumbers.length !== seatCount) {
+      setError('Your saved seat selection could not be restored. Please choose the ride and seats again.');
       return;
     }
 
-    const result = await requestSeats(tripId, stopId, seatCount);
+    const result = await requestSeats(tripId, stopId, seatCount, seatNumbers);
     if (!result.success) {
-      setError(result.error || 'Could not complete your seat request.');
+      setError(result.error || 'Could not complete your seat request. Your selected seats may no longer be available.');
       return;
     }
 
     if (result.request_id) localStorage.setItem('raahi_active_request_id', result.request_id);
-    localStorage.removeItem('raahi_pending_route_id');
-    localStorage.removeItem('raahi_pending_trip_id');
-    localStorage.removeItem('raahi_pending_stop_id');
-    localStorage.removeItem('raahi_pending_seat_count');
+    clearPending();
     router.replace('/request-status-screen');
   };
 
@@ -50,18 +63,17 @@ export default function ResumeSeatRequestPage() {
       router.replace('/profile?next=%2Fresume-seat-request');
       return;
     }
-    run();
+    void run();
   }, [authLoading, user, router]);
 
   if (error) {
     return (
       <div className="max-w-md mx-auto px-4 py-12 text-center space-y-4">
-        <AlertTriangle size={38} className="mx-auto text-amber-500" />
-        <h1 className="text-lg font-bold">Could not finish your request</h1>
+        <h1 className="text-lg font-bold">Your seats need another look</h1>
         <p className="text-sm text-muted-foreground">{error}</p>
         <div className="flex gap-2">
-          <button onClick={() => { started.current = false; run(); }} className="btn-primary flex-1">Try Again</button>
-          <button onClick={() => router.replace('/')} className="btn-outline flex-1">Choose Ride Again</button>
+          <button onClick={() => { started.current = false; void run(); }} className="btn-primary flex-1">Try Again</button>
+          <button onClick={() => { clearPending(); router.replace('/'); }} className="btn-outline flex-1">Choose Seats Again</button>
         </div>
       </div>
     );
@@ -71,11 +83,8 @@ export default function ResumeSeatRequestPage() {
     <div className="max-w-md mx-auto px-4 py-16 text-center space-y-4">
       <Loader2 size={34} className="mx-auto animate-spin text-primary" />
       <div>
-        <h1 className="text-lg font-bold">Finishing your seat request</h1>
-        <p className="text-sm text-muted-foreground mt-1">Your pickup point and seat count were saved before sign-in.</p>
-      </div>
-      <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
-        <CheckCircle2 size={14} /> Signed in with a verified phone
+        <h1 className="text-lg font-bold">Holding your selected seats</h1>
+        <p className="text-sm text-muted-foreground mt-1">Your pickup point and exact seat choices were saved before sign-in.</p>
       </div>
     </div>
   );

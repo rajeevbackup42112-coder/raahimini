@@ -5,7 +5,7 @@ import {
   CheckCircle2, X, MapPin, Users, Phone, ChevronRight,
   AlertTriangle, Loader2, Car, Lock, Navigation, RefreshCw, ShieldCheck
 } from 'lucide-react';
-import { getDriverActiveCar, driverConfirmPayment, driverMarkPassengerAbsent, driverAdvanceStop, driverCloseEmptySeats, startTrip, completeTrip, type DriverActiveTrip, type PassengerRequest } from '@/lib/raahiApi';
+import { getDriverActiveCar, getDriverReturnDemandSignal, driverConfirmPayment, driverMarkPassengerAbsent, driverAdvanceStop, driverCloseEmptySeats, startTrip, completeTrip, type DriverActiveTrip, type PassengerRequest } from '@/lib/raahiApi';
 import { useAuth } from '@/contexts/AuthContext';
 import StatusBadge from '@/components/ui/StatusBadge';
 import UnifiedTripCard from '@/components/UnifiedTripCard';
@@ -18,6 +18,7 @@ export default function DriverActiveCarContent() {
   const [showCloseSeatsModal, setShowCloseSeatsModal] = useState(false);
   const [showStartTripModal, setShowStartTripModal] = useState(false);
   const [showCompleteTripModal, setShowCompleteTripModal] = useState(false);
+  const [returnDemandLevel, setReturnDemandLevel] = useState<'Low'|'Medium'|'High'|null>(null);
 
   const fetchTrip = useCallback(async () => {
     const data = await getDriverActiveCar();
@@ -29,6 +30,17 @@ export default function DriverActiveCarContent() {
     if (!authLoading && user) fetchTrip();
     else if (!authLoading) setLoading(false);
   }, [authLoading, user, fetchTrip]);
+
+  useEffect(() => {
+    let cancelled = false;
+    const load = async () => {
+      if (trip?.status !== 'IN_PROGRESS' || !trip.trip_id) { setReturnDemandLevel(null); return; }
+      const signal = await getDriverReturnDemandSignal(trip.trip_id);
+      if (!cancelled) setReturnDemandLevel(signal.has_signal ? signal.level ?? 'Low' : null);
+    };
+    void load();
+    return () => { cancelled = true; };
+  }, [trip?.status, trip?.trip_id]);
 
   const handleAction = async (actionKey: string, fn: () => Promise<any>, successMsg: string) => {
     setLoadingAction(actionKey);
@@ -130,6 +142,14 @@ export default function DriverActiveCarContent() {
           <p className="text-xs text-muted-foreground">{trip.held_count} held seat{trip.held_count === 1 ? '' : 's'} still need attention.</p>
         )}
       </UnifiedTripCard>
+
+      {trip.status === 'IN_PROGRESS' && returnDemandLevel && (
+        <div className="compact-card">
+          <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Return demand after arrival</p>
+          <p className="mt-1 text-base font-bold text-foreground">{trip.to_location} → {trip.from_location}: {returnDemandLevel}</p>
+          <p className="mt-1 text-xs text-muted-foreground">Current Raahi signal only. It may change before you arrive and never changes FIFO.</p>
+        </div>
+      )}
 
       {/* Departure Eligibility */}
       {!canStartTrip && trip.status === 'ACTIVE_COLLECTING' && (
@@ -312,7 +332,7 @@ export default function DriverActiveCarContent() {
           <div className="w-full max-w-md bg-card rounded-t-3xl p-6 space-y-4 animate-slide-up">
             <h2 className="text-lg font-bold text-foreground">Start Trip?</h2>
             <p className="text-sm text-muted-foreground">
-              This will mark the trip as in progress. If another driver is waiting, Raahi will activate that driver for passenger collection.
+              This starts your journey. Once you leave, the next FIFO driver for this direction can begin collecting the next car.
             </p>
             <div className="flex gap-3">
               <button onClick={() => setShowStartTripModal(false)} className="btn-outline flex-1">Not Yet</button>

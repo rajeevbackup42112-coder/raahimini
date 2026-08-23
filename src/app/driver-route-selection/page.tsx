@@ -1,5 +1,15 @@
+import AppLayout from '@/components/AppLayout';
+import DriverRoleGate from '@/components/DriverRoleGate';
 import DriverRouteSelectionContent from './components/DriverRouteSelectionContent';
+import DriverDailySummary from './components/DriverDailySummary';
 
 export default function DriverRouteSelectionPage() {
-  return <DriverRouteSelectionContent />;
+  return (
+    <AppLayout showBottomNav={false}>
+      <DriverRoleGate>
+        <DriverDailySummary />
+        <DriverRouteSelectionContent />
+      </DriverRoleGate>
+    </AppLayout>
+  );
 }

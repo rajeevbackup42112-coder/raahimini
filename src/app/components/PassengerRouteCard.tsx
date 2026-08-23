@@ -24,7 +24,7 @@ export default function PassengerRouteCard({ route }: { route: RouteForLocation 
   return (
     <Link
       href={`/active-car-screen?route_id=${route.route_id}`}
-      className="group block rounded-3xl border border-border bg-card p-4 card-shadow transition-all active:scale-[0.99] hover:border-primary/30"
+      className="feature-card group block p-4 active:scale-[0.99]"
     >
       <div className="flex items-start gap-3">
         <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-secondary">
