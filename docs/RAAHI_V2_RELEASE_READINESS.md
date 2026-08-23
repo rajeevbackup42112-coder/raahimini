@@ -30,7 +30,7 @@ Raahi V2 may move toward production only when the proven V1/V10 booking, seat, F
 - Passenger wait tolerance: 15 / 30 / 60 minute choice.
 - Driver urgency signal uses only the shortest active stated wait.
 - Urgency is advisory only and cannot influence FIFO, matching, booking or dispatch.
-- V2 Dev schema contains the wait-tolerance projection; branch CI must remain green before this slice is accepted.
+- V2 Dev schema and branch code contain the wait-tolerance projection and UI; headed browser acceptance is still required.
 
 ## Still requires browser/device acceptance
 
@@ -60,6 +60,28 @@ The current staging workflow is test-only; it does not itself deploy the applica
 - No public RPC may bypass verified-phone, role, seat-capacity, queue or trip-lifecycle rules.
 - GPS/support/share projections must remain scoped and privacy-safe.
 - No production or historical Supabase project may be touched during RC validation.
+
+## Machine-free hardening results
+
+Completed against isolated `Raahi V2 Dev` while the headed browser machine was unavailable:
+
+- No client-accessible public table was found with RLS disabled.
+- Anonymous SECURITY DEFINER RPCs are limited to intended public read projections: locations, route discovery, public active car, route demand summary and token-scoped shared trip.
+- V2 RPC execute grants match intended boundaries: passenger/driver/admin commands require authenticated sessions; public share read remains token-scoped.
+- Supabase security advisor RLS-without-policy notices for RPC-only tables are expected because direct table grants are revoked.
+- Leaked Password Protection remains an optional Auth hardening item; Raahi's normal login is Google/OTP rather than password-first.
+- Advisor-recommended indexes were added for new V2 support/share/location lookup foreign keys.
+- The advisor no longer reports those new V2 foreign keys as unindexed.
+- Older V1 policy-shape performance warnings were intentionally not rewritten during this hardening pass.
+
+Current-data invariant sweep returned zero violations for:
+
+- trip aggregate counts versus `trip_seats` ledger states;
+- over-capacity trips;
+- duplicate active driver queue entries for the same driver/route;
+- queue/trip lifecycle contradictions;
+- HELD/CONFIRMED seat-request counts versus their seat ledger;
+- active NOW demand remaining for a passenger who has already created a HELD/CONFIRMED booking on the same route.
 
 ## Production blockers
 
