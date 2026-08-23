@@ -5,40 +5,13 @@ const password = process.env.RAAHI_TEST_PASSWORD;
 async function loginAs(page, loginId) {
   if (!password) throw new Error('RAAHI_TEST_PASSWORD is not configured');
 
-  let response;
-  let lastError;
-  for (let attempt = 1; attempt <= 3; attempt += 1) {
-    try {
-      response = await page.context().request.post('/api/test-auth', {
-        data: { loginId, password },
-      });
-      break;
-    } catch (error) {
-      lastError = error;
-      if (attempt < 3) await page.waitForTimeout(750 * attempt);
-    }
-  }
-
-  if (!response) throw lastError;
-  if (!response.ok()) {
-    throw new Error(`Test auth failed for ${loginId}: ${response.status()}`);
-  }
-
-  const result = await response.json();
-  if (!result?.redirectTo || !result?.accessToken || !result?.refreshToken) {
-    throw new Error(`Test auth returned an incomplete session for ${loginId}`);
-  }
-
   await page.goto('/test-login');
-  await page.evaluate(async ({ accessToken, refreshToken }) => {
-    const key = Object.keys(localStorage).find((name) => name.startsWith('sb-') && name.endsWith('-auth-token'));
-    if (key) localStorage.removeItem(key);
-    localStorage.setItem('raahi_staging_session_handoff', JSON.stringify({ accessToken, refreshToken }));
-  }, { accessToken: result.accessToken, refreshToken: result.refreshToken });
-
-  // The server response also carries the genuine SSR session cookie. Navigate only
-  // after the API call has completed so role checks see the same authenticated user.
-  await page.goto(result.redirectTo);
+  await expect(page.getByRole('heading', { name: 'Raahi Test Login' })).toBeVisible();
+  await page.getByLabel('Login ID').fill(loginId);
+  await page.getByLabel('Password').fill(password);
+  await page.getByRole('button', { name: 'Sign in' }).click();
+  await expect(page.getByRole('button', { name: 'Signing in…' })).toHaveCount(0, { timeout: 30_000 });
+  await page.waitForLoadState('domcontentloaded');
 }
 
 test('anonymous passenger discovery loads without login', async ({ page }) => {
