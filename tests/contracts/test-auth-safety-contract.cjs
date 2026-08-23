@@ -22,7 +22,7 @@ must(api.includes('SUPABASE_SERVICE_ROLE_KEY'), 'test-auth admin operation must 
 must(api.includes("admin.auth.admin.getUserById"), 'admin client may locate only the configured synthetic Auth user');
 must(api.includes("admin.auth.admin.generateLink"), 'staging login must use a genuine Supabase magic-link session');
 must(api.includes("supabase.auth.verifyOtp"), 'staging login must establish a genuine user session');
-must(api.includes("supabase\n    .from('profiles')") || api.includes("supabase.from('profiles')"), 'trusted role must be checked through the authenticated session');
+must(/supabase\s*\.from\(\s*['"]profiles['"]\s*\)/.test(api), 'trusted role must be checked through the authenticated session');
 must(!/admin\s*\.from\(\s*['"]profiles['"]\s*\)/.test(api), 'service-role client must not bypass profile table privileges for persona validation');
 must(api.includes('session.user.id !== target.userId'), 'authenticated user id must match the configured persona');
 must(api.includes('await supabase.auth.signOut()'), 'persona mismatch must invalidate the staging test session');

@@ -29,7 +29,7 @@ Base: `v2.0-beta1-design`
 ### Driver demand visibility
 - Driver Home route cards fetch aggregate outbound demand
 - reverse-route demand is projected for the candidate return journey
-- return demand is advisory only and cannot change queue order
+- return demand is hidden before departure, shown only as Low/Medium/High after Start Trip, and cannot change queue order
 - queue join / availability action remains the existing FIFO action
 - no driver is promoted, reordered or auto-activated because of demand
 
@@ -118,7 +118,7 @@ Advisor notes:
 1. Replay remaining V10 hardening/read-projection migrations into `Raahi V2 Dev` until the environment reaches production-parity for the preserved V1 engine.
 2. Verify Beta1 function privileges and no trip/queue/seat mutations under demand operations.
 3. Point a non-production V2 app configuration at `Raahi V2 Dev` without committing secrets.
-4. Run browser acceptance for passenger NOW demand, scheduled demand, driver return demand and admin unserved demand.
+4. Run browser acceptance for passenger NOW demand, scheduled demand, post-start coarse driver return demand and admin unserved demand.
 5. Add notification dedup/threshold behavior only after the core demand lifecycle remains green.
 
 

@@ -11,7 +11,6 @@ import {
   getActiveLocations,
   getDriverDepartingRoutes,
   getDriverHomeContext,
-  getRoutesForLocation,
   joinDriverQueue,
   leaveDriverQueue,
   type DriverDepartingRoute,
@@ -28,7 +27,6 @@ export default function DriverRouteSelectionContent() {
   const [locationId, setLocationId] = useState('');
   const [routes, setRoutes] = useState<DriverDepartingRoute[]>([]);
   const [demandByRoute, setDemandByRoute] = useState<Record<string, RouteDemandSummary>>({});
-  const [returnDemandByRoute, setReturnDemandByRoute] = useState<Record<string, RouteDemandSummary>>({});
   const [loading, setLoading] = useState(true);
   const [joining, setJoining] = useState<string | null>(null);
   const [leaving, setLeaving] = useState(false);
@@ -61,17 +59,6 @@ export default function DriverRouteSelectionContent() {
     const summaries = await Promise.all(nextRoutes.map(route => getRouteDemandSummary(route.route_id)));
     setDemandByRoute(Object.fromEntries(summaries.map(summary => [summary.route_id, summary])));
 
-    const returnEntries = await Promise.all(nextRoutes.map(async route => {
-      const destinationRoutes = await getRoutesForLocation(route.to_location_id);
-      const reverse = destinationRoutes.find(candidate =>
-        candidate.from_location_name === route.to_location_name &&
-        candidate.to_location_name === route.from_location_name
-      );
-      if (!reverse) return null;
-      const summary = await getRouteDemandSummary(reverse.route_id);
-      return [route.route_id, summary] as const;
-    }));
-    setReturnDemandByRoute(Object.fromEntries(returnEntries.filter((entry): entry is readonly [string, RouteDemandSummary] => Boolean(entry))));
   }, []);
 
   useEffect(() => {
@@ -89,7 +76,6 @@ export default function DriverRouteSelectionContent() {
     if (!locationId || context.queue_status === 'WAITING') {
       setRoutes([]);
       setDemandByRoute({});
-      setReturnDemandByRoute({});
       return;
     }
     localStorage.setItem('raahi_driver_location_id', locationId);
@@ -192,7 +178,7 @@ export default function DriverRouteSelectionContent() {
       <div className="hero-surface">
         <p className="text-xs font-bold uppercase tracking-wide text-amber-200">Driver home</p>
         <h1 className="mt-2 text-2xl font-extrabold text-white">{profile?.display_name ? `Ready, ${profile.display_name}?` : 'Ready to drive?'}</h1>
-        <p className="mt-1 text-sm text-white/75">Choose where you are. Raahi will show your next action, outbound demand and possible return demand.</p>
+        <p className="mt-1 text-sm text-white/75">Choose where you are. Raahi will show your next action, current-route demand and earning context.</p>
       </div>
 
       <div className="grid grid-cols-2 gap-2">
@@ -218,7 +204,6 @@ export default function DriverRouteSelectionContent() {
                 key={route.route_id}
                 route={route}
                 demand={demandByRoute[route.route_id]}
-                returnDemand={returnDemandByRoute[route.route_id]}
                 joining={joining === route.route_id}
                 onJoin={() => join(route)}
               />

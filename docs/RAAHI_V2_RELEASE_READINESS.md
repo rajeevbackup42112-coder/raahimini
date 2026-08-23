@@ -16,7 +16,7 @@ Raahi V2 may move toward production only when the proven V1/V10 booking, seat, F
 - No-driver `I need a ride` demand intent remains separate from booking.
 - Persistent passenger demand recovery across navigation; supply only restores normal booking availability.
 - Demand aggregation, rate-limited driver/admin visibility and return-demand intelligence.
-- Sequential dispatch: next driver cannot become active while the current route trip is `IN_PROGRESS`.
+- Directional pipelined dispatch: Start Trip hands the same-direction queue to the next FIFO collector; opposite directions operate independently.
 - Driver economics: fare, full-car collection context, demand and return-fill guidance.
 - Admin route-health board, exception-first operations and structured support inbox.
 - Active-trip-only GPS with usable fix required at Start Trip and automatic terminal cleanup.
@@ -123,6 +123,17 @@ These should not delay transport reliability:
 
 Only promote a Stretch feature when the launch and staging gates above remain green.
 
+## Corrected dispatch live proof
+
+Validated in isolated Raahi V2 Dev after migration 20260823071332_v2_rc1_pipelined_dispatch.sql:
+- Gomoh → Dhanbad Driver 1 was ACTIVE_COLLECTING #1; Driver 3 was WAITING #2.
+- Driver 1 Start Trip changed Driver 1 to IN_PROGRESS and immediately activated Driver 3 for the next Gomoh → Dhanbad car.
+- Dhanbad → Gomoh remained independently ACTIVE_COLLECTING throughout.
+- Driver 4 joined as WAITING #3; completing Driver 1 did not activate Driver 4.
+- Only when Driver 3 pressed Start Trip did Driver 4 become ACTIVE_COLLECTING.
+- Return-demand RPC returned no signal before Start Trip and coarse Low after Start Trip.
+- Synthetic Gomoh → Dhanbad test trips were closed through canonical lifecycle commands; no synthetic live queue/trip/GPS state remained.
+
 ## Current validation checkpoint
 
 - Git head before this documentation refresh: `7eb6e881d5f24d2916973bc4e142b5d190534ce2`.
@@ -142,7 +153,7 @@ Only promote a Stretch feature when the launch and staging gates above remain gr
 - [x] Admin route health / exception / support lifecycle previously proven green.
 - [x] GPS start, fallback and cleanup green.
 - [x] Share create / anonymous view / revoke / arrival-window behavior green.
-- [x] Two-driver sequential dispatch regression green.
+- [x] Corrected pipelined two-driver/two-direction dispatch regression green in isolated Raahi V2 Dev.
 - [x] Cancellation/no-show/seat-release invariant audit green.
 - [ ] Migration replay on isolated release-candidate database green.
 - [x] RLS/RPC privilege and live invariant audit green on V2 Dev.

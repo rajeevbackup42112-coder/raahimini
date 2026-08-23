@@ -72,8 +72,8 @@ Raahi V2 uses an isolated two-environment model:
 | Driver demand notifications | V2.0 Launch | beta1 | notification CTA: Go Available | notification events, rate limits | Medium | eligible drivers only, anti-spam |
 | Admin unserved-demand alert | V2.0 Launch | beta1 | route exception card | demand projection/event | Low | aggregation accuracy |
 | Demand activation loop | V2.0 Launch | beta1 | waiting state updates when supply appears | transition from demand intent to normal booking availability only | High | no fake booking; no duplicate activation |
-| Return-demand visibility | V2.0 Launch | beta1 | return-demand card on driver home | route-direction demand projection | Medium | no FIFO/dispatch mutation |
-| Return fill likelihood | V2.0 Stretch | beta1 | simple Low/Good/High signal | deterministic derived metric | Low | deterministic thresholds |
+| Return-demand visibility | V2.0 Launch | beta1 | post-start Low/Medium/High return-demand signal on active trip | route-direction demand projection | Medium | no FIFO/dispatch mutation |
+| Return fill likelihood | V2.0 Stretch | beta1 | simple Low/Medium/High signal | deterministic derived metric | Low | deterministic thresholds |
 | Driver daily summary | V2.0 Stretch | rc1 | trips, passengers, earnings, fill/return | aggregate reads | Low | totals/isolation/date ranges |
 | Scheduled travel intent | V2.0 Stretch | rc1 | future time-window intent | new intent records/RPCs | Low | no auto-book; expiry |
 | Live GPS prerequisite at Start Trip | V2.0 Launch | beta2 | permission/fix gate | start-trip command validates usable location context | High | location on/off/no-fix; trip not stranded later |

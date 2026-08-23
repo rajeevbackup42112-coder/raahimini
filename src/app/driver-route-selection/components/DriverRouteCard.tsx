@@ -1,6 +1,6 @@
 'use client';
 
-import { ArrowRight, Car, IndianRupee, Loader2, RotateCcw, Users } from 'lucide-react';
+import { ArrowRight, Car, IndianRupee, Loader2, Users } from 'lucide-react';
 import type { RouteDemandSummary } from '@/lib/demandApi';
 import type { DriverDepartingRoute } from '@/lib/raahiApi';
 
@@ -9,18 +9,9 @@ interface Props {
   joining: boolean;
   onJoin: () => void;
   demand?: RouteDemandSummary;
-  returnDemand?: RouteDemandSummary;
 }
 
-function returnSignal(nowCount: number, plannedCount: number, capacity: number) {
-  if (nowCount >= capacity) return { label: 'High', detail: 'enough current interest to fill your car' };
-  if (nowCount >= Math.max(2, Math.ceil(capacity / 2))) return { label: 'Good', detail: 'meaningful return demand already visible' };
-  if (nowCount > 0) return { label: 'Early', detail: 'some return interest is visible' };
-  if (plannedCount > 0) return { label: 'Planned', detail: 'future return interest is visible' };
-  return { label: 'None yet', detail: 'no return interest is visible right now' };
-}
-
-export default function DriverRouteCard({ route, joining, onJoin, demand, returnDemand }: Props) {
+export default function DriverRouteCard({ route, joining, onJoin, demand }: Props) {
   const nextAction = route.has_active_car ? 'Join queue' : 'Go available now';
   const queueText = route.has_active_car
     ? `${route.waiting_drivers} driver${route.waiting_drivers === 1 ? '' : 's'} waiting`
@@ -28,11 +19,8 @@ export default function DriverRouteCard({ route, joining, onJoin, demand, return
   const interested = demand?.now_count ?? 0;
   const planned = demand?.scheduled_count ?? 0;
   const urgency = demand?.min_wait_tolerance_minutes ?? null;
-  const returnInterested = returnDemand?.now_count ?? 0;
-  const returnPlanned = returnDemand?.scheduled_count ?? 0;
   const capacity = route.vehicle_capacity || 4;
   const fullCarValue = route.fare_per_seat * capacity;
-  const returnFill = returnSignal(returnInterested, returnPlanned, capacity);
 
   return (
     <button
@@ -72,16 +60,6 @@ export default function DriverRouteCard({ route, joining, onJoin, demand, return
               {urgency && interested > 0 && <p className="mt-0.5 text-[11px] text-muted-foreground">Shortest stated wait: <strong className="text-foreground">{urgency} min</strong>. Advisory only — FIFO is unchanged.</p>}
             </div>
           )}
-
-          <div className="mt-2 flex items-start gap-1.5 rounded-xl bg-muted/60 px-2.5 py-2">
-            <RotateCcw size={12} className="mt-0.5 shrink-0 text-primary" />
-            <div className="min-w-0">
-              <p className="text-[11px] text-muted-foreground">
-                Return demand: <strong className="text-foreground">{returnInterested} now{returnPlanned > 0 ? ` · ${returnPlanned} planned` : ''}</strong>
-              </p>
-              <p className="mt-0.5 text-[11px] text-muted-foreground">Likely fill: <strong className="text-foreground">{returnFill.label}</strong> · {returnFill.detail}. Advisory only — FIFO is unchanged.</p>
-            </div>
-          </div>
         </div>
       </div>
       <div className="mt-3 flex items-center justify-between rounded-2xl bg-secondary/70 px-3 py-2.5">

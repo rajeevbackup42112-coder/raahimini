@@ -211,27 +211,25 @@ Show:
 
 ---
 
-## 7. Return-Trip Intelligence
+## 7. Directional Dispatch and Return-Trip Intelligence
 
-Raahi V2 should begin thinking in round trips, not isolated one-way trips.
+Raahi operates each one-way direction as its own FIFO pipeline.
 
-Drivers should see return demand before or during the outbound journey.
+### 7.1 Canonical dispatch rule
+For Gomoh → Dhanbad, Driver 1 collects passengers. When Driver 1 presses **Start Trip**, Driver 1 becomes `IN_PROGRESS` and the next FIFO driver for Gomoh → Dhanbad immediately becomes `ACTIVE_COLLECTING` for the next car, if one is waiting. Driver 2 does not wait for Driver 1 to reach Dhanbad or complete a round trip.
 
-Example:
-**Dhanbad → Gomoh return demand**
-**3 passengers interested**
-**Likely fill: High**
+Dhanbad → Gomoh operates independently under exactly the same rule. An in-progress car in one direction must never block collection in the other direction.
 
-Possible signals:
-- waiting passenger count
-- interest count
-- urgency / wait tolerance
-- expected fare
-- likely fill level
+Hard invariant: only one `ACTIVE_COLLECTING` driver exists per one-way route at a time; FIFO within that route remains strict.
 
-FIFO remains the default dispatch principle unless a new deterministic business rule is intentionally approved.
+### 7.2 Return-demand signal
+Do not show reverse-demand strength on Driver Home before departure. After **Start Trip**, Raahi may show only a coarse reverse-direction signal: **Low / Medium / High**.
 
-The system should use demand and route context to reduce empty returns without introducing opaque AI allocation.
+Example: **Return demand after arrival · Dhanbad → Gomoh: Medium**
+
+This is current guidance, not a promise, and may change before arrival. Exact reverse passenger counts are not required in the driver-facing signal. Backend/Admin may retain richer reverse-demand data for planning.
+
+Hard invariant: return demand is advisory only. It must never alter FIFO, queue position, driver activation, seat allocation, fare, booking, or trip lifecycle.
 
 ---
 
@@ -646,7 +644,7 @@ Recommended implementation sequence:
 1. UI/identity cleanup: one login, display name, profile, consistent green design
 2. Passenger/driver unified live trip cards and clearer status language
 3. No-driver demand activation and driver/admin notifications
-4. Return-trip demand intelligence
+4. Directional pipelined dispatch and post-start return-demand intelligence
 5. Live GPS for active trips only
 6. Share My Raahi / loved-one tracking
 7. Admin operations board and exception inbox
@@ -663,7 +661,7 @@ Recommended implementation sequence:
 
 Raahi V2 should succeed if:
 - passengers always understand the next step;
-- drivers better understand fill and return-trip opportunity;
+- drivers understand current-trip economics and receive return-demand guidance only after departure;
 - families can confidently follow active trips;
 - no-driver demand is captured and activated;
 - fare/platform-fee expectations are transparent;
@@ -675,3 +673,17 @@ Raahi V2 should succeed if:
 ## Final Product Principle
 
 **Raahi V2 should not feel bigger. It should feel smarter, warmer, safer and more certain.**
+
+---
+
+## 26. Operating Model and Handover Continuity
+
+Raahi V2 is being driven without Codex credits. The working assistant is expected to wear two hats:
+- **Project Owner / Manager:** protect the product vision, prioritize work, maintain release gates, identify risks, keep the Bible current, and decide the next best action within approved boundaries.
+- **Implementer / Builder:** inspect code, write migrations and UI changes, add tests/contracts, run validation, diagnose defects, and maintain documentation.
+
+Do not assume a separate coding agent will complete implementation work. The assistant should take work end-to-end whenever it can do so securely. Escalate to the user only for decisions or actions that truly require explicit approval, credentials, billing, production impact, or a business/product choice that cannot be inferred safely.
+
+Continuity rule: before ending a long chat or at any major checkpoint, update this Bible and release-readiness/handover material with the current branch/head, what is green, what is pending, known risks, and the single next action.
+
+Real-world standard: optimize for a Raahi V2 that is understandable to passengers, economically sensible for drivers, low-touch for Admin, operationally safe, privacy-conscious, resilient to real connectivity/device conditions, and straightforward to support and roll back.

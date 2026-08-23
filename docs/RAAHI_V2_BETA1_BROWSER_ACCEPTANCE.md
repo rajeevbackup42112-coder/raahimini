@@ -36,7 +36,7 @@ Run only against a non-production V2 environment with the demand backend install
 
 1. Sign in as eligible driver.
 2. Confirm each route can show aggregate outbound demand.
-3. Confirm reverse-route/return demand is shown only as advisory context.
+3. Confirm reverse-route demand is absent before departure and appears only after Start Trip as Low / Medium / High advisory context.
 4. Confirm queue action remains `Go available` / `Join queue` according to existing state.
 5. Verify demand does not change displayed FIFO position.
 6. Verify joining a route with lower demand still follows queue rules.
