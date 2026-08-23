@@ -48,6 +48,8 @@ jobs:
         run: node tests/contracts/test-auth-safety-contract.cjs
       - name: Core mutation boundary contract
         run: node tests/contracts/core-mutation-boundary-contract.cjs
+      - name: No mock production imports contract
+        run: node tests/contracts/no-mock-production-imports-contract.cjs
       - name: Type check
         run: npm run type-check
       - name: Production build
