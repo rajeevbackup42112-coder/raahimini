@@ -1,22 +1,8 @@
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 
-function getProjectRef(): string {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-  return url.match(/https:\/\/([^.]+)\./)?.[1] ?? '';
-}
-
-function injectTokenFromHeader(request: NextRequest): void {
-  const token = request.headers.get('x-sb-token');
-  if (!token) return;
-  const hasCookie = request.cookies.getAll().some((c) => c.name.includes('auth-token'));
-  if (hasCookie) return;
-  request.cookies.set(`sb-${getProjectRef()}-auth-token`, token);
-}
-
 export async function middleware(request: NextRequest) {
-  injectTokenFromHeader(request);
-  let supabaseResponse = NextResponse.next({ request });
+  const supabaseResponse = NextResponse.next({ request });
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -33,10 +19,11 @@ export async function middleware(request: NextRequest) {
           });
         },
       },
-    }
+    },
   );
 
-  // Refresh session if expired
+  // Refresh the normal Supabase session when present. Authentication enters
+  // through supported Supabase OAuth/OTP/test-session flows, never a custom header.
   await supabase.auth.getUser();
 
   return supabaseResponse;
