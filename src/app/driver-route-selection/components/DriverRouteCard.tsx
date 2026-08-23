@@ -27,6 +27,7 @@ export default function DriverRouteCard({ route, joining, onJoin, demand, return
     : 'No active car — you can become current';
   const interested = demand?.now_count ?? 0;
   const planned = demand?.scheduled_count ?? 0;
+  const urgency = demand?.min_wait_tolerance_minutes ?? null;
   const returnInterested = returnDemand?.now_count ?? 0;
   const returnPlanned = returnDemand?.scheduled_count ?? 0;
   const capacity = route.vehicle_capacity || 4;
@@ -64,9 +65,12 @@ export default function DriverRouteCard({ route, joining, onJoin, demand, return
           </div>
 
           {(interested > 0 || planned > 0) && (
-            <p className="mt-2 text-xs font-semibold text-primary">
-              Passenger demand: {interested} now{planned > 0 ? ` · ${planned} planned` : ''}{demand?.demand_label ? ` · ${demand.demand_label.toLowerCase()}` : ''}
-            </p>
+            <div className="mt-2 rounded-xl bg-secondary/55 px-2.5 py-2">
+              <p className="text-xs font-semibold text-primary">
+                Passenger demand: {interested} now{planned > 0 ? ` · ${planned} planned` : ''}{demand?.demand_label ? ` · ${demand.demand_label.toLowerCase()}` : ''}
+              </p>
+              {urgency && interested > 0 && <p className="mt-0.5 text-[11px] text-muted-foreground">Shortest stated wait: <strong className="text-foreground">{urgency} min</strong>. Advisory only — FIFO is unchanged.</p>}
+            </div>
           )}
 
           <div className="mt-2 flex items-start gap-1.5 rounded-xl bg-muted/60 px-2.5 py-2">
