@@ -5,10 +5,10 @@ import { useSearchParams } from 'next/navigation';
 import { toast } from 'sonner';
 import { Car, User, CheckCircle2, Clock, MapPin, RefreshCw, Loader2, BellRing, X, CalendarClock } from 'lucide-react';
 import { getPublicActiveCar, type ActiveCarPublic, type StopWithEta } from '@/lib/raahiApi';
-import { cancelDemandIntent, createNowDemandIntent, getRouteDemandSummary, type RouteDemandSummary } from '@/lib/demandApi';
+import { cancelDemandIntent, createNowDemandIntent, getMyActiveNowDemand, getRouteDemandSummary, type RouteDemandSummary } from '@/lib/demandApi';
 import { useAuth } from '@/contexts/AuthContext';
 import UnifiedTripCard from '@/components/UnifiedTripCard';
-import { clearDemandWatch, readDemandWatch, saveDemandWatch } from '@/lib/demandWatch';
+import { clearDemandWatch, saveDemandWatch } from '@/lib/demandWatch';
 
 export default function ActiveCarContent() {
   const searchParams = useSearchParams();
@@ -40,8 +40,12 @@ export default function ActiveCarContent() {
 
   useEffect(() => {
     if (!routeId || !user?.id || profile?.role !== 'passenger') return;
-    const watch = readDemandWatch(user.id);
-    if (watch?.routeId === routeId) setIntentId(watch.intentId);
+    let alive = true;
+    getMyActiveNowDemand().then((demand) => {
+      if (!alive) return;
+      setIntentId(demand.has_active_demand && demand.route_id === routeId && demand.intent_id ? demand.intent_id : null);
+    });
+    return () => { alive = false; };
   }, [routeId, user?.id, profile?.role]);
 
   useEffect(() => {

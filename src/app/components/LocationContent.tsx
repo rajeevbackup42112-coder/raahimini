@@ -2,11 +2,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { MapPin, Car, Navigation, CheckCircle2, Loader2, ArrowRight, RotateCcw, BellRing } from 'lucide-react';
-import { getActiveLocations, getRoutesForLocation, getMyActiveRequest, getPublicActiveCar, type Location, type RouteForLocation, type PassengerRideStatus } from '@/lib/raahiApi';
+import { getActiveLocations, getRoutesForLocation, getMyActiveRequest, type Location, type RouteForLocation, type PassengerRideStatus } from '@/lib/raahiApi';
 import PassengerRouteCard from './PassengerRouteCard';
 import { RouteListSkeleton } from '@/components/ui/LoadingSkeleton';
 import { useAuth } from '@/contexts/AuthContext';
-import { readDemandWatch } from '@/lib/demandWatch';
+import { getMyActiveNowDemand } from '@/lib/demandApi';
 
 export default function LocationContent() {
   const router = useRouter();
@@ -53,16 +53,17 @@ export default function LocationContent() {
     }
     let alive = true;
     const refreshWatch = async () => {
-      const watch = readDemandWatch(user.id);
-      if (!watch) {
-        if (alive) { setWatchedRouteId(null); setWatchedCarAvailable(false); setWatchedSeatsAvailable(0); }
+      const demand = await getMyActiveNowDemand();
+      if (!alive) return;
+      if (!demand.has_active_demand || !demand.route_id) {
+        setWatchedRouteId(null);
+        setWatchedCarAvailable(false);
+        setWatchedSeatsAvailable(0);
         return;
       }
-      const car = await getPublicActiveCar(watch.routeId);
-      if (!alive) return;
-      setWatchedRouteId(watch.routeId);
-      setWatchedCarAvailable(Boolean(car.has_active_car && car.status === 'ACTIVE_COLLECTING' && (car.available_count ?? 0) > 0));
-      setWatchedSeatsAvailable(car.available_count ?? 0);
+      setWatchedRouteId(demand.route_id);
+      setWatchedCarAvailable(Boolean(demand.supply_present));
+      setWatchedSeatsAvailable(demand.available_count ?? 0);
     };
     void refreshWatch();
     const timer = window.setInterval(() => { void refreshWatch(); }, 15000);

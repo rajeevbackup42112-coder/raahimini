@@ -20,6 +20,16 @@ export interface DemandIntentResult {
   error?: string;
 }
 
+export interface MyActiveNowDemand {
+  has_active_demand: boolean;
+  intent_id?: string;
+  route_id?: string;
+  expires_at?: string;
+  supply_present?: boolean;
+  available_count?: number;
+  trip_id?: string | null;
+}
+
 const rpc = async (name: string, args: Record<string, unknown> = {}) => {
   const supabase = createClient();
   return supabase.rpc(name, args);
@@ -32,6 +42,15 @@ export async function getRouteDemandSummary(routeId: string): Promise<RouteDeman
     return { route_id: routeId, now_count: 0, scheduled_count: 0, demand_label: 'NONE' };
   }
   return (data as RouteDemandSummary) ?? { route_id: routeId, now_count: 0, scheduled_count: 0, demand_label: 'NONE' };
+}
+
+export async function getMyActiveNowDemand(): Promise<MyActiveNowDemand> {
+  const { data, error } = await rpc('get_my_active_now_demand');
+  if (error) {
+    console.error(error.message);
+    return { has_active_demand: false };
+  }
+  return (data as MyActiveNowDemand) ?? { has_active_demand: false };
 }
 
 export async function createNowDemandIntent(routeId: string, waitToleranceMinutes = 30): Promise<DemandIntentResult> {
