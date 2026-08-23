@@ -10,6 +10,7 @@ export interface RouteDemandSummary {
   now_count: number;
   scheduled_count: number;
   demand_label: DemandLabel;
+  min_wait_tolerance_minutes?: number | null;
 }
 
 export interface DemandIntentResult {
@@ -25,6 +26,7 @@ export interface MyActiveNowDemand {
   intent_id?: string;
   route_id?: string;
   expires_at?: string;
+  wait_tolerance_minutes?: number | null;
   supply_present?: boolean;
   available_count?: number;
   trip_id?: string | null;
