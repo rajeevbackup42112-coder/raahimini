@@ -10,7 +10,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import StatusBadge from '@/components/ui/StatusBadge';
 import UnifiedTripCard from '@/components/UnifiedTripCard';
 
-export default function DriverActiveCarContent() {
+export default function DriverActiveCarContent({ locationReady = false }: { locationReady?: boolean }) {
   const { user, profile, loading: authLoading } = useAuth();
   const [trip, setTrip] = useState<DriverActiveTrip | null>(null);
   const [loading, setLoading] = useState(true);
@@ -97,7 +97,7 @@ export default function DriverActiveCarContent() {
   }
 
   const heldRequests = (trip.passenger_requests ?? []).filter((r) => r.status === 'HELD');
-  const canStartTrip = trip.departure_eligible ?? false;
+  const canStartTrip = (trip.departure_eligible ?? false) && locationReady;
   const heldBlocking = heldRequests.length > 0;
   const stopCount = trip.stops?.length ?? 0;
   const finalStopOrder = trip.stops?.[stopCount - 1]?.stop_order;

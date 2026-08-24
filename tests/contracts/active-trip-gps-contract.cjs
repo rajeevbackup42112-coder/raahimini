@@ -4,6 +4,8 @@ const path = require('node:path');
 const root = path.resolve(__dirname, '../..');
 const migration = fs.readFileSync(path.join(root, 'supabase/migrations/20260822204500_v2_beta2_active_trip_location_boundary.sql'), 'utf8');
 const panel = fs.readFileSync(path.join(root, 'src/app/driver-active-car-screen/components/DriverTripLocationPanel.tsx'), 'utf8');
+const content = fs.readFileSync(path.join(root, 'src/app/driver-active-car-screen/components/DriverActiveCarContent.tsx'), 'utf8');
+const experience = fs.readFileSync(path.join(root, 'src/app/driver-active-car-screen/components/DriverActiveCarExperience.tsx'), 'utf8');
 
 const must = (condition, message) => {
   if (!condition) throw new Error(message);
@@ -26,5 +28,7 @@ must(panel.includes('SEND_INTERVAL_MS = 15000'), 'active trip location update in
 must(panel.includes("trip?.status !== 'IN_PROGRESS'"), 'continuous tracking must run only while IN_PROGRESS');
 must(panel.includes('Tracking stops automatically when the trip ends.'), 'driver privacy copy missing');
 must(panel.includes('Raahi does not track you merely for waiting or using Driver Home.'), 'pre-start privacy copy missing');
+must(experience.includes('onReadyChange={setLocationReady}'), 'location readiness must be shared with the Start Trip UI');
+must(content.includes("(trip.departure_eligible ?? false) && locationReady"), 'Start Trip UI must require both departure eligibility and usable location');
 
 console.log('Active-trip GPS contract: PASS');

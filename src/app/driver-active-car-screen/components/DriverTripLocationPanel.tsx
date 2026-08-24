@@ -6,7 +6,7 @@ import { getDriverActiveCar, updateDriverTripLocation, type DriverActiveTrip } f
 
 const SEND_INTERVAL_MS = 15000;
 
-export default function DriverTripLocationPanel() {
+export default function DriverTripLocationPanel({ onReadyChange }: { onReadyChange?: (ready: boolean) => void }) {
   const [trip, setTrip] = useState<DriverActiveTrip | null>(null);
   const [busy, setBusy] = useState(false);
   const [ready, setReady] = useState(false);
@@ -36,12 +36,14 @@ export default function DriverTripLocationPanel() {
     }
     lastSendRef.current = Date.now();
     setLastSentAt(new Date().toISOString());
-    setReady(Boolean(result.usable_for_start) || trip.status === 'IN_PROGRESS');
+    const nextReady = Boolean(result.usable_for_start) || trip.status === 'IN_PROGRESS';
+    setReady(nextReady);
+    onReadyChange?.(nextReady);
     setError(result.usable_for_start === false && trip.status === 'ACTIVE_COLLECTING'
       ? 'Location found, but accuracy is still too low to start. Try again in an open area.'
       : '');
     return true;
-  }, [trip?.trip_id, trip?.status]);
+  }, [trip?.trip_id, trip?.status, onReadyChange]);
 
   const enableLocation = () => {
     if (!trip?.trip_id || !navigator.geolocation) {

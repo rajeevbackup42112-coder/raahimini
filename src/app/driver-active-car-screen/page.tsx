@@ -1,10 +1,9 @@
 import React from 'react';
 import AppLayout from '@/components/AppLayout';
 import DriverRoleGate from '@/components/DriverRoleGate';
-import DriverActiveCarContent from './components/DriverActiveCarContent';
+import DriverActiveCarExperience from './components/DriverActiveCarExperience';
 import DriverCancelTripPanel from './components/DriverCancelTripPanel';
 import DriverSupportPanel from './components/DriverSupportPanel';
-import DriverTripLocationPanel from './components/DriverTripLocationPanel';
 import DriverFareBanner from '@/components/DriverFareBanner';
 import RealtimeRefreshBoundary from '@/components/RealtimeRefreshBoundary';
 
@@ -14,8 +13,7 @@ export default function DriverActiveCarPage() {
       <DriverRoleGate>
         <RealtimeRefreshBoundary>
           <DriverFareBanner />
-          <DriverTripLocationPanel />
-          <DriverActiveCarContent />
+          <DriverActiveCarExperience />
           <DriverSupportPanel />
           <DriverCancelTripPanel />
         </RealtimeRefreshBoundary>
