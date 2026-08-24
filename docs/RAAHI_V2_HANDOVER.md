@@ -7,6 +7,7 @@ Branch: `v2.0-beta1`
 PR: **#68 — draft, open, unmerged**
 Committed documentation head before this handover refresh: `04920b8`
 Latest validated implementation checkpoint: `636ce21` — `fix: pipeline directional dispatch at trip start`
+Local mobile-first hardening package: `9ccd8fe` — `feat: simplify mobile passenger and driver flows` (local only; not merged or deployed).
 CI: **Validate Raahi Mini #299 SUCCESS** on the validated implementation line.
 
 ## Executive status

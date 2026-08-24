@@ -135,7 +135,7 @@ Validated in isolated Raahi V2 Dev after migration 20260823071332_v2_rc1_pipelin
 
 ## Current validation checkpoint
 
-- Mobile-first UI simplification was developed from hardening base `15cd0f2` and is isolated from validation-only auth harness edits.
+- Mobile-first UI simplification was developed from hardening base `15cd0f2`, packaged locally as `9ccd8fe`, and isolated from validation-only auth harness edits.
 - Validate Raahi Mini workflow #299: **SUCCESS**.
 - All 17 business / safety contracts, including corrected pipelined dispatch and Windows-safe test-auth guard: **PASS**.
 - TypeScript: **PASS**.
