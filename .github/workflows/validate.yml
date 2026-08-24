@@ -2,7 +2,7 @@ name: Validate Raahi Mini
 
 on:
   pull_request:
-    branches: [main, v2.0-alpha1, v2.0-alpha2, v2.0-beta1-design]
+    branches: [main, v2.0-alpha1, v2.0-alpha2, v2.0-beta1, v2.0-beta1-design]
   push:
     branches: [main]
 
