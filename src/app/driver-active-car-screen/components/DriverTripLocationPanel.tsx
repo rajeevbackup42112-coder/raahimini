@@ -89,10 +89,12 @@ export default function DriverTripLocationPanel() {
             </p>
             <p className={`mt-1 text-xs ${tracking || ready ? 'text-green-800' : 'text-amber-800'}`}>
               {tracking
-                ? 'Raahi updates your location only while this trip is active. Tracking stops automatically when the trip ends.'
-                : 'Get one accurate location fix now. Raahi does not track you merely for waiting or using Driver Home.'}
+                ? 'Location is shared only while this trip is active. Tracking stops automatically when the trip ends.'
+                : ready
+                  ? 'Ready to start. Keep location on.'
+                  : 'Turn on location to start the trip. Raahi does not track you merely for waiting or using Driver Home.'}
             </p>
-            {lastSentAt && <p className="mt-1 text-[11px] text-muted-foreground">Last location update: {new Date(lastSentAt).toLocaleTimeString()}</p>}
+            {lastSentAt && <p className="mt-1 text-[11px] text-muted-foreground">Updated {new Date(lastSentAt).toLocaleTimeString()}</p>}
             {error && <p className="mt-2 text-xs font-semibold text-red-700">{error}</p>}
           </div>
           {(tracking || ready) && <CheckCircle2 size={18} className="mt-1 shrink-0 text-green-700" />}
@@ -100,7 +102,7 @@ export default function DriverTripLocationPanel() {
         {!tracking && (
           <button type="button" onClick={enableLocation} disabled={busy} className="btn-primary mt-3 w-full">
             {busy ? <Loader2 size={17} className="animate-spin" /> : <ShieldCheck size={17} />}
-            {busy ? 'Getting location…' : ready ? 'Refresh location fix' : 'Enable trip location'}
+            {busy ? 'Getting location…' : ready ? 'Refresh Location' : 'Turn On Location'}
           </button>
         )}
       </div>

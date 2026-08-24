@@ -32,15 +32,14 @@ Raahi V2 may move toward production only when the proven V1/V10 booking, seat, F
 - Urgency is advisory only and cannot influence FIFO, matching, booking or dispatch.
 - Server-backed demand recovery survives navigation/session return and reports supply without booking.
 - Matching active NOW demand becomes `SATISFIED` only after a real seat request is inserted.
-- V2 Dev schema and branch code contain these projections and guards; headed browser acceptance of the newest UI remains required.
+- V2 Dev schema and branch code contain these projections and guards; current mobile acceptance has now been rerun against the simplified production bundle.
 
-## Still requires browser/device acceptance
+## Browser/device acceptance completed
 
-- Persistent demand recovery visual E2E: `I need a ride` -> leave route -> supply appears -> Home recovery card -> explicit booking.
-- Wait-tolerance UI visual acceptance and restored selection after navigation/reload.
-- Final responsive sweep on representative passenger, driver and Admin screens after the latest changes.
-
-These gates remain pending because they have not yet been rerun to completion on the current headed Windows validation setup. Dipti is available again; resume them there. They must not be silently converted to PASS from code review alone.
+- Demand recovery E2E passed on mobile Playwright: `I need a ride` -> leave -> real driver lifecycle restores supply -> `A Raahi car is available` -> explicit `Book Seat`.
+- Wait tolerance 15 / 30 / 60 passed through navigation and reload, with canonical cancellation between cases.
+- Responsive authenticated sweep passed 10/10 across Passenger, Driver and Admin at 360x800, 390x844 and 412x915, including horizontal-overflow and primary touch-target checks.
+- Driver mandatory-location Start Trip flow was exercised with mobile geolocation emulation; the backend recent-fix safety gate remained intact.
 
 ## Staging gate
 
@@ -136,7 +135,7 @@ Validated in isolated Raahi V2 Dev after migration 20260823071332_v2_rc1_pipelin
 
 ## Current validation checkpoint
 
-- Git head before this documentation refresh: `7eb6e881d5f24d2916973bc4e142b5d190534ce2`.
+- Mobile-first UI simplification was developed from hardening base `15cd0f2` and is isolated from validation-only auth harness edits.
 - Validate Raahi Mini workflow #299: **SUCCESS**.
 - All 17 business / safety contracts, including corrected pipelined dispatch and Windows-safe test-auth guard: **PASS**.
 - TypeScript: **PASS**.
@@ -145,9 +144,9 @@ Validated in isolated Raahi V2 Dev after migration 20260823071332_v2_rc1_pipelin
 ## Final GO checklist
 
 - [x] Latest validated code head green before this documentation-only refresh.
-- [ ] Demand recovery headed browser acceptance green.
-- [ ] Wait-tolerance headed browser acceptance green.
-- [ ] Final responsive authenticated passenger / driver / Admin sweep after latest UI changes green.
+- [x] Demand recovery mobile browser acceptance green.
+- [x] Wait-tolerance mobile browser acceptance green.
+- [x] Final responsive authenticated passenger / driver / Admin sweep after latest UI changes green.
 - [x] Full authenticated passenger seat/trip lifecycle previously proven green.
 - [x] Full authenticated driver trip lifecycle previously proven green.
 - [x] Admin route health / exception / support lifecycle previously proven green.

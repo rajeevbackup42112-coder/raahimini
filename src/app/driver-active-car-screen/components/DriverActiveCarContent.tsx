@@ -3,7 +3,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
 import {
   CheckCircle2, X, MapPin, Users, Phone, ChevronRight,
-  AlertTriangle, Loader2, Car, Lock, Navigation, RefreshCw, ShieldCheck
+  Loader2, Car, Lock, Navigation, RefreshCw, ShieldCheck
 } from 'lucide-react';
 import { getDriverActiveCar, getDriverReturnDemandSignal, driverConfirmPayment, driverMarkPassengerAbsent, driverAdvanceStop, driverCloseEmptySeats, startTrip, completeTrip, type DriverActiveTrip, type PassengerRequest } from '@/lib/raahiApi';
 import { useAuth } from '@/contexts/AuthContext';
@@ -111,8 +111,6 @@ export default function DriverActiveCarContent() {
         : (trip.available_count ?? 0) > 0
           ? 'Wait for a passenger or close empty seats'
           : 'Get ready to depart';
-  const expectedCollected = (trip.confirmed_count ?? 0) * (trip.fare_per_seat ?? 0);
-
   return (
     <div className="mobile-page space-y-3 animate-fade-in">
       <UnifiedTripCard
@@ -128,18 +126,8 @@ export default function DriverActiveCarContent() {
         pickupLabel={trip.current_stop_name}
         confidenceLabel={nextAction}
       >
-        <div className="grid grid-cols-2 gap-2 border-t border-border pt-3">
-          <div className="rounded-xl bg-muted/60 px-3 py-2.5">
-            <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Expected collected</p>
-            <p className="mt-0.5 text-sm font-bold text-foreground">₹{expectedCollected}</p>
-          </div>
-          <div className="rounded-xl bg-secondary/70 px-3 py-2.5">
-            <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Next action</p>
-            <p className="mt-0.5 text-sm font-bold text-primary">{nextAction}</p>
-          </div>
-        </div>
         {(trip.held_count ?? 0) > 0 && (
-          <p className="text-xs text-muted-foreground">{trip.held_count} held seat{trip.held_count === 1 ? '' : 's'} still need attention.</p>
+          <p className="border-t border-border pt-3 text-xs font-semibold text-amber-700">Resolve {trip.held_count} held seat{trip.held_count === 1 ? '' : 's'} before departure.</p>
         )}
       </UnifiedTripCard>
 
@@ -147,28 +135,21 @@ export default function DriverActiveCarContent() {
         <div className="compact-card">
           <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Return demand after arrival</p>
           <p className="mt-1 text-base font-bold text-foreground">{trip.to_location} → {trip.from_location}: {returnDemandLevel}</p>
-          <p className="mt-1 text-xs text-muted-foreground">Current Raahi signal only. It may change before you arrive and never changes FIFO.</p>
+          <p className="mt-1 text-xs text-muted-foreground">Advisory only · never changes FIFO.</p>
         </div>
       )}
 
-      {/* Departure Eligibility */}
-      {!canStartTrip && trip.status === 'ACTIVE_COLLECTING' && (
-        <div className="flex items-start gap-3 bg-amber-50 border border-amber-200 rounded-2xl px-4 py-3">
-          <AlertTriangle size={18} className="text-amber-600 flex-shrink-0 mt-0.5" />
-          <div>
-            <p className="text-sm font-bold text-amber-800">Not Yet Ready to Depart</p>
-            <ul className="text-xs text-amber-700 mt-1 space-y-0.5 list-disc list-inside">
-              {heldBlocking && <li>{heldRequests.length} held request{heldRequests.length > 1 ? 's' : ''} must be confirmed, withdrawn, or expired</li>}
-              {(trip.available_count ?? 0) > 0 && <li>{trip.available_count} seat{(trip.available_count ?? 0) > 1 ? 's' : ''} still available — confirm passengers or close empty seats</li>}
-            </ul>
-          </div>
+      {trip.status === 'ACTIVE_COLLECTING' && !canStartTrip && (
+        <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-800">
+          {heldBlocking
+            ? `Resolve ${heldRequests.length} held passenger${heldRequests.length === 1 ? '' : 's'} before you go.`
+            : `${trip.available_count ?? 0} seat${(trip.available_count ?? 0) === 1 ? '' : 's'} still open.`}
         </div>
       )}
 
-      {canStartTrip && trip.status === 'ACTIVE_COLLECTING' && (
-        <div className="flex items-start gap-3 bg-green-50 border border-green-200 rounded-2xl px-4 py-3">
-          <CheckCircle2 size={18} className="text-green-600 flex-shrink-0 mt-0.5" />
-          <p className="text-sm font-bold text-green-800">All seats accounted for — Ready to Start Trip</p>
+      {trip.status === 'ACTIVE_COLLECTING' && canStartTrip && (
+        <div className="flex items-center gap-2 rounded-2xl border border-green-200 bg-green-50 px-4 py-3 text-sm font-bold text-green-800">
+          <CheckCircle2 size={17} /> Ready to start
         </div>
       )}
 
@@ -206,10 +187,8 @@ export default function DriverActiveCarContent() {
       {(trip.status === 'ACTIVE_COLLECTING' || trip.status === 'IN_PROGRESS') && (
         <div className="compact-card">
           <div className="flex items-center justify-between mb-3">
-            <p className="section-label">{trip.status === 'IN_PROGRESS' ? 'Trip Progress' : 'Pickup Progress'}</p>
-            <span className="text-xs text-muted-foreground">
-              Stop {trip.current_stop_order} of {(trip.stops ?? []).length}
-            </span>
+            <p className="section-label">Next stop</p>
+            <span className="text-xs text-muted-foreground">{trip.current_stop_order}/{(trip.stops ?? []).length}</span>
           </div>
           <div className="flex items-center gap-2 mb-4 bg-secondary rounded-xl px-3 py-2">
             <Navigation size={14} className="text-primary" />
