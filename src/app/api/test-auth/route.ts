@@ -181,11 +181,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Configured test persona no longer matches its trusted Raahi role' }, { status: 409 });
   }
 
-  const redirectTo = target.role === 'admin'
-    ? '/admin-panel'
-    : target.role === 'driver'
-      ? '/driver-route-selection'
-      : '/';
+  const redirectTo = target.role === 'admin' ?'/admin-panel'
+    : target.role === 'driver' ?'/driver-route-selection' :'/';
 
   // The endpoint is staging-only and secret-protected. Returning the short-lived
   // genuine Supabase session lets the browser persist the same session before

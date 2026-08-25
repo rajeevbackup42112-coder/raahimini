@@ -102,8 +102,7 @@ export default function DriverActiveCarContent({ locationReady = false }: { loca
   const stopCount = trip.stops?.length ?? 0;
   const finalStopOrder = trip.stops?.[stopCount - 1]?.stop_order;
   const atFinalStop = finalStopOrder != null && trip.current_stop_order === finalStopOrder;
-  const nextAction = trip.status === 'IN_PROGRESS'
-    ? atFinalStop ? 'Complete trip' : 'Drive to the next stop'
+  const nextAction = trip.status === 'IN_PROGRESS' ? atFinalStop ?'Complete trip' : 'Drive to the next stop'
     : heldBlocking
       ? 'Confirm or resolve held passengers'
       : canStartTrip

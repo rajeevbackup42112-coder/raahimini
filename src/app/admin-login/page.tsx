@@ -8,7 +8,7 @@ export default function AdminLoginCompatibilityPage() {
   const router = useRouter();
 
   useEffect(() => {
-    router.replace('/login');
+    router?.replace('/login');
   }, [router]);
 
   return (

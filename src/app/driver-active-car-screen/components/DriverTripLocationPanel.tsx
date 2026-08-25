@@ -39,9 +39,7 @@ export default function DriverTripLocationPanel({ onReadyChange }: { onReadyChan
     const nextReady = Boolean(result.usable_for_start) || trip.status === 'IN_PROGRESS';
     setReady(nextReady);
     onReadyChange?.(nextReady);
-    setError(result.usable_for_start === false && trip.status === 'ACTIVE_COLLECTING'
-      ? 'Location found, but accuracy is still too low to start. Try again in an open area.'
-      : '');
+    setError(result.usable_for_start === false && trip.status === 'ACTIVE_COLLECTING' ?'Location found, but accuracy is still too low to start. Try again in an open area.' :'');
     return true;
   }, [trip?.trip_id, trip?.status, onReadyChange]);
 
@@ -93,8 +91,7 @@ export default function DriverTripLocationPanel({ onReadyChange }: { onReadyChan
               {tracking
                 ? 'Location is shared only while this trip is active. Tracking stops automatically when the trip ends.'
                 : ready
-                  ? 'Ready to start. Keep location on.'
-                  : 'Turn on location to start the trip. Raahi does not track you merely for waiting or using Driver Home.'}
+                  ? 'Ready to start. Keep location on.' :'Turn on location to start the trip. Raahi does not track you merely for waiting or using Driver Home.'}
             </p>
             {lastSentAt && <p className="mt-1 text-[11px] text-muted-foreground">Updated {new Date(lastSentAt).toLocaleTimeString()}</p>}
             {error && <p className="mt-2 text-xs font-semibold text-red-700">{error}</p>}

@@ -29,7 +29,7 @@ function PlanRideLoading() {
 
 function PlanRideContent() {
   const searchParams = useSearchParams();
-  const routeId = searchParams.get('route_id');
+  const routeId = searchParams?.get('route_id');
   const { user, profile, signInWithGoogle } = useAuth();
 
   if (!routeId) {
