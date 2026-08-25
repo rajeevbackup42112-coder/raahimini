@@ -7,6 +7,7 @@ const V2_DEV_PROJECT_REF = 'euqonxznewasaymdzach';
 const HARD_BLOCKED_HOSTS = new Set([
   'raahi-mini.netlify.app',
   'raahi-mini.referralhub.co.in',
+  'myraahi.referralhub.co.in',
 ]);
 
 function normalizeHost(value: string | null): string {

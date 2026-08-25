@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
 import {
-  CheckCircle2, X, MapPin, Users, Phone, ChevronRight,
+  CheckCircle2, X, MapPin, Users, Phone,
   Loader2, Car, Lock, Navigation, RefreshCw, ShieldCheck
 } from 'lucide-react';
 import { getDriverActiveCar, getDriverReturnDemandSignal, driverConfirmPayment, driverMarkPassengerAbsent, driverAdvanceStop, driverCloseEmptySeats, startTrip, completeTrip, type DriverActiveTrip, type PassengerRequest } from '@/lib/raahiApi';
@@ -99,18 +99,21 @@ export default function DriverActiveCarContent({ locationReady = false }: { loca
   const heldRequests = (trip.passenger_requests ?? []).filter((r) => r.status === 'HELD');
   const canStartTrip = (trip.departure_eligible ?? false) && locationReady;
   const heldBlocking = heldRequests.length > 0;
-  const stopCount = trip.stops?.length ?? 0;
-  const finalStopOrder = trip.stops?.[stopCount - 1]?.stop_order;
-  const atFinalStop = finalStopOrder != null && trip.current_stop_order === finalStopOrder;
-  const nextAction = trip.status === 'IN_PROGRESS'
-    ? atFinalStop ? 'Complete trip' : 'Drive to the next stop'
-    : heldBlocking
-      ? 'Confirm or resolve held passengers'
-      : canStartTrip
-        ? 'Start trip'
-        : (trip.available_count ?? 0) > 0
+  const atFinalStop = trip.next_action === 'COMPLETE_TRIP';
+  const nextStop = trip.next_operational_stop;
+  const nextAction = trip.next_action === 'PICKUP_NOW'
+    ? `Pick up at ${nextStop?.name ?? trip.current_stop_name ?? 'this stop'}`
+    : trip.next_action === 'DRIVE_TO_PICKUP'
+      ? `Next pickup: ${nextStop?.name ?? 'passenger stop'}`
+      : trip.next_action === 'READY_TO_START'
+        ? (locationReady ? 'Ready to start' : 'All aboard · enable location')
+        : trip.next_action === 'WAIT_OR_CLOSE_SEATS'
           ? 'Wait for a passenger or close empty seats'
-          : 'Get ready to depart';
+          : trip.next_action === 'DRIVE_TO_DESTINATION'
+            ? `Drive to ${nextStop?.name ?? trip.to_location ?? 'destination'}`
+            : trip.next_action === 'COMPLETE_TRIP'
+              ? 'Trip complete at destination'
+              : 'Get ready';
   return (
     <div className="mobile-page space-y-3 animate-fade-in">
       <UnifiedTripCard
@@ -153,6 +156,42 @@ export default function DriverActiveCarContent({ locationReady = false }: { loca
         </div>
       )}
 
+      {/* One meaningful next stop only */}
+      {nextStop && (
+        <div className="compact-card">
+          <p className="section-label">{nextStop.action === 'PICKUP' ? 'Next pickup' : 'Destination'}</p>
+          <div className="mt-2 flex items-start gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-secondary">
+              <Navigation size={18} className="text-primary" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-xl font-bold text-foreground">{nextStop.name}</p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {nextStop.action === 'PICKUP'
+                  ? `${nextStop.request_count} passenger request${nextStop.request_count === 1 ? '' : 's'} · ${nextStop.seat_count} seat${nextStop.seat_count === 1 ? '' : 's'}`
+                  : 'Final destination'}
+              </p>
+            </div>
+          </div>
+          {(trip.next_action === 'DRIVE_TO_PICKUP' || trip.next_action === 'DRIVE_TO_DESTINATION') && (
+            <button
+              onClick={() => handleAction('advance-stop', () => driverAdvanceStop(trip.trip_id!), `Arrived at ${nextStop.name}`)}
+              disabled={!!loadingAction}
+              className="btn-accent mt-4 w-full"
+            >
+              {loadingAction === 'advance-stop' ? <Loader2 size={18} className="animate-spin" /> : <MapPin size={18} />}
+              {loadingAction === 'advance-stop' ? 'Updating...' : `Arrived at ${nextStop.name}`}
+            </button>
+          )}
+          {trip.next_action === 'PICKUP_NOW' && (
+            <div className="mt-4 rounded-xl bg-green-50 px-3 py-2 text-sm font-semibold text-green-800">
+              You are here. Confirm or mark the waiting passenger absent below.
+            </div>
+          )}
+        </div>
+      )}
+
+
       {/* Passenger Requests */}
       <div>
         <p className="section-label mb-2">Passenger Requests ({(trip.passenger_requests ?? []).length})</p>
@@ -183,53 +222,6 @@ export default function DriverActiveCarContent({ locationReady = false }: { loca
         </div>
       </div>
 
-      {/* Stop Progression */}
-      {(trip.status === 'ACTIVE_COLLECTING' || trip.status === 'IN_PROGRESS') && (
-        <div className="compact-card">
-          <div className="flex items-center justify-between mb-3">
-            <p className="section-label">Next stop</p>
-            <span className="text-xs text-muted-foreground">{trip.current_stop_order}/{(trip.stops ?? []).length}</span>
-          </div>
-          <div className="flex items-center gap-2 mb-4 bg-secondary rounded-xl px-3 py-2">
-            <Navigation size={14} className="text-primary" />
-            <p className="text-sm font-semibold text-secondary-foreground">
-              Currently at: <strong>{trip.current_stop_name}</strong>
-            </p>
-          </div>
-          <div className="flex gap-1 mb-2">
-            {(trip.stops ?? []).map((stop) => (
-              <div
-                key={stop.stop_id}
-                className={`flex-1 h-2.5 rounded-full ${
-                  stop.is_passed ? 'bg-accent' : stop.is_current ? 'bg-primary' : 'bg-border'
-                }`}
-                title={stop.name}
-              />
-            ))}
-          </div>
-          <div className="flex justify-between text-xs text-muted-foreground">
-            <span>{trip.stops?.[0]?.name}</span>
-            <span>{trip.stops?.[trip.stops.length - 1]?.name}</span>
-          </div>
-          <button
-            onClick={() => handleAction(
-              'advance-stop',
-              () => driverAdvanceStop(trip.trip_id!),
-              'Stop advanced'
-            )}
-            disabled={!!loadingAction || (trip.current_stop_order ?? 0) >= (trip.stops?.length ?? 0)}
-            className="btn-accent w-full mt-3"
-          >
-            {loadingAction === 'advance-stop' ? (
-              <Loader2 size={18} className="animate-spin" />
-            ) : (
-              <ChevronRight size={18} />
-            )}
-            {loadingAction === 'advance-stop' ? 'Advancing...' : 'Arrived at Next Stop'}
-          </button>
-        </div>
-      )}
-
       {/* Close Empty Seats */}
       {trip.status === 'ACTIVE_COLLECTING' && (trip.available_count ?? 0) > 0 && (
         <button
@@ -242,7 +234,7 @@ export default function DriverActiveCarContent({ locationReady = false }: { loca
           }`}
         >
           <Lock size={18} />
-          Close {trip.available_count} Empty Seat{(trip.available_count ?? 0) > 1 ? 's' : ''} & Go
+          Close {trip.available_count} Empty Seat{(trip.available_count ?? 0) > 1 ? 's' : ''}
           {heldBlocking && <span className="text-xs">(resolve held requests first)</span>}
         </button>
       )}
@@ -408,7 +400,7 @@ function PassengerRequestRow({
         )}
       </div>
 
-      {isHeld && (
+      {isHeld && request.is_at_pickup && (
         <div className="flex gap-2">
           <button
             onClick={() => onConfirm(request.request_id)}
@@ -416,7 +408,7 @@ function PassengerRequestRow({
             className="flex-1 flex items-center justify-center gap-2 bg-green-600 text-white font-semibold rounded-xl px-3 py-2.5 text-sm transition-all duration-150 active:scale-95 hover:bg-green-700 disabled:opacity-50"
           >
             {isLoadingConfirm ? <Loader2 size={14} className="animate-spin" /> : <CheckCircle2 size={14} />}
-            Payment Received
+            Boarded & Paid
           </button>
           <button
             onClick={() => onAbsent(request.request_id)}
@@ -428,11 +420,16 @@ function PassengerRequestRow({
           </button>
         </div>
       )}
+      {isHeld && !request.is_at_pickup && (
+        <div className="rounded-xl bg-muted px-3 py-2 text-xs font-semibold text-muted-foreground">
+          Waiting at {request.pickup_stop_name}
+        </div>
+      )}
 
       {isConfirmed && (
         <div className="flex items-center gap-2 bg-green-50 rounded-xl px-3 py-2">
           <CheckCircle2 size={14} className="text-green-600" />
-          <p className="text-xs font-semibold text-green-700">Confirmed — Payment received</p>
+          <p className="text-xs font-semibold text-green-700">Boarded · Payment received</p>
         </div>
       )}
     </div>

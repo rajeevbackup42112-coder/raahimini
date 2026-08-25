@@ -116,3 +116,31 @@ Current RLS/RPC/live-invariant audit on isolated V2 Dev: **PASS**.
 
 ### Validation impact
 The previous mobile/responsive PASS baseline remains historical evidence, but Passenger live-trip, Driver active-trip and Admin route/user flows are **reopened** for acceptance because approved behavior is changing. For every implemented slice, rerun focused tests, neighboring role flows, TypeScript, production build, relevant contracts and manual real-user acceptance.
+
+## Stage simplification workstream — 2026-08-25
+
+| Area | Capability | Status | Evidence / next gate |
+|---|---|---:|---|
+| Hosting | Prod V4 frozen on `myraahi.referralhub.co.in` | BASELINE | User-declared Rocket Version 4 rollback point; do not modify during stage work |
+| Hosting | Stage on `myraahi-stage.referralhub.co.in` | CONFIGURED IN GIT | Staging branch bootstrap site URL updated; live redeploy/acceptance still required |
+| Driver | Next operational-stop projection | BUILT IN GIT | Migration adds `next_action`, `next_operational_stop`, `operational_stops`; TypeScript contract added |
+| Driver | Skip empty intermediate stops safely | BUILT IN GIT | Proposed RPC guard permits next waiting pickup / final destination only; migration not applied yet |
+| Driver | Boarding confirmation only at pickup | BUILT IN GIT | Backend hardening included in unapplied stage migration |
+| Driver | Automatic Start Trip after final pickup | PLANNED | Must preserve GPS prerequisite and same-direction FIFO handoff exactly once |
+| Driver | One dominant WHAT'S NEXT screen | PLANNED | Depends on operational-stop backend contract becoming live on isolated Stage |
+| Passenger | Actual live driver map | PLANNED | Current text-only location status remains until map phase |
+| Admin | Dashboard + registered Users | PLANNED | Build after Passenger/Driver next-state flow stabilizes |
+| Admin | Guarded full Route Management | PLANNED | Requires route versioning / future-effective change design |
+
+**Current blocker:** Stage and frozen Prod V4 are not yet proven to use separate Supabase backends. The new operational migration must not be applied to shared Raahi V2 Dev merely to accelerate Stage testing.
+
+## Production version train — current slice
+
+| Version | Scope | Code | DB | Build | Live acceptance |
+|---|---|---:|---:|---:|---:|
+| V4 | Known-good pre-simplification baseline | FROZEN | Existing | Historical PASS | Baseline |
+| V5 | Driver meaningful pickup stops + destination; boarding only at pickup; production test-auth hard block | READY TO COMMIT | PENDING MIGRATION | PASS | PENDING DEPLOY |
+| V6 | Automatic Start Trip after manifest resolved + usable GPS, preserving canonical FIFO handoff | PLANNED | PLANNED | PENDING | PENDING |
+| Later | Passenger simplification/live map, then Admin Users/Dashboard/Routes/Operations | PLANNED | TBD | PENDING | PENDING |
+
+V5 preflight on 2026-08-25: active trips = 0, live queue entries = 0, HELD requests = 0. This makes the operational-function transition suitable for the approved production rollout window.

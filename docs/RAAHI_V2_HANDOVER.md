@@ -105,3 +105,34 @@ User-approved next product direction:
 Release status is therefore **manual-acceptance / focused simplification in progress**, not production-ready. Previously green Passenger/Driver/Admin responsive acceptance is historical evidence and must be rerun for each affected redesigned flow.
 
 Documentation discipline: every code/migration/product decision in this phase must update the Bible, Decision Log, Build Matrix and this Handover; Release Readiness must be updated whenever a release gate changes.
+
+## 2026-08-25 22:21 IST — Stage / Prod V4 split and next-state foundation
+
+User changed hosting roles:
+- Frozen baseline: `https://myraahi.referralhub.co.in` — Rocket Version 4, keep intact.
+- Active development stage: `https://myraahi-stage.referralhub.co.in`.
+
+Stage branch baseline before this slice: `01759b63f786c93aa30ecbd3f72fc4556acc4728` on `rocket-staging-ready`.
+
+Implemented locally for the next commit:
+- staging bootstrap `NEXT_PUBLIC_SITE_URL` changed to the new stage hostname;
+- `DriverActiveTrip` client contract extended with `next_action`, `next_operational_stop`, `operational_stops`;
+- new migration `20260825223000_v2_stage_operational_stops.sql` defines meaningful Driver progression: next unresolved pickup while collecting, destination while in progress, and boarding confirmation only at the actual pickup stop.
+
+Validation so far: TypeScript PASS; Next.js production build completed successfully against the staging branch configuration.
+
+**Do not apply the new migration yet.** Current evidence still points Stage at Raahi V2 Dev, and frozen Prod V4 may share that backend. Applying it would alter Version 4 operational behavior even though the frontend deployment is frozen. First establish backend isolation or obtain explicit user approval for shared-backend impact.
+
+Next action after committing this Git-only foundation: verify/establish safe Stage backend separation, then apply the operational-stop migration to Stage only and run focused Driver regression before changing visible Driver UI.
+
+## 2026-08-25 23:06 IST — production train approved
+
+The user explicitly replaced the temporary Stage-first plan with a one-version-at-a-time production rollout on `https://myraahi.referralhub.co.in`. Treat the earlier Stage/Prod split section above as historical/superseded.
+
+Version 4 application baseline is frozen on Git branch `prod-v4-frozen` at `01759b63f786c93aa30ecbd3f72fc4556acc4728`. Database rollback remains forward-repair only.
+
+Version 5 candidate implements Driver meaningful-stop progression: unresolved pickup stops only while collecting; boarding/payment confirmation only at the actual pickup stop; after the existing Start Trip transition, progression goes to the route destination. Manual Start Trip intentionally remains for V5. Production hostname is added to the hard-block list for staging/test-auth endpoints.
+
+V5 preflight immediately before release work: 0 active trips, 0 live queue entries, 0 HELD requests. TypeScript PASS and production Next.js build PASS.
+
+Release sequence: commit/push V5 candidate and canonical migration -> apply forward migration -> deploy Rocket Version 5 -> focused live Driver/Passenger acceptance -> only then begin V6 automatic Start Trip.

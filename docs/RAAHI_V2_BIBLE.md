@@ -762,3 +762,29 @@ Admin is where complexity belongs. The target primary navigation is **Dashboard 
 
 ### Vehicle configuration and release rule
 Driver Onboarding uses controlled vehicle type selection and supports seat capacities 4, 5, 6, 7 and 8. UI and canonical backend validation must remain aligned. Every simplification that changes visible workflow or trip transitions reopens the corresponding acceptance gate; rerun focused regression, neighboring role flows, TypeScript/build/contracts and final manual acceptance before production consideration.
+
+---
+
+## 29. Stage Simplification Baseline — 2026-08-25
+
+Hosting is now intentionally split by the user: `myraahi.referralhub.co.in` is frozen at Rocket Version 4 as the known-good baseline, while `myraahi-stage.referralhub.co.in` is the only target for the approved simplification work.
+
+Stage Git baseline before the next-state foundation: `01759b63f786c93aa30ecbd3f72fc4556acc4728` on `rocket-staging-ready`. The exact immutable Git commit behind the already-deployed Rocket Version 4 is not independently proven by repository metadata, so do not invent one; treat the hosting Version 4 deployment itself as the rollback baseline until its source mapping is verified.
+
+The first implementation slice is deliberately backend-contract-first. Driver progression is being changed from every physical route stop to **operational stops**: unresolved pickup stops while collecting, then the route destination once the trip is in progress. Boarding confirmation is valid only when the Driver has reached that passenger's pickup stop. The projection exposes `next_action`, `next_operational_stop` and `operational_stops` so later UI work can render one dominant "what is next" card.
+
+This first slice does **not** yet remove manual Start Trip or Complete Trip. Those remain later phases and must continue to use the canonical FIFO/GPS-protected transitions until their automatic replacements are implemented and proven.
+
+Critical environment rule: the stage branch currently uses Raahi V2 Dev client configuration, and Prod V4 may still use that same backend. Therefore the new operational-stop migration must remain **Git-only / unapplied** until Stage backend isolation is verified or the user explicitly accepts shared-backend impact. Protecting the frozen Version 4 behavior takes precedence over speeding up the refactor.
+
+## 29. Production Version Train — 2026-08-25
+
+The user has explicitly chosen a controlled production version train rather than a parallel Stage-first rollout. The temporary Stage/Prod split note is historical and no longer governs execution.
+
+Production home: `https://myraahi.referralhub.co.in`. Version 4 is preserved as the known-good application rollback baseline on Git branch `prod-v4-frozen`. New work advances as Version 5, Version 6, and so on, with one coherent product behavior change per version wherever practical.
+
+Version 5 is the Driver operational-stop simplification only: show and progress to the next unresolved passenger pickup, skip intermediate route stops with no action, require boarding confirmation at the actual pickup stop, and after Start Trip progress to the destination. Existing Start Trip remains authoritative in Version 5 to preserve the proven FIFO handoff and GPS safety boundary.
+
+The database is forward-only. A frozen application branch is not a database snapshot. If a production migration needs correction, use a reviewed forward repair migration rather than destructive restoration.
+
+Before each production migration, verify there is no live state that makes the transition unsafe. Before each next version, run focused real-user acceptance of the version just released.

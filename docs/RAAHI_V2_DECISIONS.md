@@ -67,3 +67,18 @@ Future chats must start from `RAAHI_V2_HANDOVER.md`, then consult this Decision 
 43. **Admin Users is the primary identity-management surface.** Admin can search/filter registered users, inspect profile/phone/role/operational state and invoke guarded role actions such as Driver onboarding from the user's detail view.
 44. **Admin Route Management is full-control but guarded.** Admin may create/edit/duplicate/activate/deactivate/archive routes, add/edit/remove/reorder stops and handle emergencies, but destructive changes must not rewrite active-trip or historical route state. Versioning/future-effective changes are preferred.
 45. **Acceptance discoveries may reopen release gates.** Previously green UI acceptance does not grandfather behavior after an approved workflow change; affected Passenger, Driver and Admin flows must be re-run after implementation.
+
+## 2026-08-25 stage / Prod V4 split
+
+46. **Prod V4 is frozen while simplification work proceeds.** `https://myraahi.referralhub.co.in` remains the known-good Version 4 deployment and is not to be modified during the stage refactor.
+47. **Rocket Stage is now `https://myraahi-stage.referralhub.co.in`.** New application changes target the stage deployment first; the tracked Rocket bootstrap `NEXT_PUBLIC_SITE_URL` on the staging branch must point to this hostname.
+48. **Do not apply stage backend migrations to a backend shared by Prod V4.** The current stage code still references Raahi V2 Dev. Until Stage has backend isolation, or the user explicitly approves shared-backend impact, new operational-state migrations remain committed in Git but unapplied.
+49. **Operational-stop progression is backend-owned.** The planned contract moves a collecting Driver only to the next unresolved passenger pickup, allows in-progress progression directly to the route destination, and requires boarding confirmation at the actual pickup stop. FIFO, seat ledger, GPS and canonical trip transitions remain authoritative.
+
+## 2026-08-25 production version train — supersedes the temporary Stage/Prod split
+
+50. **User explicitly approved incremental production evolution.** The temporary freeze/isolate-stage plan in decisions 46–48 is superseded. Raahi will now move one numbered production version at a time on `https://myraahi.referralhub.co.in`, with acceptance between versions.
+51. **Version 4 remains the rollback baseline.** Git branch `prod-v4-frozen` points at the application baseline before Version 5. Production database changes remain forward-only; rollback means compatible app rollback plus a reviewed forward database repair if required.
+52. **Version 5 scope is deliberately narrow.** Driver progression changes from every route stop to the next unresolved passenger pickup while collecting, then the route destination after Start Trip. Manual Start Trip remains in Version 5 so FIFO/GPS handoff is changed separately in Version 6.
+53. **Production test-auth must fail closed.** `myraahi.referralhub.co.in` is hard-blocked from staging/test-auth endpoints regardless of environment allowlists.
+54. **Every production version is gated.** Code/build/contracts, database preflight, migration, deployment and live acceptance are recorded separately; a later version does not proceed until the current version is understood.

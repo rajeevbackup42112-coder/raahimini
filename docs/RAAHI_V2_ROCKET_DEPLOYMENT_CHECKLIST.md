@@ -45,3 +45,17 @@ Never place a service-role key in browser/public variables.
 Production must not be created or deployed from this document. Production requires the full release-readiness gate, clean-room migration replay, verified staging E2E, rollback rehearsal, and explicit production approval.
 
 Until those gates are complete, Rocket should be treated as **deferred**, not as Raahi V2's deployment plan.
+
+## 2026-08-25 superseding Rocket decision
+
+This historical status is superseded by the user's explicit hosting decision. Rocket is now the active Raahi V2 hosting path for the current manual-acceptance phase, with strict separation by deployment role:
+- Stage: `myraahi-stage.referralhub.co.in`
+- Frozen baseline: `myraahi.referralhub.co.in` Rocket Version 4
+
+The safety principles above still apply. In particular, a different hostname does not prove a different database. Do not apply Stage-only operational migrations until the Stage backend is isolated from the frozen Version 4 backend, or the user explicitly approves shared-backend impact. GitHub remains canonical; do not make source edits only inside Rocket.
+
+## 2026-08-25 production-train override
+
+The user has now explicitly selected Rocket for controlled production versioning on `https://myraahi.referralhub.co.in`. The earlier "deferred" wording above is historical. For the current work, Rocket production deployments are allowed only as explicit numbered versions, with the prior version retained for application rollback and with GitHub remaining the canonical source.
+
+Production test-auth remains disabled and the production hostname is hard-blocked in code. Database migrations remain forward-only and must be preflighted before each version.

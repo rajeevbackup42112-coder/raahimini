@@ -176,3 +176,37 @@ Already implemented in this manual-acceptance phase:
 - Seat capacity 4/5/6/7/8 across onboarding UI/client/backend validation.
 
 Before production consideration, affected flows must pass TypeScript, production build, relevant contract/invariant tests, focused headed/browser regression and manual real-user acceptance on the final staging domain. Production merge/deploy remains explicitly blocked until user approval.
+
+## 2026-08-25 stage refactor gate
+
+The release posture changed when the user froze Rocket Version 4 on `myraahi.referralhub.co.in` and moved active work to `myraahi-stage.referralhub.co.in`.
+
+Additional gates before any later promotion over Version 4:
+- [ ] Stage hostname deployed from the intended staging branch/configuration.
+- [ ] Stage Supabase backend proven isolated from the frozen Version 4 deployment, or explicit shared-backend-change approval received.
+- [ ] Operational-stop migration applied to Stage only.
+- [ ] Driver can reach only meaningful pickup stops while collecting; empty intermediate stops require no manual progression.
+- [ ] Boarding/payment confirmation is rejected before the Driver reaches the passenger pickup stop.
+- [ ] Existing FIFO handoff, GPS Start Trip gate, seat ledger and cancellation invariants remain green.
+- [ ] Passenger/Driver visible simplification passes real-device acceptance after the backend foundation is live.
+- [ ] Passenger live map renders real Driver coordinates with stale/unavailable fallback.
+- [ ] Admin Dashboard, Users and guarded Route Management complete their own acceptance before promotion if included in the same release train.
+
+Until these gates are green, Rocket Version 4 remains the rollback and user-facing baseline.
+
+## Production train override — Version 5
+
+User gave explicit approval to evolve the current production deployment one numbered version at a time. The earlier blanket production block is superseded for this approved version-train workflow, but each version still requires its own preflight, migration/deploy evidence and live acceptance.
+
+Version 5 release gate:
+- [x] V4 application rollback ref created: `prod-v4-frozen` at `01759b63f786c93aa30ecbd3f72fc4556acc4728`.
+- [x] Production DB preflight: 0 active trips, 0 live queue entries, 0 HELD requests.
+- [x] Version 5 TypeScript check PASS.
+- [x] Version 5 production Next.js build PASS.
+- [ ] Version 5 canonical Git commit pushed.
+- [ ] Version 5 forward migration applied and verified.
+- [ ] Rocket Version 5 deployed to `myraahi.referralhub.co.in`.
+- [ ] Focused live Driver operational-stop journey accepted.
+- [ ] Neighboring Passenger/FIFO/GPS behavior accepted.
+
+Do not begin Version 6 automatic Start Trip until the Version 5 live behavior is accepted or any discovered defect is understood.
