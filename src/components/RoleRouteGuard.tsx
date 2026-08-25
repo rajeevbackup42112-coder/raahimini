@@ -6,6 +6,7 @@ import { useAuth } from '@/contexts/AuthContext';
 
 const isAuthPath = (path: string) => path.startsWith('/auth/');
 const isProfilePath = (path: string) => path === '/profile';
+const isAdminPath = (path: string) => path.startsWith('/admin-panel') || path === '/admin-driver-onboarding';
 
 export default function RoleRouteGuard() {
   const pathname = usePathname();
@@ -17,7 +18,7 @@ export default function RoleRouteGuard() {
     if (isAuthPath(pathname) || isProfilePath(pathname)) return;
 
     if (profile.role === 'admin') {
-      if (!pathname.startsWith('/admin-panel')) router.replace('/admin-panel');
+      if (!isAdminPath(pathname)) router.replace('/admin-panel');
       return;
     }
 
