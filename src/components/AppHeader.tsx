@@ -27,7 +27,6 @@ export default function AppHeader({ title, showBack = false }: AppHeaderProps) {
 
   const displayName = profile?.display_name || user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'User';
   const initial = displayName.slice(0, 1).toUpperCase();
-  const roleLabel = profile?.role === 'driver' ? 'Driver' : profile?.role === 'admin' ? 'Admin' : 'Passenger';
   const homeHref = profile?.role === 'driver' ? '/driver-route-selection' : profile?.role === 'admin' ? '/admin-panel' : '/';
 
   return (
@@ -76,12 +75,11 @@ export default function AppHeader({ title, showBack = false }: AppHeaderProps) {
                 <span className="gradient-primary flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold text-white">{initial}</span>
                 <span className="hidden max-w-[140px] text-left leading-tight sm:block">
                   <span className="block truncate text-sm font-semibold text-foreground">{displayName}</span>
-                  <span className="block text-[10px] text-muted-foreground">{roleLabel}</span>
                 </span>
               </button>
               {showUserMenu && (
                 <div className="absolute right-0 top-12 z-50 w-64 overflow-hidden rounded-2xl border border-border bg-card shadow-lg">
-                  <div className="border-b px-4 py-3"><p className="truncate text-sm font-bold">{displayName}</p><p className="text-xs text-muted-foreground">{roleLabel}</p></div>
+                  <div className="border-b px-4 py-3"><p className="truncate text-sm font-bold">{displayName}</p></div>
                   <Link href="/profile" onClick={() => setShowUserMenu(false)} className="flex items-center gap-2 px-4 py-3 text-sm hover:bg-muted"><Phone size={14} />Profile & phone</Link>
                   {profile?.role === 'driver' && <Link href="/driver-route-selection" onClick={() => setShowUserMenu(false)} className="flex items-center gap-2 px-4 py-3 text-sm hover:bg-muted"><Car size={14} />Driver home</Link>}
                   {profile?.role === 'admin' && <Link href="/admin-panel" onClick={() => setShowUserMenu(false)} className="flex items-center gap-2 px-4 py-3 text-sm hover:bg-muted"><ShieldCheck size={14} />Admin panel</Link>}
