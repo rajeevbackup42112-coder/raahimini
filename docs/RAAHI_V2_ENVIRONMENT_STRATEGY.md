@@ -57,3 +57,19 @@ Production deployment always requires explicit user approval.
 Frontend/application rollback uses the last known-good compatible Git commit or immutable hosting deployment. Operational database history is forward-only by default: database defects are repaired with reviewed forward migrations rather than restoring an older snapshot over newer passenger/driver journey data.
 
 See `RAAHI_V2_ROLLBACK_RUNBOOK.md` for the full RC procedure.
+
+## 2026-08-25 Rocket environment update
+
+The user has now designated Rocket hosting roles explicitly:
+- `myraahi-stage.referralhub.co.in` = active Stage for new work.
+- `myraahi.referralhub.co.in` = frozen Rocket Version 4 baseline.
+
+Because the existing Rocket bootstrap workaround tracks public Supabase client values in `.env`, the staging branch intentionally tracks only public V2 client configuration plus `NEXT_PUBLIC_SITE_URL=https://myraahi-stage.referralhub.co.in` and `RAAHI_TEST_AUTH_ENABLED=false`. Never add service-role or test-auth secrets to the tracked file.
+
+Frontend hostname separation alone is not backend isolation. Before applying any Stage-only operational migration, verify that Stage does not share the same Supabase operational database as frozen Version 4. If it does share, stop and obtain explicit approval or provision a separately approved Stage backend first.
+
+## Production train override — 2026-08-25
+
+The user has explicitly selected incremental production versions on `https://myraahi.referralhub.co.in` instead of requiring a separate Stage deployment for the current simplification sequence. Version 4 is the application rollback baseline; subsequent versions are promoted directly one at a time with focused live acceptance.
+
+This does not weaken security boundaries: production remains hard-blocked from test-auth, GitHub remains canonical, database migrations are forward-only, and each version requires a clean operational preflight before state-machine changes are applied.
