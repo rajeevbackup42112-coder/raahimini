@@ -7,6 +7,9 @@ import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import { adminDeactivateDriver, adminListDriverCandidates, adminOnboardDriver, type DriverCandidate } from '@/lib/adminDriverApi';
 
+const VEHICLE_TYPES = ['Car', 'Hatchback', 'Sedan', 'SUV', 'MPV', 'Van'] as const;
+type SeatCapacity = 4 | 5 | 6 | 7 | 8;
+
 export default function AdminDriverOnboardingPage() {
   const { profile, loading: authLoading } = useAuth();
   const [items, setItems] = useState<DriverCandidate[]>([]);
@@ -17,7 +20,7 @@ export default function AdminDriverOnboardingPage() {
   const [registration, setRegistration] = useState('');
   const [model, setModel] = useState('');
   const [vehicleType, setVehicleType] = useState('Car');
-  const [capacity, setCapacity] = useState<4|6|8>(4);
+  const [capacity, setCapacity] = useState<SeatCapacity>(4);
   const [saving, setSaving] = useState(false);
   const [deactivating, setDeactivating] = useState<string|null>(null);
 
@@ -43,7 +46,7 @@ export default function AdminDriverOnboardingPage() {
     setPhone(selected.driver_phone || selected.phone || '');
     setRegistration(selected.registration_number || '');
     setModel(selected.vehicle_model || '');
-    setCapacity((selected.capacity === 6 || selected.capacity === 8 ? selected.capacity : 4) as 4|6|8);
+    setCapacity(([4, 5, 6, 7, 8].includes(selected.capacity || 0) ? selected.capacity : 4) as SeatCapacity);
   }, [selected]);
 
   if (authLoading || loading) return <div className="flex justify-center py-20"><Loader2 className="animate-spin text-primary" /></div>;
@@ -95,10 +98,14 @@ export default function AdminDriverOnboardingPage() {
             <Field label="Phone" value={phone} onChange={setPhone} inputMode="tel"/>
             <Field label="Registration number" value={registration} onChange={setRegistration}/>
             <Field label="Vehicle model" value={model} onChange={setModel}/>
-            <Field label="Vehicle type" value={vehicleType} onChange={setVehicleType}/>
+            <label><span className="text-xs font-semibold text-muted-foreground">VEHICLE TYPE</span>
+              <select value={vehicleType} onChange={e=>setVehicleType(e.target.value)} className="mt-1 w-full rounded-xl border border-border bg-background px-3 py-3 text-sm">
+                {VEHICLE_TYPES.map(type=><option key={type} value={type}>{type}</option>)}
+              </select>
+            </label>
             <label><span className="text-xs font-semibold text-muted-foreground">SEAT CAPACITY</span>
-              <select value={capacity} onChange={e=>setCapacity(Number(e.target.value) as 4|6|8)} className="mt-1 w-full rounded-xl border border-border bg-background px-3 py-3 text-sm">
-                <option value={4}>4 seats</option><option value={6}>6 seats</option><option value={8}>8 seats</option>
+              <select value={capacity} onChange={e=>setCapacity(Number(e.target.value) as SeatCapacity)} className="mt-1 w-full rounded-xl border border-border bg-background px-3 py-3 text-sm">
+                <option value={4}>4 seats</option><option value={5}>5 seats</option><option value={6}>6 seats</option><option value={7}>7 seats</option><option value={8}>8 seats</option>
               </select>
             </label>
           </div>
