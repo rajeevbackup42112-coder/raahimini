@@ -13,7 +13,7 @@ export default function ResumeSeatRequestPage() {
   const [error, setError] = useState('');
 
   const run = async () => {
-    if (started.current) return;
+    if (started?.current) return;
     started.current = true;
     setError('');
 
@@ -27,27 +27,27 @@ export default function ResumeSeatRequestPage() {
     }
 
     const result = await requestSeats(tripId, stopId, seatCount);
-    if (!result.success) {
-      setError(result.error || 'Could not complete your seat request.');
+    if (!result?.success) {
+      setError(result?.error || 'Could not complete your seat request.');
       return;
     }
 
-    if (result.request_id) localStorage.setItem('raahi_active_request_id', result.request_id);
+    if (result?.request_id) localStorage.setItem('raahi_active_request_id', result?.request_id);
     localStorage.removeItem('raahi_pending_route_id');
     localStorage.removeItem('raahi_pending_trip_id');
     localStorage.removeItem('raahi_pending_stop_id');
     localStorage.removeItem('raahi_pending_seat_count');
-    router.replace('/request-status-screen');
+    router?.replace('/request-status-screen');
   };
 
   useEffect(() => {
     if (authLoading) return;
     if (!user) {
-      router.replace('/');
+      router?.replace('/');
       return;
     }
-    if (!user.phone || !user.phone_confirmed_at) {
-      router.replace('/profile?next=%2Fresume-seat-request');
+    if (!user?.phone || !user?.phone_confirmed_at) {
+      router?.replace('/profile?next=%2Fresume-seat-request');
       return;
     }
     run();
@@ -61,7 +61,7 @@ export default function ResumeSeatRequestPage() {
         <p className="text-sm text-muted-foreground">{error}</p>
         <div className="flex gap-2">
           <button onClick={() => { started.current = false; run(); }} className="btn-primary flex-1">Try Again</button>
-          <button onClick={() => router.replace('/')} className="btn-outline flex-1">Choose Ride Again</button>
+          <button onClick={() => router?.replace('/')} className="btn-outline flex-1">Choose Ride Again</button>
         </div>
       </div>
     );

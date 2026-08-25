@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { ChevronLeft, User, MapPin, LogOut, ShieldCheck, Car, Phone, MessageCircle, LogIn } from 'lucide-react';
+import { ChevronLeft, User, MapPin, LogOut, ShieldCheck, Car, Phone } from 'lucide-react';
 import AppLogo from '@/components/ui/AppLogo';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -37,13 +37,12 @@ export default function AppHeader({ title, showBack = false }: AppHeaderProps) {
               {user ? <>
                 <div className="px-4 py-3 border-b"><p className="text-sm font-semibold truncate">{displayName}</p><p className="text-xs text-muted-foreground">{roleLabel}</p><p className="text-[11px] text-muted-foreground truncate mt-1">{user.email || user.phone || ''}</p></div>
                 <Link href="/profile" onClick={()=>setShowUserMenu(false)} className="flex items-center gap-2 px-4 py-3 text-sm hover:bg-muted"><Phone size={14}/>Profile & phone</Link>
-                <Link href="/support" onClick={()=>setShowUserMenu(false)} className="flex items-center gap-2 px-4 py-3 text-sm hover:bg-muted"><MessageCircle size={14}/>Contact support</Link>
                 {profile?.role === 'driver' && <Link href="/driver-route-selection" onClick={()=>setShowUserMenu(false)} className="flex items-center gap-2 px-4 py-3 text-sm hover:bg-muted"><Car size={14}/>Driver home</Link>}
                 {profile?.role === 'admin' && <Link href="/admin-panel" onClick={()=>setShowUserMenu(false)} className="flex items-center gap-2 px-4 py-3 text-sm hover:bg-muted"><ShieldCheck size={14}/>Admin panel</Link>}
                 <button onClick={handleSignOut} className="w-full flex items-center gap-2 px-4 py-3 text-sm text-red-600 hover:bg-red-50"><LogOut size={14}/>Sign Out</button>
               </> : <>
-                <div className="px-4 py-3 border-b"><p className="text-xs font-semibold">Welcome to Raahi</p><p className="text-xs text-muted-foreground mt-0.5">Browse rides without signing in. Use the same sign-in for Passenger, Driver or Admin.</p></div>
-                <Link href="/login" onClick={()=>setShowUserMenu(false)} className="flex items-center gap-2 px-4 py-3 text-sm font-semibold hover:bg-muted"><LogIn size={14}/>Sign in with Google</Link>
+                <div className="px-4 py-3 border-b"><p className="text-xs font-semibold">Passenger</p><p className="text-xs text-muted-foreground mt-0.5">Browse without signing in. Sign in only when you request a seat.</p></div>
+                <Link href="/driver-login" onClick={()=>setShowUserMenu(false)} className="flex items-center gap-2 px-4 py-3 text-sm font-medium hover:bg-muted"><Car size={14}/>Driver sign in</Link>
               </>}
             </div>}
           </div>

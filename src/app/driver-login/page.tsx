@@ -14,14 +14,14 @@ export default function DriverLoginPage() {
   useEffect(() => {
     // The server callback has already consumed this one-time OAuth code.
     // Remove any query string retained by the hosting redirect.
-    if (window.location.search) {
-      window.history.replaceState({}, '', '/driver-login');
+    if (window.location?.search) {
+      window.history?.replaceState({}, '', '/driver-login');
     }
   }, []);
 
   useEffect(() => {
     if (!loading && user && profile?.role === 'driver') {
-      router.replace('/driver-route-selection');
+      router?.replace('/driver-route-selection');
     }
   }, [loading, user, profile?.role, router]);
 
@@ -36,7 +36,7 @@ export default function DriverLoginPage() {
 
   const handleSignOut = async () => {
     await signOut();
-    router.replace('/driver-login');
+    router?.replace('/driver-login');
   };
 
   const resolvingProfile = !!user && !profile;
@@ -52,7 +52,7 @@ export default function DriverLoginPage() {
             <ShieldCheck size={42} className="mx-auto text-primary" />
             <div>
               <h1 className="text-xl font-bold">Driver account not activated yet</h1>
-              <p className="text-sm text-muted-foreground mt-2">You are signed in as {user.email || 'this Google account'}. An admin must activate this account as a Raahi driver and attach a vehicle before the Driver panel becomes available.</p>
+              <p className="text-sm text-muted-foreground mt-2">You are signed in as {user?.email || 'this Google account'}. An admin must activate this account as a Raahi driver and attach a vehicle before the Driver panel becomes available.</p>
             </div>
             <button onClick={handleSignOut} className="w-full rounded-xl border border-border px-4 py-3 text-sm font-semibold flex items-center justify-center gap-2"><LogOut size={16}/>Use a different account</button>
           </div>

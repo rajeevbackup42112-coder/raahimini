@@ -58,71 +58,24 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   useEffect(() => {
-    let active = true;
-    let eventGeneration = 0;
-    let profileTimer: ReturnType<typeof setTimeout> | null = null;
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+      if (session?.user?.id) loadProfile(session.user.id);
+      setLoading(false);
+    });
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((event, nextSession) => {
-      setSession(nextSession);
-      setUser(nextSession?.user ?? null);
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+      if (session?.user?.id) loadProfile(session.user.id);
+      else setProfile(null);
       setLoading(false);
-
-      if (!nextSession?.user?.id) {
-        if (profileTimer) {
-          clearTimeout(profileTimer);
-          profileTimer = null;
-        }
-        setProfile(null);
-        return;
-      }
-
-      // TOKEN_REFRESHED only changes credentials. Reloading the profile for every
-      // refresh creates unnecessary PostgREST work and, when a stale session is
-      // already churning, can feed a refresh -> profile query -> refresh loop.
-      // Keep the latest session/user in memory, but leave the existing profile
-      // alone. Profile data is loaded only when identity/profile state can change.
-      if (event === 'TOKEN_REFRESHED') return;
-
-      const shouldReloadProfile =
-        event === 'INITIAL_SESSION' ||
-        event === 'SIGNED_IN' ||
-        event === 'USER_UPDATED';
-
-      if (!shouldReloadProfile) return;
-
-      const generation = ++eventGeneration;
-      if (profileTimer) {
-        clearTimeout(profileTimer);
-        profileTimer = null;
-      }
-
-      // Do not call another Supabase API from inside onAuthStateChange.
-      // supabase-js can hold its auth lock while this callback runs; defer the
-      // profile query until the auth callback has returned.
-      const userId = nextSession.user.id;
-      profileTimer = setTimeout(() => {
-        void (async () => {
-          try {
-            const { data } = await supabase
-              .from('profiles')
-              .select('*')
-              .eq('id', userId)
-              .single();
-            if (active && generation === eventGeneration) setProfile(data);
-          } catch {
-            if (active && generation === eventGeneration) setProfile(null);
-          }
-        })();
-      }, 0);
     });
 
-    return () => {
-      active = false;
-      if (profileTimer) clearTimeout(profileTimer);
-      subscription.unsubscribe();
-    };
+    return () => subscription.unsubscribe();
   }, []);
 
   const signUp = async (email: string, password: string, metadata = {}) => {
@@ -147,13 +100,18 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     return data;
   };
 
+  // Mobile OTP: send OTP to phone number
   const signInWithOtp = async (phone: string) => {
+    // Normalize phone: ensure +91 prefix
     const normalized = phone.startsWith('+') ? phone : `+91${phone.replace(/\D/g, '')}`;
-    const { data, error } = await supabase.auth.signInWithOtp({ phone: normalized });
+    const { data, error } = await supabase.auth.signInWithOtp({
+      phone: normalized,
+    });
     if (error) throw error;
     return data;
   };
 
+  // Mobile OTP: verify the OTP token
   const verifyOtp = async (phone: string, token: string) => {
     const normalized = phone.startsWith('+') ? phone : `+91${phone.replace(/\D/g, '')}`;
     const { data, error } = await supabase.auth.verifyOtp({
@@ -165,6 +123,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     return data;
   };
 
+  // Add or change a phone on the current account. Supabase sends a verification OTP.
   const requestPhoneVerification = async (phone: string) => {
     const normalized = phone.startsWith('+') ? phone : `+91${phone.replace(/\D/g, '')}`;
     const { data, error } = await supabase.auth.updateUser({ phone: normalized });
@@ -212,11 +171,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
+  // Google OAuth
   const signInWithGoogle = async (redirectTo?: string) => {
     const callbackUrl = `${window.location.origin}/auth/callback${redirectTo ? `?next=${encodeURIComponent(redirectTo)}` : ''}`;
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: callbackUrl },
+      options: {
+        redirectTo: callbackUrl,
+      },
     });
     if (error) throw error;
     return data;
@@ -234,7 +196,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     return user;
   };
 
-  const isEmailVerified = () => user?.email_confirmed_at !== null;
+  const isEmailVerified = () => {
+    return user?.email_confirmed_at !== null;
+  };
 
   const getUserProfile = async () => {
     if (!user) return null;

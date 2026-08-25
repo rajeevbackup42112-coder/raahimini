@@ -12,11 +12,11 @@ export default function AdminLoginPage() {
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
-    if (window.location.search) window.history.replaceState({}, '', '/admin-login');
+    if (window.location?.search) window.history?.replaceState({}, '', '/admin-login');
   }, []);
 
   useEffect(() => {
-    if (!loading && user && profile?.role === 'admin') router.replace('/admin-panel');
+    if (!loading && user && profile?.role === 'admin') router?.replace('/admin-panel');
   }, [loading, user, profile?.role, router]);
 
   const handleGoogle = async () => {
@@ -27,7 +27,7 @@ export default function AdminLoginPage() {
 
   const handleSignOut = async () => {
     await signOut();
-    router.replace('/admin-login');
+    router?.replace('/admin-login');
   };
 
   return (
@@ -41,7 +41,7 @@ export default function AdminLoginPage() {
             <ShieldCheck size={42} className="mx-auto text-primary" />
             <div>
               <h1 className="text-xl font-bold">Admin access not available</h1>
-              <p className="text-sm text-muted-foreground mt-2">You are signed in as {user.email || 'this Google account'}, but this account is not an active Raahi admin.</p>
+              <p className="text-sm text-muted-foreground mt-2">You are signed in as {user?.email || 'this Google account'}, but this account is not an active Raahi admin.</p>
             </div>
             <button onClick={handleSignOut} className="w-full rounded-xl border border-border px-4 py-3 text-sm font-semibold flex items-center justify-center gap-2"><LogOut size={16}/>Use a different account</button>
           </div>
