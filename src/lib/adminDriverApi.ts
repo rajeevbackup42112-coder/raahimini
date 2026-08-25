@@ -31,7 +31,7 @@ export async function adminOnboardDriver(input: {
   registrationNumber: string;
   vehicleModel: string;
   vehicleType: string;
-  capacity: 4 | 6 | 8;
+  capacity: 4 | 5 | 6 | 7 | 8;
 }) {
   const supabase = createClient();
   const { data, error } = await supabase.rpc('admin_onboard_driver', {
