@@ -1,6 +1,6 @@
 # Raahi V2 Decision Log
 
-Updated: 2026-08-23
+Updated: 2026-08-24
 Scope: **Raahi 2.0 only — never mix with Raahi School.**
 
 This file records product and engineering decisions that future chats must treat as intentional unless the user explicitly changes them.
@@ -49,6 +49,7 @@ This file records product and engineering decisions that future chats must treat
 32. **Staging must fail closed.** Automated staging E2E may run only against a positively attested non-production target using isolated V2 credentials.
 33. **Stretch features cannot delay transport reliability.** Loved-one notifications, family labels, extended insights, promotions and voting remain optional until launch gates are green.
 34. **Do not rush wallets, mandatory online payments, surge pricing, opaque AI dispatch, heavy ads or complex ratings.** Add only with proven operational/business need.
+35. **Mobile-first simplicity is a release principle.** Passenger and Driver screens should foreground one current state and one dominant next action; secondary operational detail should be progressively disclosed. Mobile/touch acceptance is primary, while Admin may retain richer desktop views.
 
 ## Handover decision rule
 

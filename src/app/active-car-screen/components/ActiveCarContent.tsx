@@ -116,15 +116,14 @@ export default function ActiveCarContent() {
       <div className="mx-auto max-w-screen-md space-y-4 px-4 py-8 sm:px-6 animate-fade-in">
         <div className="feature-card p-6 text-center">
           <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-secondary"><Car size={22} className="text-primary" /></div>
-          <p className="mt-4 text-lg font-bold text-foreground">No driver is available right now</p>
-          <p className="mt-2 text-sm text-muted-foreground">Raahi can collect passenger interest and show drivers that this route needs a car.</p>
+          <p className="mt-4 text-xl font-bold text-foreground">No car right now</p>
+          <p className="mt-2 text-sm text-muted-foreground">Tell Raahi how long you can wait.</p>
 
           {(interested > 0 || scheduled > 0) && (
             <div className="mt-4 rounded-2xl bg-secondary/70 px-4 py-3">
-              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Route demand</p>
-              {interested > 0 && <p className="mt-1 text-sm font-bold text-primary">{interested} passenger{interested === 1 ? '' : 's'} interested now</p>}
-              {scheduled > 0 && <p className="mt-1 text-xs font-semibold text-foreground">{scheduled} upcoming travel plan{scheduled === 1 ? '' : 's'}</p>}
-              <p className="mt-1 text-xs text-muted-foreground">Interest does not reserve a seat. Booking starts only when a car becomes available.</p>
+              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">People waiting</p>
+              {interested > 0 && <p className="mt-1 text-sm font-bold text-primary">{interested} now</p>}
+              {scheduled > 0 && <p className="mt-1 text-xs font-semibold text-foreground">{scheduled} later</p>}
             </div>
           )}
 
@@ -134,8 +133,8 @@ export default function ActiveCarContent() {
                 <div className="flex items-start gap-2">
                   <BellRing size={17} className="mt-0.5 shrink-0 text-green-700" />
                   <div>
-                    <p className="text-sm font-bold text-green-800">We’re checking with Raahi drivers</p>
-                    <p className="mt-1 text-xs text-green-700">Raahi will remember this request for up to {waitTolerance} minutes. You can leave this screen. You will still need to book explicitly when a car opens.</p>
+                    <p className="text-sm font-bold text-green-800">Raahi is watching this route</p>
+                    <p className="mt-1 text-xs text-green-700">Up to {waitTolerance} min · You can leave this screen. You still need to book explicitly when a car opens.</p>
                   </div>
                 </div>
               </div>
@@ -152,7 +151,7 @@ export default function ActiveCarContent() {
                     </button>
                   ))}
                 </div>
-                <p className="mt-2 text-xs text-muted-foreground">Drivers see only the shortest stated wait on this route as an advisory urgency signal. It never changes FIFO.</p>
+                <p className="mt-2 text-xs text-muted-foreground">Drivers see the shortest wait as an urgency signal. It never changes FIFO.</p>
               </div>
               <button onClick={createDemand} disabled={demandBusy} className="btn-primary w-full">
                 {demandBusy ? <Loader2 size={18} className="animate-spin" /> : <BellRing size={18} />}
@@ -179,7 +178,7 @@ export default function ActiveCarContent() {
         <div className="rounded-2xl border border-green-200 bg-green-50 px-4 py-3">
           <div className="flex items-start gap-3">
             <BellRing size={18} className="mt-0.5 shrink-0 text-green-700" />
-            <div><p className="text-sm font-bold text-green-900">A Raahi car is available</p><p className="mt-1 text-xs text-green-800">This is the route you asked Raahi to watch. Nothing is booked yet — choose a seat below when you are ready.</p></div>
+            <div><p className="text-sm font-bold text-green-900">A Raahi car is available</p><p className="mt-1 text-xs text-green-800">You asked Raahi to watch this route. Nothing is booked yet.</p></div>
           </div>
         </div>
       )}
@@ -205,13 +204,13 @@ export default function ActiveCarContent() {
         </div>
       </UnifiedTripCard>
 
-      <div className="card p-4">
-        <div className="flex items-center justify-between mb-3">
-          <p className="section-label">Pickup Route</p>
-          <div className="flex items-center gap-1 text-xs text-muted-foreground"><MapPin size={12} /><span>Driver at <strong className="text-foreground">{car.current_stop_name}</strong></span></div>
-        </div>
-        <div className="space-y-0">{(car.stops ?? []).map((stop, idx) => <StopRow key={stop.stop_id} stop={stop} isLast={idx === (car.stops?.length ?? 0) - 1} />)}</div>
-      </div>
+      <details className="card p-4">
+        <summary className="flex cursor-pointer list-none items-center justify-between gap-3">
+          <span className="text-sm font-bold text-foreground">Route details</span>
+          <span className="flex items-center gap-1 text-xs text-muted-foreground"><MapPin size={12} /> {car.current_stop_name}</span>
+        </summary>
+        <div className="mt-4 space-y-0 border-t border-border pt-4">{(car.stops ?? []).map((stop, idx) => <StopRow key={stop.stop_id} stop={stop} isLast={idx === (car.stops?.length ?? 0) - 1} />)}</div>
+      </details>
 
       {isCollecting && (car.available_count ?? 0) > 0 ? (
         <Link href={`/request-seat-screen?route_id=${routeId}&trip_id=${car.trip_id}`} className="btn-primary w-full text-center"><Car size={18} /> Book Seat</Link>
@@ -221,7 +220,6 @@ export default function ActiveCarContent() {
         <div className="flex items-center justify-center gap-2 bg-blue-50 rounded-2xl px-5 py-4 text-blue-700 text-sm font-semibold"><Car size={18} /> Car is En Route — Check back for next departure</div>
       )}
 
-      <p className="text-center text-xs text-muted-foreground pb-2">Live updates · Tap <RefreshCw size={10} className="inline" /> to refresh manually</p>
     </div>
   );
 }
