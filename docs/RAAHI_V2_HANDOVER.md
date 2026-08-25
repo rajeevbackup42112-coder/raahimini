@@ -85,3 +85,23 @@ The next unresolved RC gate is the clean-room migration replay, which requires e
 ## New-chat bootstrap
 
 > This is **Raahi 2.0 / raahimini**, not Raahi School. Read `docs/RAAHI_V2_HANDOVER.md`, `docs/RAAHI_V2_DECISIONS.md`, `docs/RAAHI_V2_BIBLE.md`, `docs/RAAHI_V2_BUILD_MATRIX.md`, and `docs/RAAHI_V2_RELEASE_READINESS.md`. Verify GitHub and the isolated V2 Dev environment before acting. Resume from the single next action. Work autonomously; stop only for credentials, billable infrastructure, a genuinely new product decision, destructive/security-sensitive action, or production/merge approval.
+
+## 2026-08-25 live staging / manual acceptance update
+
+The active staging domain is now `https://myraahi.referralhub.co.in`, deployed through Rocket from the Rocket staging branches. Manual real-user acceptance is active and has intentionally reopened some UX work.
+
+Recent implemented staging changes:
+- Admin `/admin-driver-onboarding` route guard fixed so Admin is not redirected back to `/admin-panel`.
+- Driver Onboarding vehicle type changed to a controlled dropdown.
+- Seat capacity expanded to 4/5/6/7/8 in UI/client and canonical V2 Dev onboarding RPC validation.
+- TypeScript and production build passed after the vehicle-option changes.
+
+User-approved next product direction:
+- Passenger live Driver location should render as a real map, not only a freshness/status card.
+- Driver should see only meaningful pickup/drop-off stops and one dominant next action.
+- Manual Start Trip/Complete Trip should be removed only through a deliberate backend state-machine redesign; current RPC lifecycle remains authoritative until that work is implemented and revalidated.
+- Admin should gain Dashboard, Registered Users, guarded full Route Management, and Operations surfaces.
+
+Release status is therefore **manual-acceptance / focused simplification in progress**, not production-ready. Previously green Passenger/Driver/Admin responsive acceptance is historical evidence and must be rerun for each affected redesigned flow.
+
+Documentation discipline: every code/migration/product decision in this phase must update the Bible, Decision Log, Build Matrix and this Handover; Release Readiness must be updated whenever a release gate changes.

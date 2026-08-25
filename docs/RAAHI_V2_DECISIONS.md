@@ -54,3 +54,16 @@ This file records product and engineering decisions that future chats must treat
 ## Handover decision rule
 
 Future chats must start from `RAAHI_V2_HANDOVER.md`, then consult this Decision Log, the Bible, Build Matrix and Release Readiness before editing code. If code, documentation and memory disagree, verify GitHub and isolated V2 Dev state and update the documents rather than guessing.
+
+## 2026-08-25 manual-acceptance product decisions
+
+36. **Driver vehicle type is controlled data.** Admin Driver Onboarding uses a dropdown rather than free text. Current allowed UI values: Car, Hatchback, Sedan, SUV, MPV, Van.
+37. **Driver seat capacity supports 4, 5, 6, 7 or 8 seats.** The Admin UI, client typing and canonical `admin_onboard_driver` backend validation must agree on this range.
+38. **Passenger and Driver experiences will be simplified around one question: what happens next?** Technical state names, redundant status cards and internal queue/trip mechanics should remain hidden unless needed for recovery or support.
+39. **Driver operational stops are action stops, not every route stop.** The Driver should normally see only stops where a passenger must be picked up or dropped off; intermediate route stops remain authoritative route data but should not create manual taps.
+40. **Manual Start Trip is targeted for removal from the Driver workflow.** Once the manifest is closed, required pickups are complete and GPS is usable, Raahi should transition automatically into the travelling/drop-off phase. Until that refactor is implemented and regression-tested, the existing Start Trip RPC remains authoritative.
+41. **Passenger live location must be a real map experience.** The current text-only live-location status is insufficient; active passengers should see the driver's plotted location, freshness/staleness and pickup/destination context, with route/stop progress as fallback.
+42. **Admin owns operational complexity.** Admin should have Dashboard, Users, Routes and Operations surfaces. Passenger and Driver should remain intentionally minimal.
+43. **Admin Users is the primary identity-management surface.** Admin can search/filter registered users, inspect profile/phone/role/operational state and invoke guarded role actions such as Driver onboarding from the user's detail view.
+44. **Admin Route Management is full-control but guarded.** Admin may create/edit/duplicate/activate/deactivate/archive routes, add/edit/remove/reorder stops and handle emergencies, but destructive changes must not rewrite active-trip or historical route state. Versioning/future-effective changes are preferred.
+45. **Acceptance discoveries may reopen release gates.** Previously green UI acceptance does not grandfather behavior after an approved workflow change; affected Passenger, Driver and Admin flows must be re-run after implementation.

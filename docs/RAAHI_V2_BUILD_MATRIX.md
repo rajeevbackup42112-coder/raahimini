@@ -97,3 +97,22 @@ Current RLS/RPC/live-invariant audit on isolated V2 Dev: **PASS**.
 ## Release principle
 
 **Do not trade proven ride reliability for feature count.** The remaining work is acceptance and release discipline, not another broad redesign.
+
+## Manual-acceptance delta — 2026-08-25
+
+| Area | Capability | Status | Evidence / next gate |
+|---|---|---:|---|
+| Staging | Final public staging domain `https://myraahi.referralhub.co.in` | LIVE | Google login manually proven for Admin |
+| Admin | Driver Onboarding route reachable for Admin | FIXED | `RoleRouteGuard` now permits `/admin-driver-onboarding`; TypeScript/build passed |
+| Admin | Vehicle type controlled dropdown | BUILT | Car/Hatchback/Sedan/SUV/MPV/Van in onboarding UI |
+| Admin | Vehicle capacity 4/5/6/7/8 | BUILT | UI/client updated; V2 Dev `admin_onboard_driver` validation migrated; build passed |
+| Passenger | Real plotted Driver live-location map | PLANNED | Current component is text/freshness only; must render actual coordinates and stale fallback |
+| Driver | Show only pickup/drop-off action stops | PLANNED | Current UI still exposes route-stop progression; needs state-machine-aware simplification |
+| Driver | Automatic transition after all pickups / usable GPS | PLANNED | Manual Start Trip remains authoritative until backend dispatch handoff is redesigned and regression-tested |
+| Driver | Automatic completion after final required drop-off where safe | PLANNED | Existing Complete Trip remains current behavior until redesign |
+| Admin | Dashboard: live health + attention-needed + recent activity | PLANNED | User-approved product direction |
+| Admin | Registered Users directory + detail/actions | PLANNED | Search/filter users; guarded role/onboarding actions from user detail |
+| Admin | Full guarded Route Management | PLANNED | Create/edit/duplicate/activate/deactivate/archive routes; add/edit/remove/reorder stops; active/history protection required |
+
+### Validation impact
+The previous mobile/responsive PASS baseline remains historical evidence, but Passenger live-trip, Driver active-trip and Admin route/user flows are **reopened** for acceptance because approved behavior is changing. For every implemented slice, rerun focused tests, neighboring role flows, TypeScript, production build, relevant contracts and manual real-user acceptance.

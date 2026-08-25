@@ -159,3 +159,20 @@ Validated in isolated Raahi V2 Dev after migration 20260823071332_v2_rc1_pipelin
 - [ ] Guaranteed non-production staging E2E green.
 - [ ] Rollback procedure rehearsed on guaranteed non-production staging.
 - [ ] Explicit production approval received.
+
+## Release-gate reopening — 2026-08-25
+
+Manual real-user acceptance on `https://myraahi.referralhub.co.in` found UX/workflow issues that are now part of the approved product plan. As a result, the previous responsive-role acceptance remains useful historical evidence but is not sufficient for production approval after the upcoming changes.
+
+Reopened gates:
+- Passenger active-ride live location: must render a real Driver map/location experience with truthful stale fallback.
+- Driver active-trip workflow: must remove pre-trip route-stop progression clutter and move toward pickup/drop-off action stops with one dominant next action.
+- Driver trip transitions: any removal of manual Start Trip or Complete Trip requires canonical backend transition changes plus FIFO/GPS/trip regression proof before acceptance.
+- Admin: Dashboard, Users and guarded Route Management require new role/security/audit acceptance before release.
+
+Already implemented in this manual-acceptance phase:
+- Admin Driver Onboarding route-guard fix.
+- Vehicle type dropdown.
+- Seat capacity 4/5/6/7/8 across onboarding UI/client/backend validation.
+
+Before production consideration, affected flows must pass TypeScript, production build, relevant contract/invariant tests, focused headed/browser regression and manual real-user acceptance on the final staging domain. Production merge/deploy remains explicitly blocked until user approval.

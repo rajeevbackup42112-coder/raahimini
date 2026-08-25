@@ -742,3 +742,23 @@ Future chats must use these together:
 - this Bible — enduring product intent and operating doctrine.
 
 If any of these disagree with code or live V2 Dev state, verify the repository/database and correct the documentation rather than guessing.
+
+---
+
+## 28. Manual-Acceptance Simplification Charter — 2026-08-25
+
+Manual real-user acceptance reopened parts of the UX by exposing friction that automated acceptance did not catch. This section supersedes the earlier instruction in §27.3 not to begin another redesign: a focused simplification pass is now explicitly user-approved, provided the proven booking, seat, FIFO, GPS, role and audit invariants remain intact.
+
+### Passenger doctrine
+Passenger screens should answer only: **Do I have a ride? Which car? Where is it? What happens next?** Home should emphasize From → To → Find a Ride. Once a ride exists, the journey becomes the primary experience. Internal states such as HELD, ACTIVE_COLLECTING and FIFO should not be user-facing language. During an active journey, live Driver GPS should render as a real map/vehicle position with freshness or truthful stale-state messaging. Route/stop progress remains the fallback when GPS is unavailable.
+
+### Driver doctrine
+Driver screens should answer only: **What do I do next?** The primary Driver surface should expose one dominant next action. Route stops that have no pickup/drop-off action should not require manual progression. Passenger pickup/drop-off stops should drive the visible workflow.
+
+The target workflow is: Join queue → become active → collect assigned passengers → close remaining empty seats/manifest → complete required pickups → automatic transition into travel when GPS is usable → perform drop-offs → automatic completion after the last required drop-off where safely possible. Manual Start Trip/Complete Trip controls remain current behavior only until the backend state machine is deliberately refactored and revalidated.
+
+### Admin doctrine
+Admin is where complexity belongs. The target primary navigation is **Dashboard · Users · Routes · Operations**. Admin should be able to understand live system health, inspect registered users, manage roles/driver onboarding, manage route definitions and stop order, and intervene in exceptional operations through audited guarded controls. Route editing must preserve active-trip and historical integrity. Prefer route versioning, archive/deactivate and future-effective publication over destructive rewrites.
+
+### Vehicle configuration and release rule
+Driver Onboarding uses controlled vehicle type selection and supports seat capacities 4, 5, 6, 7 and 8. UI and canonical backend validation must remain aligned. Every simplification that changes visible workflow or trip transitions reopens the corresponding acceptance gate; rerun focused regression, neighboring role flows, TypeScript/build/contracts and final manual acceptance before production consideration.
