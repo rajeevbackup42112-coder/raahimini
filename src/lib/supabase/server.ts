@@ -1,27 +1,20 @@
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 
+const ROCKET_PREVIEW_URL = 'https://placeholder.supabase.co';
+const ROCKET_PREVIEW_KEY = 'rocket-preview-placeholder';
+
 function getSupabasePublicKey(): string {
-  const key =
+  return (
     process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-  if (!key) {
-    throw new Error(
-      'Missing Supabase public key. Set NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY or NEXT_PUBLIC_SUPABASE_ANON_KEY.'
-    );
-  }
-
-  return key;
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
+    ROCKET_PREVIEW_KEY
+  );
 }
 
 export async function createClient() {
   const cookieStore = await cookies();
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-
-  if (!url) {
-    throw new Error('Missing NEXT_PUBLIC_SUPABASE_URL.');
-  }
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL || ROCKET_PREVIEW_URL;
 
   return createServerClient(url, getSupabasePublicKey(), {
     cookies: {
