@@ -3,26 +3,20 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 
 let browserClient: SupabaseClient | undefined;
 
+const ROCKET_PREVIEW_URL = 'https://placeholder.supabase.co';
+const ROCKET_PREVIEW_KEY = 'rocket-preview-placeholder';
+
 function getSupabasePublicKey(): string {
-  const key =
+  return (
     process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-  if (!key) {
-    throw new Error(
-      'Missing Supabase public key. Set NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY or NEXT_PUBLIC_SUPABASE_ANON_KEY.'
-    );
-  }
-
-  return key;
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
+    ROCKET_PREVIEW_KEY
+  );
 }
 
 export function createClient(): SupabaseClient {
   if (!browserClient) {
-    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    if (!url) {
-      throw new Error('Missing NEXT_PUBLIC_SUPABASE_URL.');
-    }
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL || ROCKET_PREVIEW_URL;
 
     browserClient = createBrowserClient(url, getSupabasePublicKey(), {
       // OAuth codes are exchanged once by the canonical server callback.
