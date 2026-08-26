@@ -139,8 +139,19 @@ The previous mobile/responsive PASS baseline remains historical evidence, but Pa
 | Version | Scope | Code | DB | Build | Live acceptance |
 |---|---|---:|---:|---:|---:|
 | V4 | Known-good pre-simplification baseline | FROZEN | Existing | Historical PASS | Baseline |
-| V5 | Driver meaningful pickup stops + destination; boarding only at pickup; production test-auth hard block | READY TO COMMIT | PENDING MIGRATION | PASS | PENDING DEPLOY |
+| V5 | Driver meaningful pickup stops + destination; boarding only at pickup; production test-auth hard block | DEPLOYED, ACCEPTANCE PATCH IN GIT | MIGRATED | PRIOR PASS; PATCH REVALIDATION PENDING | Driver destination PASS; Passenger mismatch found |
 | V6 | Automatic Start Trip after manifest resolved + usable GPS, preserving canonical FIFO handoff | PLANNED | PLANNED | PENDING | PENDING |
-| Later | Passenger simplification/live map, then Admin Users/Dashboard/Routes/Operations | PLANNED | TBD | PENDING | PENDING |
+| Later | Passenger live map, then Admin Users/Dashboard/Routes/Operations | PLANNED | TBD | PENDING | PENDING |
 
-V5 preflight on 2026-08-25: active trips = 0, live queue entries = 0, HELD requests = 0. This makes the operational-function transition suitable for the approved production rollout window.
+V5 preflight on 2026-08-25: active trips = 0, live queue entries = 0, HELD requests = 0. The V5 operational migration was applied successfully. Live acceptance then showed Driver correctly destination-focused while Passenger still rendered legacy stop-by-stop progress after boarding.
+
+## V5 passenger acceptance patch — 2026-08-26
+
+| Area | Capability | Status | Evidence / next gate |
+|---|---|---:|---|
+| Passenger | Same operational truth as Driver after boarding | BUILT IN GIT | Confirmed + `IN_PROGRESS` passenger now sees destination as the next meaningful event |
+| Passenger | Hide obsolete intermediate-stop progress after boarding | BUILT IN GIT | Legacy Driver Progress card is suppressed only for confirmed in-progress rides; pre-pickup progress remains available |
+| Passenger | Destination-focused copy | BUILT IN GIT | `On your way to <destination>` + destination card; pickup label no longer dominates after boarding |
+| Passenger | Real live Driver map | PLANNED | Location status remains text-only until the dedicated map slice |
+
+Acceptance patch is application-only; no new database migration is required. Focused contract added at `tests/contracts/passenger-next-state-v5-contract.cjs`. TypeScript/build revalidation is still required before Rocket redeploy because the remote validation device became unavailable during this patch.
