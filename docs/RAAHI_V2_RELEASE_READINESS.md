@@ -329,8 +329,8 @@ V10 candidate:
 - [x] TypeScript PASS.
 - [x] Production Next.js build PASS.
 - [x] Final V10 runtime candidate pushed: `ce56d489e19d220862f104b928831ab30e6e56c8`.
-- [ ] Rocket V10 deployed.
-- [ ] Admin Routes live visual acceptance PASS.
-- [ ] Neighboring Passenger/Driver route discovery and Ride Again smoke PASS after a real version publish.
+- [x] Rocket V10 deployed at `07adb1a549493bbf8778d281e3af8882eb1002e2`.
+- [x] Admin Routes live acceptance PASS: authenticated draft create/edit, current-route isolation, busy-route publish rejection, and live UI discard.
+- [~] Neighboring route semantics were preserved during acceptance; a successful real version publish was intentionally not performed on the live two-route network.
 
 Do not begin V11 Operations expansion until V10 live behavior is accepted or any discrepancy is diagnosed.
