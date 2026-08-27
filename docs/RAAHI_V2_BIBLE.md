@@ -857,3 +857,13 @@ V11 validation: 25/25 contracts PASS, TypeScript PASS, production Next.js build 
 ## 2026-08-27 V11 consolidated Admin Operations live
 
 V11 completes the approved Admin information architecture: **Dashboard · Users · Routes · Operations**, with Account/Profile in the header. Operations shows live cars, the same next-action truth used by the ride workflow, GPS health, queues, support and guarded Driver recovery. The backend projection is read-only and Admin-only. Production acceptance showed one GD-01 ride in progress, `Drive to destination · Dhanbad Station`, stale GPS warning, no waiting queue and no open support cases; the UI matched backend state. No seat/FIFO/GPS/phone-verification mutation path was added. Rollback ref: `prod-v11-frozen` at `66c543e865d2998c5bf3c066b56f81acb19ffa87`.
+
+## 2026-08-27 V12 automatic trip completion
+
+V12 removes the remaining manual Complete Trip decision without making arrival GPS-driven. The Driver still explicitly taps `Arrived at <destination>`; only after the backend projection changes to `COMPLETE_TRIP` does the client invoke the existing canonical `complete_trip(trip_id)` automatically.
+
+`complete_trip` remains authoritative for final-stop authorization, terminal trip state, Driver queue DONE, trips-completed accounting, passenger/Driver behaviour events and audit recording. Existing terminal triggers continue to clean live GPS and expire share state. V12 adds no database migration and no new lifecycle RPC.
+
+A per-trip attempt guard prevents repeated automatic completion calls. If the canonical command fails transiently, the UI shows `Retry finalization`; this is a recovery action, not a second completion decision. Manual Complete Trip button/modal is removed.
+
+Validation: 26/26 contracts PASS locally, TypeScript PASS, production build PASS (23/23 static pages), plus GitHub Validate Raahi Mini run #315 SUCCESS using a temporary full-suite fan-out shim that was removed afterward. Final runtime/test checkpoint before docs: `fe22cae60217983ac788131f0217605ea0068c30`.

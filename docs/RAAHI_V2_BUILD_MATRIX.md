@@ -109,7 +109,7 @@ Current RLS/RPC/live-invariant audit on isolated V2 Dev: **PASS**.
 | Passenger | Real plotted Driver live-location map | BUILT + VALIDATED V8 | Authorized `IN_PROGRESS` coordinates render on a keyless OpenStreetMap embed with live/last-known/unavailable states |
 | Driver | Show only pickup/drop-off action stops | BUILT V5; DRIVER LIVE PASS | Driver uses meaningful pickup stops while collecting and destination after Start Trip |
 | Driver | Automatic transition after all pickups / usable GPS | BUILT + VALIDATED V7 | UI automatically invokes canonical `start_trip` exactly when departure eligibility + fresh usable GPS are true; manual Start Trip removed |
-| Driver | Automatic completion after final required drop-off where safe | PLANNED | Existing Complete Trip remains current behavior until redesign |
+| Driver | Automatic completion after final destination arrival | BUILT + VALIDATED V12 | Explicit Arrived-at-destination action triggers canonical completion automatically; manual Complete Trip removed |
 | Admin | Dashboard: live health + attention-needed + recent activity | DEPLOYED V9 | Production bundle verified; authenticated visual acceptance remains evidence to capture |
 | Admin | Registered Users directory + detail/actions | DEPLOYED V9 | Search/filters/detail + integrated canonical Driver onboarding are live |
 | Admin | Full guarded Route Management | DEPLOYED + LIVE ACCEPTED V10 | Versioned drafts, stop reorder, preview/publish, create/duplicate/archive; draft isolation and busy-route guard proven live |
@@ -146,6 +146,7 @@ The previous mobile/responsive PASS baseline remains historical evidence, but Pa
 | V9 | Admin Dashboard + Registered Users + integrated Driver onboarding | DEPLOYED | MIGRATED (READ-ONLY) | PASS | Production bundle verified; authenticated Admin visual acceptance still to capture |
 | V10 | Guarded full Route Management with versioning/future-effective publishing | DEPLOYED `07adb1a` | MIGRATED | PASS | LIVE ACCEPTANCE PASS: draft isolation + busy-route publish guard + discard |
 | V11 | Consolidated Admin Operations / emergency controls + cleanup | DEPLOYED `66c543e` | MIGRATED (READ-ONLY) | PASS | LIVE ACCEPTANCE PASS |
+| V12 | Automatic trip completion after explicit destination arrival | PUSHED + VALIDATED `fe22cae` | NOT REQUIRED | PASS | PENDING ROCKET DEPLOY/LIVE |
 
 V5 preflight on 2026-08-25: active trips = 0, live queue entries = 0, HELD requests = 0. The V5 operational migration was applied successfully. Live acceptance then showed Driver correctly destination-focused while Passenger still rendered legacy stop-by-stop progress after boarding.
 

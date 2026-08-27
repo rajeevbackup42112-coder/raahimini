@@ -221,3 +221,13 @@ Validation: 25/25 contracts PASS, TypeScript PASS, production build PASS. V11 ru
 ## 2026-08-27 V11 live acceptance
 
 Rocket V11 is serving the `66c543e865d2998c5bf3c066b56f81acb19ffa87` source line. Production bundle markers and the authenticated Admin Operations screen confirm the V11 UI. It showed one live GD-01 trip with Naresh Kumar / JH10NK1234, `Drive to destination`, destination Dhanbad Station, stale GPS, no waiting Driver queue and no open support cases. Account/Profile is linked from the Admin header. Backend state matched the UI and no live ride data was changed during acceptance. `prod-v11-frozen` preserves the exact deployed source. The approved V9-V11 Admin roadmap is complete.
+
+## 2026-08-27 V12 automatic completion candidate
+
+V11 is production-accepted and frozen at `prod-v11-frozen` -> `66c543e865d2998c5bf3c066b56f81acb19ffa87`. V12 is based on the post-V11 documentation checkpoint `3d979ff2fcc93e85ba9b1f6eb527d500f48a4977`.
+
+V12 removes the Driver Complete Trip button/modal. After the Driver explicitly taps Arrived at the route destination, `get_driver_active_car()` returns `COMPLETE_TRIP`; the client then invokes canonical `complete_trip()` automatically once. A failed finalization exposes Retry finalization without bypassing backend guards. No DB migration is required.
+
+Backend review confirmed `complete_trip()` still requires the authorized active Driver, `IN_PROGRESS`, and current stop equal to the final route stop; it records COMPLETED, queue DONE, Driver trip count, behaviour and audit. Existing trip-status triggers retain terminal GPS cleanup/share expiry.
+
+Validation: 26/26 contracts PASS, TypeScript PASS, production build PASS (23/23 static pages). GitHub Validate Raahi Mini run #315 also passed; its temporary full-contract CI shim was removed and PR #73 was closed unmerged. Runtime/test checkpoint: `fe22cae60217983ac788131f0217605ea0068c30`. Next action: push final V12 docs checkpoint to `rocket-staging-ready`, deploy Rocket Version 12, then live-test explicit destination arrival -> automatic completion and Passenger Arrived state.
