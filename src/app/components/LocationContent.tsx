@@ -153,8 +153,8 @@ export default function LocationContent() {
         </button>
       )}
 
-      {!activeRequest && !watchedRouteId && recentTrip?.route_id && recentFrom && recentTo && (
-        <button onClick={() => router.push(`/active-car-screen?route_id=${recentTrip.route_id}`)} className="feature-card w-full text-left active:scale-[0.99]">
+      {!activeRequest && !watchedRouteId && recentTrip?.repeat_route_id && recentFrom && recentTo && (
+        <button onClick={() => router.push(`/active-car-screen?route_id=${recentTrip.repeat_route_id}`)} className="feature-card w-full text-left active:scale-[0.99]">
           <div className="flex items-start gap-3">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-secondary"><RotateCcw size={18} className="text-primary" /></div>
             <div className="min-w-0 flex-1"><p className="text-[11px] font-bold uppercase tracking-wide text-primary">My Raahi · Recent trip</p><h2 className="mt-1 text-base font-bold text-foreground">{recentFrom} → {recentTo}</h2><p className="mt-1 text-xs text-muted-foreground">Pickup: {recentTrip.pickup_stop_name}. Nothing is booked until you choose a live car and confirm again.</p></div>
