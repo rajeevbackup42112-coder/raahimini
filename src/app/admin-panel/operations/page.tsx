@@ -6,6 +6,7 @@ import { ChevronLeft, Loader2, ShieldAlert, Trash2, ArrowUp, ArrowDown, UserX } 
 import { toast } from 'sonner';
 import { createClient } from '@/lib/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import AdminPrimaryNav from '../components/AdminPrimaryNav';
 import { adminGetDrivers, adminGetRoutes, getDriverQueueStatus } from '@/lib/raahiApi';
 
 export default function AdminOperationsPage(){
@@ -65,12 +66,7 @@ export default function AdminOperationsPage(){
   if(profile?.role!=='admin') return <div className="min-h-screen flex items-center justify-center"><ShieldAlert className="mr-2"/>Admin access required.</div>;
 
   return <div className="min-h-screen bg-background">
-    <header className="sticky top-0 z-40 bg-card border-b border-border">
-      <div className="max-w-3xl mx-auto h-14 px-4 flex items-center gap-3">
-        <Link href="/admin-panel" className="w-9 h-9 rounded-xl flex items-center justify-center hover:bg-muted"><ChevronLeft size={20}/></Link>
-        <div><p className="text-sm font-bold">Safe Operations</p><p className="text-[11px] text-muted-foreground">Audited, invariant-preserving controls only</p></div>
-      </div>
-    </header>
+    <AdminPrimaryNav active="operations" />
     <main className="max-w-3xl mx-auto px-4 py-4 space-y-6">
       <section className="space-y-3">
         <div><h2 className="text-base font-bold">Drivers</h2><p className="text-xs text-muted-foreground">Deactivate only when no live trip exists. Raahi blocks unsafe attempts server-side.</p></div>

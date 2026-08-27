@@ -1,6 +1,6 @@
 # Raahi 2.0 Admin Control Plan
 
-Status: **PLANNED**. This document defines the approved Admin simplification/expansion direction; it is not evidence that the features are live.
+Status: **IN PROGRESS**. V9 Dashboard + Registered Users is built/locally validated; V10 Route Management and V11 Operations expansion remain planned. This document separates built state from later live acceptance.
 
 ## Product principle
 

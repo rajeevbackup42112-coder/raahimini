@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { ChevronLeft, IndianRupee, Loader2, Route, Save, ToggleLeft, ToggleRight } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
+import AdminPrimaryNav from '../components/AdminPrimaryNav';
 import { createClient } from '@/lib/supabase/client';
 import { adminGetRoutes } from '@/lib/raahiApi';
 
@@ -59,13 +60,7 @@ export default function RouteSettingsPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="sticky top-0 z-40 bg-card border-b border-border card-shadow">
-        <div className="max-w-3xl mx-auto h-14 px-4 flex items-center gap-3">
-          <Link href="/admin-panel" className="w-9 h-9 rounded-xl flex items-center justify-center hover:bg-muted" aria-label="Back to Admin Panel"><ChevronLeft size={20} /></Link>
-          <Route size={20} className="text-primary" />
-          <div><p className="text-sm font-bold">Route Settings</p><p className="text-[11px] text-muted-foreground">Fare and availability</p></div>
-        </div>
-      </header>
+      <AdminPrimaryNav active="routes" />
 
       <main className="max-w-3xl mx-auto px-4 py-5 space-y-4">
         <div className="rounded-2xl border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800">

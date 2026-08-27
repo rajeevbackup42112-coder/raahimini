@@ -822,3 +822,13 @@ The Passenger map refreshes every ~15 seconds and uses a keyless OpenStreetMap e
 V8 local validation: 22/22 contract files PASS, TypeScript PASS, production Next.js build PASS, and the OpenStreetMap embed endpoint returned HTTP 200 from the validation device. Live Rocket deployment and real Passenger visual acceptance remain the gate before Admin V9.
 
 V8 runtime candidate `04c5624a09a5712b3e46dbe81137d4a06960d52d` is pushed to both `prod-v8-candidate` and `rocket-staging-ready`.
+
+## 2026-08-27 V8 live verification + V9 Admin Dashboard/Users
+
+V8 production bundle is independently verified: Passenger code contains the live/last-known OpenStreetMap map states, boarded-at context and no legacy Driver Progress string. `prod-v8-frozen` preserves `3222802dcec1caa79140ff76b51b41e6d8e3914d`. Authenticated real-trip map screenshot acceptance remains a separate live evidence item.
+
+V9 is the first Admin information-architecture release. Primary Admin navigation is now **Dashboard · Users · Routes · Operations**. Dashboard adds top live counts, current route health, support exceptions and recent meaningful audit activity. Registered Users covers Passenger/Driver/Admin accounts with search, role/verification/restriction filters, current operational state, vehicle context and safe detail actions.
+
+Driver onboarding is integrated from Users through a selected-user deep link into the existing canonical `admin_onboard_driver` workflow. V9 does not add raw role, seat, FIFO, GPS or phone-verification mutation. New database functions are additive, admin-only, read-only projections: `admin_get_dashboard_summary`, `admin_list_registered_users`, and `admin_get_recent_activity`.
+
+V9 local validation: 23/23 contracts PASS, TypeScript PASS, production Next.js build PASS. Production migration/deployment/live Admin acceptance remain pending.

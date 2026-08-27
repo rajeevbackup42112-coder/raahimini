@@ -1,0 +1,44 @@
+'use client';
+
+import Link from 'next/link';
+import { Activity, LayoutDashboard, Route, Users } from 'lucide-react';
+import AppLogo from '@/components/ui/AppLogo';
+import { useAuth } from '@/contexts/AuthContext';
+
+type AdminSection = 'dashboard' | 'users' | 'routes' | 'operations';
+
+const links: { id: AdminSection; label: string; href: string; icon: React.ReactNode }[] = [
+  { id: 'dashboard', label: 'Dashboard', href: '/admin-panel', icon: <LayoutDashboard size={16} /> },
+  { id: 'users', label: 'Users', href: '/admin-panel/users', icon: <Users size={16} /> },
+  { id: 'routes', label: 'Routes', href: '/admin-panel/route-settings', icon: <Route size={16} /> },
+  { id: 'operations', label: 'Operations', href: '/admin-panel/operations', icon: <Activity size={16} /> },
+];
+
+export default function AdminPrimaryNav({ active }: { active: AdminSection }) {
+  const { profile } = useAuth();
+  return (
+    <header className="sticky top-0 z-40 border-b border-border bg-card/95 backdrop-blur-sm">
+      <div className="mx-auto flex h-14 max-w-screen-2xl items-center gap-3 px-4">
+        <Link href="/" className="flex items-center gap-2" aria-label="Raahi home">
+          <AppLogo size={28} />
+          <span className="font-bold text-foreground">Raahi Admin</span>
+        </Link>
+        <div className="ml-auto min-w-0 text-right">
+          <p className="max-w-[150px] truncate text-xs font-bold text-foreground">{profile?.display_name || 'Admin'}</p>
+          <p className="text-[10px] text-muted-foreground">Admin access</p>
+        </div>
+      </div>
+      <nav className="mx-auto grid max-w-screen-2xl grid-cols-4 border-t border-border px-1" aria-label="Admin sections">
+        {links.map((item) => (
+          <Link
+            key={item.id}
+            href={item.href}
+            className={`flex min-h-12 items-center justify-center gap-1.5 border-b-2 px-2 text-xs font-semibold transition-colors ${active === item.id ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}`}
+          >
+            {item.icon}<span className="truncate">{item.label}</span>
+          </Link>
+        ))}
+      </nav>
+    </header>
+  );
+}
