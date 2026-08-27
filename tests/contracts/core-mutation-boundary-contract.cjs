@@ -1,6 +1,5 @@
 const fs = require('node:fs');
 const path = require('node:path');
-const { spawnSync } = require('node:child_process');
 
 const root = path.resolve(__dirname, '../..');
 const src = path.join(root, 'src');
@@ -40,14 +39,3 @@ if (violations.length) {
 }
 
 console.log('Core mutation boundary contract: PASS');
-
-// Temporary V12 CI fan-out: the base workflow invokes this contract, so run every
-// other contract here to validate the full current production-train suite.
-const contractDir = path.join(root, 'tests', 'contracts');
-const current = path.basename(__filename);
-for (const name of fs.readdirSync(contractDir).filter((n) => n.endsWith('-contract.cjs') && n !== current).sort()) {
-  const result = spawnSync(process.execPath, [path.join(contractDir, name)], { encoding: 'utf8' });
-  if (result.stdout) process.stdout.write(result.stdout);
-  if (result.stderr) process.stderr.write(result.stderr);
-  if (result.status !== 0) throw new Error(`Contract failed: ${name}`);
-}
