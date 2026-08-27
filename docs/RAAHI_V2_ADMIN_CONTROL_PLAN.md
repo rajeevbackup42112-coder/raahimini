@@ -1,6 +1,6 @@
 # Raahi 2.0 Admin Control Plan
 
-Status: **IN PROGRESS**. V9 Dashboard + Registered Users is built/locally validated; V10 Route Management and V11 Operations expansion remain planned. This document separates built state from later live acceptance.
+Status: **IN PROGRESS**. V9 Dashboard + Registered Users is live. V10 guarded Route Management is built, migrated and validated; Rocket V10 deployment/live acceptance remains pending. V11 Operations expansion remains planned.
 
 ## Product principle
 
@@ -59,14 +59,14 @@ Driver onboarding should therefore move naturally to **Users → person → Make
 
 ## 3. Routes
 
-Current Admin Route Settings already supports fare changes and guarded enable/disable. Full Route Management will add create/duplicate/archive route, add/edit/remove/reorder stops, edit route metadata, and publish a new configuration.
+V10 Route Management adds create/duplicate/archive route, add/edit/remove/reorder stops, edit route metadata, fare/active controls, draft preview and explicit Publish.
 
 Structural route changes must **not mutate historical/live route stops in place**. `seat_requests.pickup_stop_id` references `route_stops`, and trips reference the route, so destructive edits can corrupt active/history semantics.
 
 Implementation rule: use an explicit route-version/future-effective model. Active trips keep the exact route/stops they started with; new trips use the newly published version.
 
 Route editor UX:
-- ordered stop list with drag handles
+- ordered stop list with drag handles plus touch-friendly up/down controls
 - Add Stop / Edit / Remove actions
 - fare and active state in the same route detail
 - preview before Publish

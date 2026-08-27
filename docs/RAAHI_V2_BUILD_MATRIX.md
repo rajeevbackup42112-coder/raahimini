@@ -110,9 +110,9 @@ Current RLS/RPC/live-invariant audit on isolated V2 Dev: **PASS**.
 | Driver | Show only pickup/drop-off action stops | BUILT V5; DRIVER LIVE PASS | Driver uses meaningful pickup stops while collecting and destination after Start Trip |
 | Driver | Automatic transition after all pickups / usable GPS | BUILT + VALIDATED V7 | UI automatically invokes canonical `start_trip` exactly when departure eligibility + fresh usable GPS are true; manual Start Trip removed |
 | Driver | Automatic completion after final required drop-off where safe | PLANNED | Existing Complete Trip remains current behavior until redesign |
-| Admin | Dashboard: live health + attention-needed + recent activity | PLANNED V9 | Detailed scope in `RAAHI_V2_ADMIN_CONTROL_PLAN.md` |
-| Admin | Registered Users directory + detail/actions | PLANNED V9 | New guarded all-user read projection; integrate Driver onboarding from user detail |
-| Admin | Full guarded Route Management | PLANNED V10 | Structural edits require versioning/future-effective publishing; never rewrite live/history stops |
+| Admin | Dashboard: live health + attention-needed + recent activity | DEPLOYED V9 | Production bundle verified; authenticated visual acceptance remains evidence to capture |
+| Admin | Registered Users directory + detail/actions | DEPLOYED V9 | Search/filters/detail + integrated canonical Driver onboarding are live |
+| Admin | Full guarded Route Management | BUILT + MIGRATED V10 | Versioned drafts, stop reorder, preview/publish, create/duplicate/archive; Rocket deployment pending |
 
 ### Validation impact
 The previous mobile/responsive PASS baseline remains historical evidence, but Passenger live-trip, Driver active-trip and Admin route/user flows are **reopened** for acceptance because approved behavior is changing. For every implemented slice, rerun focused tests, neighboring role flows, TypeScript, production build, relevant contracts and manual real-user acceptance.
@@ -143,8 +143,8 @@ The previous mobile/responsive PASS baseline remains historical evidence, but Pa
 | V6 | Passenger/Driver next-state alignment; remove Passenger stop-by-stop primary progress | DEPLOYED | NOT REQUIRED | PASS | Production bundle verified; authenticated paired-screen acceptance not separately captured |
 | V7 | Automatic Start Trip after manifest resolved + usable GPS, preserving canonical FIFO handoff | DEPLOYED | NOT REQUIRED | PASS | Production bundle verified; real automatic-departure ride acceptance remains to be captured |
 | V8 | Real Passenger Driver-location map + final Passenger simplification | DEPLOYED | NOT REQUIRED | PASS | Production bundle verified; authenticated real-map ride screenshot still pending |
-| V9 | Admin Dashboard + Registered Users + integrated Driver onboarding | BUILT + LOCALLY VALIDATED | ADDITIVE READ PROJECTIONS PENDING APPLY | PASS | PENDING ROCKET DEPLOY/LIVE |
-| V10 | Guarded full Route Management with versioning/future-effective publishing | PLANNED | PLANNED | PENDING | PENDING |
+| V9 | Admin Dashboard + Registered Users + integrated Driver onboarding | DEPLOYED | MIGRATED (READ-ONLY) | PASS | Production bundle verified; authenticated Admin visual acceptance still to capture |
+| V10 | Guarded full Route Management with versioning/future-effective publishing | PUSHED + VALIDATED `ce56d48` | MIGRATED | PASS | PENDING ROCKET DEPLOY/LIVE |
 | V11 | Consolidated Admin Operations / emergency controls + cleanup | PLANNED | TBD | PENDING | PENDING |
 
 V5 preflight on 2026-08-25: active trips = 0, live queue entries = 0, HELD requests = 0. The V5 operational migration was applied successfully. Live acceptance then showed Driver correctly destination-focused while Passenger still rendered legacy stop-by-stop progress after boarding.
@@ -164,3 +164,10 @@ Acceptance patch is application-only; no new database migration is required. Foc
 ## Production roadmap after V6 validation
 
 Detailed Admin scope is authoritative in `RAAHI_V2_ADMIN_CONTROL_PLAN.md`. V9–V11 must use audited RPCs and preserve FIFO, GPS, seat ownership, phone verification and historical route semantics.
+
+
+## 2026-08-27 Version 10 guarded Route Management checkpoint
+
+V10 final runtime candidate: `ce56d489e19d220862f104b928831ab30e6e56c8` (foundation commit `2c6191e9512e948c6474c535d9ad7770242682f4`). Migration `v2_prod_v10_route_versioning` is applied. Existing DG-01/GD-01 routes were backfilled as current published v1 without changing their active state. Pre/post migration operational state remained DG-01: 0 live trips / 1 active demand; GD-01: 1 live trip / 0 active demand. No draft was created by migration.
+
+Admin can prepare New Route, Duplicate or Edit as an inactive draft; add/remove/edit/reorder stops using drag or touch buttons; inspect a publish preview; and explicitly Publish. Publishing/archiving is blocked by live trip, live queue or active passenger demand. Historical route/stops remain attached to historical trips. `Ride this route again` now resolves a completed trip to the current active route version instead of an archived route id. Canonical Start Trip/FIFO/GPS functions were not redefined. Validation: 24/24 contracts PASS, TypeScript PASS, production build PASS. Rocket V10 deployment and live Admin acceptance remain pending.

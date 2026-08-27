@@ -296,9 +296,41 @@ V9 candidate:
 - [x] 23/23 contract files PASS.
 - [x] TypeScript PASS.
 - [x] Production Next.js build PASS.
-- [ ] V9 migration applied and verified.
-- [ ] V9 candidate pushed to Rocket source branch.
-- [ ] Rocket V9 deployed.
-- [ ] Admin Dashboard + Users visual/role acceptance PASS.
+- [x] V9 read-only migration applied and verified.
+- [x] V9 candidate pushed to Rocket source branch: `b4af229dab950fbf14aa96c689b50e6c54853d12`.
+- [x] Rocket V9 deployed; production bundle independently verified.
+- [~] Admin Dashboard + Users bundle/role-gate implementation verified; authenticated Admin visual acceptance still to capture.
 
 Do not begin V10 structural Route Management until V9 live behavior is accepted or any discrepancy is diagnosed.
+
+
+## 2026-08-27 Version 10 guarded Route Management gate
+
+V9 deployment evidence:
+- [x] User reports Rocket V9 published.
+- [x] Production Dashboard bundle contains Dashboard / Active trips / Recent activity.
+- [x] Production Users bundle contains Passenger / Driver / Admin / Unverified / Restricted filters and Make Driver.
+- [~] Authenticated Admin visual acceptance was not separately captured before the user explicitly directed V10 to proceed.
+
+V10 candidate:
+- [x] V9 application rollback reference preserved before V10.
+- [x] Existing routes version-backfilled as current published v1 without changing active state.
+- [x] Structural edits are draft-only; DRAFT is forced inactive/non-current.
+- [x] Create / duplicate / edit / add-remove-reorder stops / preview / publish / discard / archive implemented.
+- [x] Reorder supports drag plus touch-friendly arrow controls.
+- [x] Publish and Archive reject live trips, live Driver queues and active passenger demand.
+- [x] Prior published route/stops are archived rather than rewritten.
+- [x] Passenger Ride Again resolves completed history to the current active route version.
+- [x] New Route Management RPCs are Admin-guarded; anon execute denied.
+- [x] Canonical Start Trip FIFO/GPS/freshness guards remain present and V10 does not redefine ride-engine commands.
+- [x] Migration `v2_prod_v10_route_versioning` applied successfully.
+- [x] Pre/post operational state unchanged: DG-01 1 active demand / no live trip; GD-01 1 live trip / no active demand.
+- [x] 24/24 contract files PASS.
+- [x] TypeScript PASS.
+- [x] Production Next.js build PASS.
+- [x] Final V10 runtime candidate pushed: `ce56d489e19d220862f104b928831ab30e6e56c8`.
+- [ ] Rocket V10 deployed.
+- [ ] Admin Routes live visual acceptance PASS.
+- [ ] Neighboring Passenger/Driver route discovery and Ride Again smoke PASS after a real version publish.
+
+Do not begin V11 Operations expansion until V10 live behavior is accepted or any discrepancy is diagnosed.

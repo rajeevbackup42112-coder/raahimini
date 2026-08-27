@@ -832,3 +832,16 @@ V9 is the first Admin information-architecture release. Primary Admin navigation
 Driver onboarding is integrated from Users through a selected-user deep link into the existing canonical `admin_onboard_driver` workflow. V9 does not add raw role, seat, FIFO, GPS or phone-verification mutation. New database functions are additive, admin-only, read-only projections: `admin_get_dashboard_summary`, `admin_list_registered_users`, and `admin_get_recent_activity`.
 
 V9 local validation: 23/23 contracts PASS, TypeScript PASS, production Next.js build PASS. Production migration/deployment/live Admin acceptance remain pending.
+
+V9 DB verification after push: migration applied successfully. Admin-context checks returned 16 registered profiles (9 Passenger, 5 Driver, 2 Admin); anon execute is denied and authenticated execute is granted for all three new RPCs. Dashboard projection returned the current live state without mutating the one active trip. Runtime candidate: `b4af229dab950fbf14aa96c689b50e6c54853d12`. User reports Rocket V9 deployed; production bundle independently contains Dashboard, Registered Users, Active trips and Recent activity. Authenticated Admin visual acceptance remains the next live gate.
+
+
+## 2026-08-27 V10 guarded Route Management
+
+V10 makes Admin Routes future-effective rather than destructive. A published route is immutable for structural edits: Admin first creates a DRAFT version, edits metadata and ordered stops, previews the exact proposed route, then publishes only when that route family is operationally idle. A live trip, live Driver queue, or active passenger demand intent blocks Publish and Archive server-side.
+
+Publishing archives the prior route version instead of rewriting it. Historical trips, requests and stops keep their original route ids; only future journeys discover the newly published current version. Drafts are always inactive and non-current, so Passenger/Driver route discovery cannot see them. Existing direct Admin route reads are filtered to the current published version.
+
+Admin actions include New Route, Duplicate, Edit Draft, add/edit/remove/reorder stops, fare, pause/enable, Publish, Discard Draft and Archive. Reordering supports both drag and touch-friendly arrows. The route editor shows live-trip/queue/demand impact plus a Publish preview. Repeat-use Passenger logic resolves a historical completed trip to its current active route version while retaining the old route/stops for historical display.
+
+V10 migration was applied with one live GD-01 trip and one active DG-01 demand intent present; those states were unchanged because the migration only adds version metadata/RPCs and does not publish a draft. Canonical booking, seats, `start_trip`, `activate_next_driver`, FIFO, GPS and phone verification are unchanged. Final runtime candidate `ce56d489e19d220862f104b928831ab30e6e56c8`; 24/24 contracts, TypeScript and production build PASS.
