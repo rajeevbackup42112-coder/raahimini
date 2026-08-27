@@ -250,7 +250,7 @@ V7 candidate:
 - [x] TypeScript PASS.
 - [x] Production Next.js build PASS.
 - [x] No V7 database migration required.
-- [ ] V7 candidate pushed to Rocket source branch.
+- [x] V7 candidate pushed to Rocket source branch: `478be880aa458bfb0e1eb74c52f031c6bc521364`.
 - [ ] Rocket Version 7 deployed.
 - [ ] Real Driver automatic-departure acceptance PASS.
 

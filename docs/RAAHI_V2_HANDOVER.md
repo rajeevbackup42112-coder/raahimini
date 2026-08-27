@@ -167,4 +167,4 @@ V7 is application-only. `DriverActiveCarContent` removes the Start Trip button/m
 
 Backend inspection confirmed `start_trip` still owns the authoritative invariants: no HELD requests, confirmed + driver-closed = capacity, fresh location <=60 seconds, accuracy <=200m, trip transition to IN_PROGRESS, and `activate_next_driver(route_id)` same-direction FIFO handoff. No V7 migration is needed.
 
-Validation: 21/21 contract files PASS, TypeScript PASS, production build PASS. Next action: push V7 candidate, deploy as Rocket Version 7, then exercise one real Driver flow with (a) full manifest automatic start and (b) empty-seat close followed by automatic start if practical.
+Validation: 21/21 contract files PASS, TypeScript PASS, production build PASS. V7 runtime/docs candidate `478be880aa458bfb0e1eb74c52f031c6bc521364` is pushed to both `prod-v7-candidate` and `rocket-staging-ready`. Next action: deploy as Rocket Version 7, then exercise one real Driver flow with (a) full manifest automatic start and (b) empty-seat close followed by automatic start if practical.

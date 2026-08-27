@@ -808,4 +808,4 @@ Departure remains impossible while HELD requests exist or while confirmed + deli
 
 The pre-departure GPS readiness UI expires after 50 seconds, intentionally before the backend's 60-second limit. If everyone is aboard but GPS is unavailable or stale, the only blocking instruction is to enable/refresh location; after a usable fix Raahi starts automatically. Manual Complete Trip remains unchanged for this version.
 
-V7 validation: 21 contract files PASS, TypeScript PASS, production Next.js build PASS. No database migration is required. Live Rocket deployment/real Driver acceptance remains the next gate.
+V7 validation: 21 contract files PASS, TypeScript PASS, production Next.js build PASS. Candidate `478be880aa458bfb0e1eb74c52f031c6bc521364` is pushed; no database migration is required. Live Rocket deployment/real Driver acceptance remains the next gate.

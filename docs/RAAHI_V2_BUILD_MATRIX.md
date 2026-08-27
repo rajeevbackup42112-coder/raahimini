@@ -141,7 +141,7 @@ The previous mobile/responsive PASS baseline remains historical evidence, but Pa
 | V4 | Known-good pre-simplification baseline | FROZEN | Existing | Historical PASS | Baseline |
 | V5 | Driver meaningful pickup stops + destination; boarding only at pickup; production test-auth hard block | DEPLOYED | MIGRATED | PASS | Driver destination PASS; Passenger mismatch promoted to V6 fix |
 | V6 | Passenger/Driver next-state alignment; remove Passenger stop-by-stop primary progress | DEPLOYED | NOT REQUIRED | PASS | Production bundle verified; authenticated paired-screen acceptance not separately captured |
-| V7 | Automatic Start Trip after manifest resolved + usable GPS, preserving canonical FIFO handoff | BUILT + LOCALLY VALIDATED | NOT REQUIRED | PASS | PENDING DEPLOY/LIVE |
+| V7 | Automatic Start Trip after manifest resolved + usable GPS, preserving canonical FIFO handoff | PUSHED + LOCALLY VALIDATED | NOT REQUIRED | PASS | PENDING ROCKET DEPLOY/LIVE |
 | V8 | Real Passenger Driver-location map + final Passenger simplification | PLANNED | TBD | PENDING | PENDING |
 | V9 | Admin Dashboard + Registered Users + integrated Driver onboarding | PLANNED | PLANNED READ PROJECTION | PENDING | PENDING |
 | V10 | Guarded full Route Management with versioning/future-effective publishing | PLANNED | PLANNED | PENDING | PENDING |
