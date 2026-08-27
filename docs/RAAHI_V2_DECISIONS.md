@@ -102,3 +102,11 @@ Future chats must start from `RAAHI_V2_HANDOVER.md`, then consult this Decision 
 70. **UI GPS readiness expires before backend freshness.** The client clears pre-departure readiness at 50 seconds while `start_trip` independently rejects fixes older than 60 seconds or worse than 200m accuracy.
 71. **Complete Trip remains manual in V7.** Automatic completion is a separate lifecycle slice and must not be bundled into the departure change.
 72. **V6 production bundle was verified before V7.** The deployed Passenger bundle contains Requested / On the way / You are aboard / destination-focused behavior and no legacy Driver Progress string; paired authenticated visual acceptance was not separately captured before the user directed the train to continue.
+
+
+## 2026-08-27 V8 Passenger live map decisions
+
+73. **V8 uses the existing authorized live-location projection.** No new GPS write path or broader read permission is introduced; the map consumes `get_active_trip_location()` only while the passenger trip is `IN_PROGRESS`.
+74. **The V8 map uses a keyless OpenStreetMap embed, not a billable map API.** Exact coordinates are sent only to the map provider when the authenticated Passenger has already been authorized to read that active trip location; the embed uses `referrerPolicy="no-referrer"`.
+75. **Freshness is explicit.** Backend `is_fresh` remains the truth (45-second window). Fresh fixes are labeled live, older coordinates are labeled last known, and no-coordinate state shows an unavailable fallback rather than fabricating movement.
+76. **The active Passenger journey becomes map-first.** During `IN_PROGRESS`, redundant confirmation and standalone destination cards are suppressed; the map card carries live driver position plus boarded-at and destination context. No V8 database migration is required.

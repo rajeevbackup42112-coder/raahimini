@@ -809,3 +809,14 @@ Departure remains impossible while HELD requests exist or while confirmed + deli
 The pre-departure GPS readiness UI expires after 50 seconds, intentionally before the backend's 60-second limit. If everyone is aboard but GPS is unavailable or stale, the only blocking instruction is to enable/refresh location; after a usable fix Raahi starts automatically. Manual Complete Trip remains unchanged for this version.
 
 V7 validation: 21 contract files PASS, TypeScript PASS, production Next.js build PASS. Candidate `478be880aa458bfb0e1eb74c52f031c6bc521364` is pushed; no database migration is required. Live Rocket deployment/real Driver acceptance remains the next gate.
+
+
+## 2026-08-27 V8 Passenger live map
+
+Rocket V7 was reported deployed and the production Driver JS bundle was independently checked: automatic-departure copy is present, the manual `Start Trip to ...` string is absent, and the new pre-departure location wording is present. V7 is frozen as `prod-v7-frozen` at `c0aa81d46f8c8ca18d3901f1190f5b2eb4536dd4`.
+
+V8 turns the existing authenticated live-location projection into the primary active-ride Passenger map. `get_active_trip_location()` already returns latitude, longitude, accuracy, capture time and a 45-second `is_fresh` flag only for an `IN_PROGRESS` trip and only to the Driver, an Admin, or a passenger with a HELD/CONFIRMED request on that trip. V8 does not broaden those permissions.
+
+The Passenger map refreshes every ~15 seconds and uses a keyless OpenStreetMap embed centered on the latest authorized Driver coordinates. Fresh data is labeled `Live driver location`; stale data is explicitly `Last known location`; if no coordinates exist the UI says the live map is temporarily unavailable. During an active ride, duplicate confirmation/destination cards are removed so the map plus `Boarded at` / `Destination` context becomes the main visual. No V8 database migration or paid map key is required.
+
+V8 local validation: 22/22 contract files PASS, TypeScript PASS, production Next.js build PASS, and the OpenStreetMap embed endpoint returned HTTP 200 from the validation device. Live Rocket deployment and real Passenger visual acceptance remain the gate before Admin V9.
