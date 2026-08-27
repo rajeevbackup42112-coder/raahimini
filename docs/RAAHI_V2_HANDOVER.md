@@ -191,3 +191,16 @@ New migration `20260827164000_v2_prod_v9_admin_dashboard_users.sql` is additive/
 Validation: 23/23 contracts PASS, TypeScript PASS, production build PASS. Next gates: commit/push V9 → apply/verify read-only migration → Rocket V9 deploy → Admin visual/role acceptance. Do not begin V10 structural Route Management before V9 is understood live.
 
 V9 DB verification after push: migration applied successfully. Admin-context checks returned 16 registered profiles (9 Passenger, 5 Driver, 2 Admin); anon execute is denied and authenticated execute is granted for all three new RPCs. Dashboard projection returned the current live state without mutating the one active trip. Runtime candidate: `b4af229dab950fbf14aa96c689b50e6c54853d12`. User reports Rocket V9 deployed; production bundle independently contains Dashboard, Registered Users, Active trips and Recent activity. Authenticated Admin visual acceptance remains the next live gate.
+
+
+## 2026-08-27 V10 guarded Route Management candidate
+
+V9 is live and its production Admin bundles were independently verified. V9 rollback reference remains `prod-v9-frozen`. The user directed the production train to continue despite authenticated Admin visual evidence not being separately captured.
+
+V10 is now implemented and migrated. Final runtime candidate: `ce56d489e19d220862f104b928831ab30e6e56c8`; initial foundation commit: `2c6191e9512e948c6474c535d9ad7770242682f4`. New migration `20260827174500_v2_prod_v10_route_versioning.sql` / applied migration name `v2_prod_v10_route_versioning`. Existing routes became current published v1 rows in their own route families; migration created no drafts and did not change live operations. Pre/post state: DG-01 retained 1 active demand and no live trip; GD-01 retained 1 live trip and no active demand.
+
+Admin Routes now supports New Route, Duplicate, draft-based structural editing, add/edit/remove/reorder stops (drag + touch arrows), publish preview, guarded Publish, Discard Draft, Fare, Pause/Enable and Archive. Publish/Archive are blocked if the current route has a live trip, live queue or active demand. Old route/stops are archived, not rewritten. Passenger `Ride this route again` resolves to the current active route version.
+
+Security/regression: anonymous execute is denied for the new Route Management RPCs; authenticated execute is granted but every RPC checks Admin. Canonical `start_trip` still contains FIFO activation and GPS/freshness guards. V10 does not redefine Start Trip, queue join/activation or seat booking. Validation: 24/24 contracts PASS, TypeScript PASS, production Next.js build PASS.
+
+Next action: deploy latest `rocket-staging-ready` as Rocket Version 10, then visually accept Admin Routes: create/edit a draft without affecting Passenger/Driver, confirm a blocked publish on a busy route if naturally available, and publish only an idle test change after explicit care. Do not begin V11 Operations expansion until V10 is understood live.

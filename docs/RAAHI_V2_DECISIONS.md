@@ -119,3 +119,15 @@ Future chats must start from `RAAHI_V2_HANDOVER.md`, then consult this Decision 
 80. **Admin Dashboard summary and recent activity are read-only.** Counts and audit projections must not mutate rides or become a second operational command path.
 81. **Driver onboarding remains canonical.** Users → Make Driver deep-links the selected profile into the existing `admin_onboard_driver` flow; V9 does not duplicate onboarding logic.
 82. **V9 is additive during live operations.** One live trip/queue entry does not block the read-only migration; no seat, trip, queue, GPS, phone verification or historical route row is modified.
+
+
+## 2026-08-27 V10 Route Management decisions
+
+83. **Structural route edits never mutate the published route in place.** Admin edits an inactive/non-current DRAFT row with its own route_stops.
+84. **Publish is future-effective and server-gated.** A current route cannot be superseded while it has an ACTIVE_COLLECTING/IN_PROGRESS trip, WAITING/ACTIVE_COLLECTING Driver queue entry, or ACTIVE passenger demand intent.
+85. **Historical route meaning is immutable.** Publishing archives the old route row and preserves its route_stops; historical trips/seat requests continue to reference those exact rows.
+86. **Only one current published version exists per route family and one current published route may own a route code.** Draft/history rows do not become public route options.
+87. **Drafts are invisible to transport users.** DRAFT implies `is_current=false` and `is_active=false`; normal route discovery still requires active routes.
+88. **Route deletion is draft-only.** Unpublished drafts may be discarded; published routes use Archive rather than destructive delete.
+89. **Repeat-use shortcuts follow the current version.** Completed-trip display remains historical, while `Ride this route again` uses `repeat_route_id` resolved to the current active published member of that route family.
+90. **V10 does not redefine the ride engine.** `start_trip`, `activate_next_driver`, `join_driver_queue`, `request_seats`, seat ownership, GPS and phone verification remain canonical and unchanged.
