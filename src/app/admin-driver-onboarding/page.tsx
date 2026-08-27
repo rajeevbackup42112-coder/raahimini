@@ -39,6 +39,12 @@ export default function AdminDriverOnboardingPage() {
     else if (!authLoading) setLoading(false);
   }, [authLoading, profile?.role]);
 
+  useEffect(() => {
+    if (selectedId || items.length === 0 || typeof window === 'undefined') return;
+    const profileId = new URLSearchParams(window.location.search).get('profile');
+    if (profileId && items.some((item) => item.profile_id === profileId)) setSelectedId(profileId);
+  }, [items, selectedId]);
+
   const selected = useMemo(() => items.find(x => x.profile_id === selectedId), [items, selectedId]);
   useEffect(() => {
     if (!selected) return;

@@ -276,3 +276,29 @@ Do not begin the next lifecycle/UI version until V7 live behavior is observed or
 - [ ] Real Passenger active-ride map visually accepted, including stale/unavailable fallback if practical.
 
 Do not begin Admin V9 implementation until the V8 candidate is at least pushed and its production deployment state is understood.
+
+## 2026-08-27 Version 9 Admin Dashboard + Users gate
+
+V8 deployment evidence:
+- [x] User reports Rocket V8 published.
+- [x] Production Passenger bundle independently verified: live/last-known map states and OpenStreetMap embed present; legacy Driver Progress absent.
+- [ ] Authenticated real-trip map screenshot acceptance captured.
+
+V9 candidate:
+- [x] V8 frozen as `prod-v8-frozen` at `3222802dcec1caa79140ff76b51b41e6d8e3914d`.
+- [x] Dashboard / Users / Routes / Operations primary navigation built.
+- [x] Dashboard live summary + route health + support exceptions + recent meaningful activity built.
+- [x] Registered Users search/filters/detail built for Passenger, Driver and Admin.
+- [x] Phone verified state comes from Auth confirmation, not editable client state.
+- [x] Users → Make Driver reuses existing audited `admin_onboard_driver` workflow.
+- [x] New V9 DB functions are admin-only, additive and read-only.
+- [x] Current live-operation preflight recorded; no V9 operational table mutation required.
+- [x] 23/23 contract files PASS.
+- [x] TypeScript PASS.
+- [x] Production Next.js build PASS.
+- [ ] V9 migration applied and verified.
+- [ ] V9 candidate pushed to Rocket source branch.
+- [ ] Rocket V9 deployed.
+- [ ] Admin Dashboard + Users visual/role acceptance PASS.
+
+Do not begin V10 structural Route Management until V9 live behavior is accepted or any discrepancy is diagnosed.

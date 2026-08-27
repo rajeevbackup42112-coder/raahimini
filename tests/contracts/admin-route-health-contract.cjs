@@ -19,6 +19,7 @@ expect(overview, 'Route health', 'Admin Home must show route-level operational c
 expect(overview, 'Passenger demand', 'route cards must include demand context');
 expect(overview, 'Next driver', 'route cards must include the next waiting driver');
 expect(page, '<AdminRouteHealthOverview />', 'route health must appear on Admin Home');
-expect(page, 'Detailed management', 'table/detail views must be secondary to the overview');
+expect(page, '<AdminDashboardOverview />', 'Admin Home must lead with the V9 dashboard');
+expect(page, '<AdminSupportInbox />', 'support exceptions must remain on Admin Home');
 
 console.log('admin route health contract: PASS');

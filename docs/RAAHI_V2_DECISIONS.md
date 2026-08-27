@@ -110,3 +110,12 @@ Future chats must start from `RAAHI_V2_HANDOVER.md`, then consult this Decision 
 74. **The V8 map uses a keyless OpenStreetMap embed, not a billable map API.** Exact coordinates are sent only to the map provider when the authenticated Passenger has already been authorized to read that active trip location; the embed uses `referrerPolicy="no-referrer"`.
 75. **Freshness is explicit.** Backend `is_fresh` remains the truth (45-second window). Fresh fixes are labeled live, older coordinates are labeled last known, and no-coordinate state shows an unavailable fallback rather than fabricating movement.
 76. **The active Passenger journey becomes map-first.** During `IN_PROGRESS`, redundant confirmation and standalone destination cards are suppressed; the map card carries live driver position plus boarded-at and destination context. No V8 database migration is required.
+
+## 2026-08-27 V9 Admin Dashboard + Registered Users decisions
+
+77. **V8 is the application rollback baseline before Admin restructuring.** `prod-v8-frozen` points at `3222802dcec1caa79140ff76b51b41e6d8e3914d`.
+78. **V9 primary Admin navigation is Dashboard · Users · Routes · Operations.** Legacy specialist views may remain behind those sections, but they no longer define Admin Home.
+79. **All-user identity is exposed only through a dedicated admin-only projection.** `admin_list_registered_users()` may join `auth.users` for email and authoritative `phone_confirmed_at`, but execute permission remains authenticated-only and the function rejects non-admin callers.
+80. **Admin Dashboard summary and recent activity are read-only.** Counts and audit projections must not mutate rides or become a second operational command path.
+81. **Driver onboarding remains canonical.** Users → Make Driver deep-links the selected profile into the existing `admin_onboard_driver` flow; V9 does not duplicate onboarding logic.
+82. **V9 is additive during live operations.** One live trip/queue entry does not block the read-only migration; no seat, trip, queue, GPS, phone verification or historical route row is modified.

@@ -179,3 +179,13 @@ V8 is application-only. `PassengerLiveLocationStatus` now renders the authorized
 Validation: 22/22 contracts PASS, TypeScript PASS, production build PASS, OpenStreetMap embed HTTP 200. No database migration. Next: push V8 candidate to the Rocket source branch, deploy as Version 8, visually accept a real Passenger active ride, then begin Admin V9 Dashboard + Registered Users.
 
 V8 runtime candidate `04c5624a09a5712b3e46dbe81137d4a06960d52d` is pushed to both `prod-v8-candidate` and `rocket-staging-ready`.
+
+## 2026-08-27 V8 live + V9 Admin candidate
+
+Production V8 is serving the new Passenger map bundle. Frozen rollback ref: `prod-v8-frozen` → `3222802dcec1caa79140ff76b51b41e6d8e3914d`.
+
+V9 candidate is based directly on that V8 head. Built changes: Admin Home is now a live Dashboard; primary nav is Dashboard / Users / Routes / Operations; new `/admin-panel/users` provides searchable registered-user detail with Passenger/Driver/Admin, phone-verification, restriction, operational-state and vehicle context; eligible Passengers deep-link into existing Driver onboarding with their profile preselected.
+
+New migration `20260827164000_v2_prod_v9_admin_dashboard_users.sql` is additive/read-only and defines three admin-only projections: dashboard summary, all registered users, recent meaningful audit activity. Current preflight while V9 was built: 16 profiles, 5 Driver rows, 1 live trip, 1 live queue entry, 0 HELD requests, 0 open support cases. The live ride does not block this migration because it performs no operational writes.
+
+Validation: 23/23 contracts PASS, TypeScript PASS, production build PASS. Next gates: commit/push V9 → apply/verify read-only migration → Rocket V9 deploy → Admin visual/role acceptance. Do not begin V10 structural Route Management before V9 is understood live.
