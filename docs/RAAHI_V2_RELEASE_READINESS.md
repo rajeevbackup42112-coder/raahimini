@@ -357,3 +357,33 @@ V11 candidate:
 - [x] V11 committed/pushed to Rocket source branch: `29b041c760f738d02492c19fa0368d79834f86bd`.
 - [ ] Rocket Version 11 deployed.
 - [ ] Authenticated Admin Operations visual acceptance PASS.
+
+## 2026-08-27 Version 11 live acceptance
+
+- [x] Rocket V11 deployed from `66c543e865d2998c5bf3c066b56f81acb19ffa87`.
+- [x] Production bundle contains V11 Operations markers.
+- [x] Authenticated Admin Operations renders live cars, GPS attention, next action, queues, Driver recovery, support and emergency boundary.
+- [x] Admin Account/Profile link present in header.
+- [x] Live UI truth matched backend state for current GD-01 trip.
+- [x] No production operational mutation was needed for acceptance.
+- [x] `prod-v11-frozen` created at exact deployed source.
+
+V11 is accepted. Any subsequent release should open as a new numbered slice with its own lifecycle/security review.
+
+## 2026-08-27 Version 12 automatic completion gate
+
+- [x] V11 production accepted and frozen before V12.
+- [x] Existing `complete_trip()` inspected: Driver authorization, IN_PROGRESS and final-stop guards retained.
+- [x] Destination arrival remains an explicit Driver action; V12 does not infer arrival from GPS.
+- [x] Manual Complete Trip button/modal removed.
+- [x] `COMPLETE_TRIP` next-action automatically invokes canonical `complete_trip()` with a per-trip attempt guard.
+- [x] Failed canonical finalization exposes retry only; no unsafe bypass is added.
+- [x] No V12 database migration required.
+- [x] 26/26 contract files PASS locally.
+- [x] TypeScript PASS.
+- [x] Production Next.js build PASS (23/23 static pages).
+- [x] GitHub Validate Raahi Mini run #315 SUCCESS; temporary fan-out shim removed, PR #73 closed unmerged.
+- [x] Runtime/test checkpoint `fe22cae60217983ac788131f0217605ea0068c30`.
+- [ ] Rocket Version 12 deployed.
+- [ ] Live Driver destination-arrival -> automatic completion PASS.
+- [ ] Passenger switches to Arrived/completed state and terminal GPS cleanup remains correct.

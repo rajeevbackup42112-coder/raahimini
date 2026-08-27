@@ -139,3 +139,18 @@ Future chats must start from `RAAHI_V2_HANDOVER.md`, then consult this Decision 
 93. **V11 adds no new emergency mutation primitive.** Queue reorder/remove, Driver deactivation, support resolution and Route controls reuse existing audited RPCs; raw seat/FIFO/GPS/phone/active-Driver mutation remains forbidden.
 94. **Admin GPS health is descriptive.** V11 mirrors fresh/stale/poor/missing location truth and Driver next-action state without writing GPS or trip lifecycle state.
 95. **Admin account access belongs in the header/Profile.** Dashboard · Users · Routes · Operations remains the complete primary operational navigation.
+
+## 2026-08-27 V11 Operations live decisions
+
+91. **V11 Operations is the canonical Admin intervention surface.** Live trips, GPS health, FIFO queues, support and guarded Driver recovery are consolidated under Operations.
+92. **V11 adds observation, not a second ride engine.** `admin_get_live_trip_operations()` is read-only/Admin-only; existing guarded queue, support, Driver and Route RPCs remain the only mutations exposed.
+93. **Unsafe emergency powers remain intentionally absent.** Admin cannot rewrite seat ownership, replace an active-trip Driver, bypass FIFO, edit verified-phone truth or fabricate GPS.
+94. **V11 is production-accepted and frozen.** `prod-v11-frozen` points to `66c543e865d2998c5bf3c066b56f81acb19ffa87`.
+
+## 2026-08-27 V12 automatic completion decisions
+
+96. **Destination arrival remains explicit.** V12 does not infer arrival from GPS; the Driver still records arrival through the existing destination progression action.
+97. **Completion reuses canonical `complete_trip`.** The client automatically invokes the existing command only after backend next-action truth becomes `COMPLETE_TRIP`; no second terminal pathway is introduced.
+98. **Manual Complete Trip UI is removed.** The final Driver decision is Arrived at destination, not a redundant second confirmation.
+99. **Automatic completion is attempt-guarded.** The client makes one automatic completion attempt per trip state and offers only a retry if canonical finalization fails.
+100. **V12 is application-only.** Final-stop authorization, queue DONE, accounting, behaviour/audit events, GPS cleanup and share expiry remain backend-owned and unchanged.

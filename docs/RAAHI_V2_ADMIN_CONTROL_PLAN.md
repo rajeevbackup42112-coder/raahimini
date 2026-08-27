@@ -1,6 +1,6 @@
 # Raahi 2.0 Admin Control Plan
 
-Status: **IN PROGRESS**. V9 Dashboard + Registered Users and V10 guarded Route Management are live. V10 draft isolation and busy-route publish blocking are production-accepted. V11 consolidated Operations is pushed/validated at runtime commit `29b041c760f738d02492c19fa0368d79834f86bd` and its read-only projection is migrated; Rocket V11 deployment/live acceptance remains pending.
+Status: **IMPLEMENTED THROUGH V11**. V9 Dashboard + Registered Users, V10 guarded Route Management, and V11 consolidated Operations are live and production-accepted. Future Admin work should be incremental rather than reopening the information architecture.
 
 ## Product principle
 
