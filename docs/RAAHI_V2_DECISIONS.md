@@ -139,3 +139,10 @@ Future chats must start from `RAAHI_V2_HANDOVER.md`, then consult this Decision 
 93. **V11 adds no new emergency mutation primitive.** Queue reorder/remove, Driver deactivation, support resolution and Route controls reuse existing audited RPCs; raw seat/FIFO/GPS/phone/active-Driver mutation remains forbidden.
 94. **Admin GPS health is descriptive.** V11 mirrors fresh/stale/poor/missing location truth and Driver next-action state without writing GPS or trip lifecycle state.
 95. **Admin account access belongs in the header/Profile.** Dashboard · Users · Routes · Operations remains the complete primary operational navigation.
+
+## 2026-08-27 V11 Operations live decisions
+
+91. **V11 Operations is the canonical Admin intervention surface.** Live trips, GPS health, FIFO queues, support and guarded Driver recovery are consolidated under Operations.
+92. **V11 adds observation, not a second ride engine.** `admin_get_live_trip_operations()` is read-only/Admin-only; existing guarded queue, support, Driver and Route RPCs remain the only mutations exposed.
+93. **Unsafe emergency powers remain intentionally absent.** Admin cannot rewrite seat ownership, replace an active-trip Driver, bypass FIFO, edit verified-phone truth or fabricate GPS.
+94. **V11 is production-accepted and frozen.** `prod-v11-frozen` points to `66c543e865d2998c5bf3c066b56f81acb19ffa87`.

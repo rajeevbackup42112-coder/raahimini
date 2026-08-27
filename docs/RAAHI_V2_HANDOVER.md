@@ -217,3 +217,7 @@ V10 production acceptance is complete and frozen at `prod-v10-frozen` -> `07adb1
 V11 branch `v11-operations-candidate` is based on that accepted checkpoint. Operations now consolidates live trip/next-action state, GPS health, queues, support and guarded Driver recovery. Migration `20260827194500_v2_prod_v11_admin_operations.sql` defines only `admin_get_live_trip_operations`; no ride-engine command is redefined. The migration is applied, and an authenticated Admin-context invocation returned the current GD-01 IN_PROGRESS ride as `DRIVE_TO_DESTINATION` with stale GPS, proving the projection executes.
 
 Validation: 25/25 contracts PASS, TypeScript PASS, production build PASS. V11 runtime commit `29b041c760f738d02492c19fa0368d79834f86bd` is pushed to `prod-v11-candidate` and `rocket-staging-ready`. Next action: Rocket Version 11, then authenticated Admin Operations acceptance.
+
+## 2026-08-27 V11 live acceptance
+
+Rocket V11 is serving the `66c543e865d2998c5bf3c066b56f81acb19ffa87` source line. Production bundle markers and the authenticated Admin Operations screen confirm the V11 UI. It showed one live GD-01 trip with Naresh Kumar / JH10NK1234, `Drive to destination`, destination Dhanbad Station, stale GPS, no waiting Driver queue and no open support cases. Account/Profile is linked from the Admin header. Backend state matched the UI and no live ride data was changed during acceptance. `prod-v11-frozen` preserves the exact deployed source. The approved V9-V11 Admin roadmap is complete.
