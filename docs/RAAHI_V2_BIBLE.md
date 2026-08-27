@@ -799,3 +799,13 @@ Production train after V6: V7 automatic Start Trip with the existing GPS/FIFO sa
 Admin product rule: Dashboard answers what is happening now; Users owns identity/role/Driver onboarding; Routes owns configuration with future-effective versioning; Operations owns exceptions. Full Admin control never means raw mutation of seat ownership, active-trip Driver identity, FIFO, verified-phone state or GPS truth.
 
 Detailed plan: `RAAHI_V2_ADMIN_CONTROL_PLAN.md`.
+
+## 2026-08-27 V7 automatic departure
+
+V7 removes the Driver's manual Start Trip decision without weakening the canonical lifecycle. The browser automatically calls the existing `start_trip(trip_id)` RPC only when the server projection says `departure_eligible` and the Driver UI holds a fresh usable GPS readiness signal.
+
+Departure remains impossible while HELD requests exist or while confirmed + deliberately closed seats do not equal capacity. `Close Empty Seats` remains an explicit Driver decision. The existing `start_trip` RPC still performs the same-direction FIFO handoff and independently rechecks the fresh <=60-second / <=200m GPS boundary.
+
+The pre-departure GPS readiness UI expires after 50 seconds, intentionally before the backend's 60-second limit. If everyone is aboard but GPS is unavailable or stale, the only blocking instruction is to enable/refresh location; after a usable fix Raahi starts automatically. Manual Complete Trip remains unchanged for this version.
+
+V7 validation: 21 contract files PASS, TypeScript PASS, production Next.js build PASS. No database migration is required. Live Rocket deployment/real Driver acceptance remains the next gate.

@@ -158,3 +158,13 @@ GitHub `rocket-staging-ready` had advanced to `7a8817738f2ff799299457cbf819c495a
 Combined V6 candidate: all 19 contract files PASS, TypeScript PASS, production Next.js build PASS. No database migration is required. V6 runtime commit is `be8eeaf242979cba228225ed297e5b11997331dd`; remaining gates are Rocket deployment and live Passenger/Driver visual acceptance.
 
 Admin roadmap is now documented in `RAAHI_V2_ADMIN_CONTROL_PLAN.md`: V9 Dashboard + Registered Users, V10 guarded Route Management, V11 Operations. V7 remains automatic Start Trip; V8 remains real Passenger live map.
+
+## 2026-08-27 V7 automatic departure candidate
+
+The user deployed Rocket V6 and explicitly directed the production train to continue. A direct production-bundle check confirmed the V6 Passenger chunk contains the new `Requested`, `On the way`, `You are aboard` and destination-focused strings and no longer contains `Driver Progress`.
+
+V7 is application-only. `DriverActiveCarContent` removes the Start Trip button/modal and automatically invokes the existing canonical `start_trip` RPC when `departure_eligible` and fresh local GPS readiness are both true. `DriverTripLocationPanel` expires pre-departure readiness after 50 seconds and refreshes into continuous IN_PROGRESS tracking after automatic start. `Close Empty Seats` stays explicit; Complete Trip stays manual.
+
+Backend inspection confirmed `start_trip` still owns the authoritative invariants: no HELD requests, confirmed + driver-closed = capacity, fresh location <=60 seconds, accuracy <=200m, trip transition to IN_PROGRESS, and `activate_next_driver(route_id)` same-direction FIFO handoff. No V7 migration is needed.
+
+Validation: 21/21 contract files PASS, TypeScript PASS, production build PASS. Next action: push V7 candidate, deploy as Rocket Version 7, then exercise one real Driver flow with (a) full manifest automatic start and (b) empty-seat close followed by automatic start if practical.

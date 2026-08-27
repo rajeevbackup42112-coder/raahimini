@@ -1,5 +1,5 @@
 'use client';
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { toast } from 'sonner';
 import {
   CheckCircle2, X, MapPin, Users, Phone,
@@ -10,15 +10,15 @@ import { useAuth } from '@/contexts/AuthContext';
 import StatusBadge from '@/components/ui/StatusBadge';
 import UnifiedTripCard from '@/components/UnifiedTripCard';
 
-export default function DriverActiveCarContent({ locationReady = false }: { locationReady?: boolean }) {
+export default function DriverActiveCarContent({ locationReady = false, onTripStarted }: { locationReady?: boolean; onTripStarted?: () => void }) {
   const { user, profile, loading: authLoading } = useAuth();
   const [trip, setTrip] = useState<DriverActiveTrip | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadingAction, setLoadingAction] = useState<string | null>(null);
   const [showCloseSeatsModal, setShowCloseSeatsModal] = useState(false);
-  const [showStartTripModal, setShowStartTripModal] = useState(false);
   const [showCompleteTripModal, setShowCompleteTripModal] = useState(false);
   const [returnDemandLevel, setReturnDemandLevel] = useState<'Low'|'Medium'|'High'|null>(null);
+  const autoStartAttemptRef = useRef<string | null>(null);
 
   const fetchTrip = useCallback(async () => {
     const data = await getDriverActiveCar();
@@ -53,6 +53,26 @@ export default function DriverActiveCarContent({ locationReady = false }: { loca
       toast.error(result?.error || 'Action failed');
     }
   };
+
+  useEffect(() => {
+    if (!trip?.trip_id || trip.status !== 'ACTIVE_COLLECTING' || !trip.departure_eligible || !locationReady) {
+      if (!locationReady || !trip?.departure_eligible || trip?.status !== 'ACTIVE_COLLECTING') autoStartAttemptRef.current = null;
+      return;
+    }
+    if (loadingAction || autoStartAttemptRef.current === trip.trip_id) return;
+    autoStartAttemptRef.current = trip.trip_id;
+    setLoadingAction('auto-start');
+    void startTrip(trip.trip_id).then((result) => {
+      setLoadingAction(null);
+      if (result?.success) {
+        toast.success('Everyone is aboard - trip started automatically');
+        onTripStarted?.();
+        void fetchTrip();
+      } else {
+        toast.error(result?.error || 'Could not start trip automatically');
+      }
+    });
+  }, [trip?.trip_id, trip?.status, trip?.departure_eligible, locationReady, loadingAction, fetchTrip, onTripStarted]);
 
   if (authLoading || loading) {
     return (
@@ -97,7 +117,7 @@ export default function DriverActiveCarContent({ locationReady = false }: { loca
   }
 
   const heldRequests = (trip.passenger_requests ?? []).filter((r) => r.status === 'HELD');
-  const canStartTrip = (trip.departure_eligible ?? false) && locationReady;
+  const canAutoStart = (trip.departure_eligible ?? false) && locationReady;
   const heldBlocking = heldRequests.length > 0;
   const atFinalStop = trip.next_action === 'COMPLETE_TRIP';
   const nextStop = trip.next_operational_stop;
@@ -106,7 +126,7 @@ export default function DriverActiveCarContent({ locationReady = false }: { loca
     : trip.next_action === 'DRIVE_TO_PICKUP'
       ? `Next pickup: ${nextStop?.name ?? 'passenger stop'}`
       : trip.next_action === 'READY_TO_START'
-        ? (locationReady ? 'Ready to start' : 'All aboard · enable location')
+        ? (locationReady ? 'Everyone aboard - starting automatically' : 'Everyone aboard - enable location')
         : trip.next_action === 'WAIT_OR_CLOSE_SEATS'
           ? 'Wait for a passenger or close empty seats'
           : trip.next_action === 'DRIVE_TO_DESTINATION'
@@ -120,7 +140,7 @@ export default function DriverActiveCarContent({ locationReady = false }: { loca
         from={trip.from_location ?? 'Origin'}
         to={trip.to_location ?? 'Destination'}
         statusLabel={trip.status === 'ACTIVE_COLLECTING' ? 'Collecting passengers' : 'Trip in progress'}
-        statusTone={trip.status === 'ACTIVE_COLLECTING' ? (canStartTrip ? 'good' : 'limited') : 'transit'}
+        statusTone={trip.status === 'ACTIVE_COLLECTING' ? (canAutoStart ? 'good' : 'limited') : 'transit'}
         vehicleLabel={`${trip.vehicle_model ?? 'Raahi car'}${trip.vehicle_number ? ` · ${trip.vehicle_number}` : ''}`}
         seatsFilled={trip.confirmed_count ?? 0}
         seatsTotal={trip.capacity ?? 0}
@@ -142,7 +162,7 @@ export default function DriverActiveCarContent({ locationReady = false }: { loca
         </div>
       )}
 
-      {trip.status === 'ACTIVE_COLLECTING' && !canStartTrip && (
+      {trip.status === 'ACTIVE_COLLECTING' && !(trip.departure_eligible ?? false) && (
         <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-800">
           {heldBlocking
             ? `Resolve ${heldRequests.length} held passenger${heldRequests.length === 1 ? '' : 's'} before you go.`
@@ -150,9 +170,15 @@ export default function DriverActiveCarContent({ locationReady = false }: { loca
         </div>
       )}
 
-      {trip.status === 'ACTIVE_COLLECTING' && canStartTrip && (
+      {trip.status === 'ACTIVE_COLLECTING' && (trip.departure_eligible ?? false) && !locationReady && (
+        <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-800">
+          Everyone is aboard. Turn on location to continue; Raahi will start the trip automatically.
+        </div>
+      )}
+
+      {trip.status === 'ACTIVE_COLLECTING' && canAutoStart && (
         <div className="flex items-center gap-2 rounded-2xl border border-green-200 bg-green-50 px-4 py-3 text-sm font-bold text-green-800">
-          <CheckCircle2 size={17} /> Ready to start
+          <Loader2 size={17} className="animate-spin" /> Everyone is aboard - starting automatically
         </div>
       )}
 
@@ -239,22 +265,6 @@ export default function DriverActiveCarContent({ locationReady = false }: { loca
         </button>
       )}
 
-      {/* Start Trip */}
-      {trip.status === 'ACTIVE_COLLECTING' && (
-        <button
-          onClick={() => setShowStartTripModal(true)}
-          disabled={!canStartTrip || !!loadingAction}
-          className="btn-primary w-full"
-        >
-          {loadingAction === 'start-trip' ? (
-            <Loader2 size={18} className="animate-spin" />
-          ) : (
-            <Car size={18} />
-          )}
-          {loadingAction === 'start-trip' ? 'Starting Trip...' : `Start Trip to ${trip.to_location}`}
-        </button>
-      )}
-
       {/* Complete Trip */}
       {trip.status === 'IN_PROGRESS' && atFinalStop && (
         <button
@@ -284,39 +294,13 @@ export default function DriverActiveCarContent({ locationReady = false }: { loca
               <button
                 onClick={() => {
                   setShowCloseSeatsModal(false);
-                  handleAction('close-seats', () => driverCloseEmptySeats(trip.trip_id!), 'Empty seats closed — ready to depart');
+                  handleAction('close-seats', () => driverCloseEmptySeats(trip.trip_id!), 'Empty seats closed - Raahi will depart automatically when location is ready');
                 }}
                 disabled={loadingAction === 'close-seats'}
                 className="btn-primary flex-1"
               >
                 {loadingAction === 'close-seats' ? <Loader2 size={16} className="animate-spin" /> : <Lock size={16} />}
                 Confirm & Close
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Start Trip Modal */}
-      {showStartTripModal && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 animate-fade-in">
-          <div className="w-full max-w-md bg-card rounded-t-3xl p-6 space-y-4 animate-slide-up">
-            <h2 className="text-lg font-bold text-foreground">Start Trip?</h2>
-            <p className="text-sm text-muted-foreground">
-              This starts your journey. Once you leave, the next FIFO driver for this direction can begin collecting the next car.
-            </p>
-            <div className="flex gap-3">
-              <button onClick={() => setShowStartTripModal(false)} className="btn-outline flex-1">Not Yet</button>
-              <button
-                onClick={() => {
-                  setShowStartTripModal(false);
-                  handleAction('start-trip', () => startTrip(trip.trip_id!), 'Trip started successfully');
-                }}
-                disabled={loadingAction === 'start-trip'}
-                className="btn-primary flex-1"
-              >
-                {loadingAction === 'start-trip' ? <Loader2 size={16} className="animate-spin" /> : <Car size={16} />}
-                Start Trip
               </button>
             </div>
           </div>
