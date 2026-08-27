@@ -155,6 +155,6 @@ No database migration is needed for this acceptance patch. Do not begin Version 
 
 GitHub `rocket-staging-ready` had advanced to `7a8817738f2ff799299457cbf819c495afbf3ad3`; V6 work was rebased onto that remote baseline rather than overwriting it. The remote V5 Passenger patch is preserved and V6 supersedes its partial stop-progress behavior.
 
-Combined V6 candidate: all 19 contract files PASS, TypeScript PASS, production Next.js build PASS. No database migration is required. Remaining gate is commit/push → Rocket deployment → live Passenger/Driver visual acceptance.
+Combined V6 candidate: all 19 contract files PASS, TypeScript PASS, production Next.js build PASS. No database migration is required. V6 runtime commit is `be8eeaf242979cba228225ed297e5b11997331dd`; remaining gates are Rocket deployment and live Passenger/Driver visual acceptance.
 
 Admin roadmap is now documented in `RAAHI_V2_ADMIN_CONTROL_PLAN.md`: V9 Dashboard + Registered Users, V10 guarded Route Management, V11 Operations. V7 remains automatic Start Trip; V8 remains real Passenger live map.
