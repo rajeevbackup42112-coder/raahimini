@@ -296,9 +296,9 @@ V9 candidate:
 - [x] 23/23 contract files PASS.
 - [x] TypeScript PASS.
 - [x] Production Next.js build PASS.
-- [ ] V9 migration applied and verified.
-- [ ] V9 candidate pushed to Rocket source branch.
-- [ ] Rocket V9 deployed.
-- [ ] Admin Dashboard + Users visual/role acceptance PASS.
+- [x] V9 read-only migration applied and verified.
+- [x] V9 candidate pushed to Rocket source branch: `b4af229dab950fbf14aa96c689b50e6c54853d12`.
+- [x] Rocket V9 deployed; production bundle independently verified.
+- [~] Admin Dashboard + Users bundle/role-gate implementation verified; authenticated Admin visual acceptance still to capture.
 
 Do not begin V10 structural Route Management until V9 live behavior is accepted or any discrepancy is diagnosed.

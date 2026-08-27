@@ -1,6 +1,6 @@
 # Raahi 2.0 Admin Control Plan
 
-Status: **IN PROGRESS**. V9 Dashboard + Registered Users is built/locally validated; V10 Route Management and V11 Operations expansion remain planned. This document separates built state from later live acceptance.
+Status: **IN PROGRESS**. V9 Dashboard + Registered Users is pushed/validated and its read-only DB projections are live; Rocket V9 deployment/acceptance remains pending. V10 Route Management and V11 Operations expansion remain planned.
 
 ## Product principle
 
