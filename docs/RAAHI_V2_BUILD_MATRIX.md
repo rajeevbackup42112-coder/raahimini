@@ -145,7 +145,7 @@ The previous mobile/responsive PASS baseline remains historical evidence, but Pa
 | V8 | Real Passenger Driver-location map + final Passenger simplification | DEPLOYED | NOT REQUIRED | PASS | Production bundle verified; authenticated real-map ride screenshot still pending |
 | V9 | Admin Dashboard + Registered Users + integrated Driver onboarding | DEPLOYED | MIGRATED (READ-ONLY) | PASS | Production bundle verified; authenticated Admin visual acceptance still to capture |
 | V10 | Guarded full Route Management with versioning/future-effective publishing | DEPLOYED `07adb1a` | MIGRATED | PASS | LIVE ACCEPTANCE PASS: draft isolation + busy-route publish guard + discard |
-| V11 | Consolidated Admin Operations / emergency controls + cleanup | BUILT + VALIDATED | MIGRATED (READ-ONLY) | PASS | PENDING ROCKET DEPLOY/LIVE |
+| V11 | Consolidated Admin Operations / emergency controls + cleanup | PUSHED + VALIDATED `29b041c` | MIGRATED (READ-ONLY) | PASS | PENDING ROCKET DEPLOY/LIVE |
 
 V5 preflight on 2026-08-25: active trips = 0, live queue entries = 0, HELD requests = 0. The V5 operational migration was applied successfully. Live acceptance then showed Driver correctly destination-focused while Passenger still rendered legacy stop-by-stop progress after boarding.
 

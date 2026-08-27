@@ -852,4 +852,4 @@ V10 is live-accepted. An authenticated Admin created a GD-01 v2 draft while GD-0
 
 V11 consolidates live trips, Driver GPS health, backend-owned next action, FIFO queues, support and guarded Driver recovery under Operations. It adds one read-only Admin projection, `admin_get_live_trip_operations()`, and no new mutation primitive. Existing queue reorder/remove, Driver deactivation and support-resolution commands remain authoritative. Admin still cannot rewrite seats, replace an active-trip Driver, bypass FIFO/phone verification or fabricate GPS.
 
-V11 validation: 25/25 contracts PASS, TypeScript PASS, production Next.js build PASS. The migration is applied; anon execute is denied, authenticated execute is granted with an internal Admin check, and live trip/queue/support/location counts were unchanged.
+V11 validation: 25/25 contracts PASS, TypeScript PASS, production Next.js build PASS. The migration is applied; anon execute is denied, authenticated execute is granted with an internal Admin check, and live trip/queue/support/location counts were unchanged. Runtime candidate: `29b041c760f738d02492c19fa0368d79834f86bd`.
