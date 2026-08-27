@@ -12,8 +12,9 @@ const startTrip = section('create or replace function public.start_trip', 'creat
 const completeTrip = migration.slice(migration.indexOf('create or replace function public.complete_trip'));
 if (activation.includes('blocked_by_in_progress_trip')) throw new Error('IN_PROGRESS must not block the next collecting driver');
 if (!activation.includes("status='ACTIVE_COLLECTING'")) throw new Error('activation must enforce one collecting driver per route');
-if (!startTrip.includes('activate_next_driver(v_trip.route_id)')) throw new Error('Start Trip must hand off to next FIFO driver');
+if (!startTrip.includes('activate_next_driver(v_trip.route_id)')) throw new Error('Canonical start_trip must hand off to next FIFO driver');
 if (completeTrip.includes('activate_next_driver(v_trip.route_id)')) throw new Error('completion must not be the dispatch handoff');
 if (!migration.includes('PIPELINED_PER_DIRECTION')) throw new Error('canonical per-direction dispatch marker missing');
-if (!driverUi.includes('next FIFO driver for this direction can begin collecting')) throw new Error('Start Trip copy must explain pipelined handoff');
+if (!driverUi.includes('startTrip(trip.trip_id)')) throw new Error('Automatic departure must still invoke canonical startTrip');
+if (!driverUi.includes('trip.departure_eligible') || !driverUi.includes('locationReady')) throw new Error('Automatic departure must retain eligibility and GPS prerequisites');
 console.log('Pipelined per-direction dispatch contract: PASS');

@@ -228,3 +228,30 @@ Do not begin Version 6 automatic Start Trip until the Version 5 live behavior is
 - [ ] Same live ride visually accepted on Driver + Passenger screens.
 
 Do not start V7 automatic Start Trip until the V6 live alignment is accepted or any new discrepancy is diagnosed.
+
+## 2026-08-27 Version 7 automatic departure gate
+
+V6 deployment evidence:
+- [x] User reports Rocket Version 6 published to `myraahi.referralhub.co.in`.
+- [x] Production Passenger JS bundle independently checked: new V6 next-state strings present; legacy `Driver Progress` absent.
+- [~] Paired authenticated Passenger/Driver screenshot acceptance was not separately captured before the user explicitly directed work to continue.
+
+V7 candidate:
+- [x] V6 frozen as `prod-v6-frozen` at `7a63aabf0aed5ccbc5821162f645241a3dd61ffe`.
+- [x] Existing production `start_trip` implementation inspected before UI changes.
+- [x] Automatic departure uses the canonical `start_trip` command rather than duplicating transition logic.
+- [x] Server departure eligibility remains mandatory.
+- [x] Fresh usable GPS remains mandatory and independently rechecked by backend.
+- [x] Same-direction FIFO handoff remains inside canonical `start_trip`.
+- [x] Close Empty Seats remains explicit; no silent capacity closure.
+- [x] Manual Start Trip button/modal removed.
+- [x] Pre-departure client GPS readiness expires at 50 seconds, before backend 60-second gate.
+- [x] 21/21 contract files PASS.
+- [x] TypeScript PASS.
+- [x] Production Next.js build PASS.
+- [x] No V7 database migration required.
+- [x] V7 candidate pushed to Rocket source branch: `478be880aa458bfb0e1eb74c52f031c6bc521364`.
+- [ ] Rocket Version 7 deployed.
+- [ ] Real Driver automatic-departure acceptance PASS.
+
+Do not begin the next lifecycle/UI version until V7 live behavior is observed or any discrepancy is diagnosed.

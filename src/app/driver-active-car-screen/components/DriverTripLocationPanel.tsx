@@ -6,7 +6,7 @@ import { getDriverActiveCar, updateDriverTripLocation, type DriverActiveTrip } f
 
 const SEND_INTERVAL_MS = 15000;
 
-export default function DriverTripLocationPanel({ onReadyChange }: { onReadyChange?: (ready: boolean) => void }) {
+export default function DriverTripLocationPanel({ onReadyChange, refreshToken = 0 }: { onReadyChange?: (ready: boolean) => void; refreshToken?: number }) {
   const [trip, setTrip] = useState<DriverActiveTrip | null>(null);
   const [busy, setBusy] = useState(false);
   const [ready, setReady] = useState(false);
@@ -19,7 +19,7 @@ export default function DriverTripLocationPanel({ onReadyChange }: { onReadyChan
     setTrip(next);
   }, []);
 
-  useEffect(() => { void load(); }, [load]);
+  useEffect(() => { void load(); }, [load, refreshToken]);
 
   const sendPosition = useCallback(async (position: GeolocationPosition) => {
     if (!trip?.trip_id) return false;
@@ -48,6 +48,8 @@ export default function DriverTripLocationPanel({ onReadyChange }: { onReadyChan
       setError('Location is not available on this device.');
       return;
     }
+    setReady(false);
+    onReadyChange?.(false);
     setBusy(true);
     setError('');
     navigator.geolocation.getCurrentPosition(
@@ -56,6 +58,17 @@ export default function DriverTripLocationPanel({ onReadyChange }: { onReadyChan
       { enableHighAccuracy: true, maximumAge: 0, timeout: 20000 }
     );
   };
+
+  useEffect(() => {
+    if (!ready || trip?.status !== 'ACTIVE_COLLECTING' || !lastSentAt) return;
+    const age = Date.now() - new Date(lastSentAt).getTime();
+    const timer = window.setTimeout(() => {
+      setReady(false);
+      onReadyChange?.(false);
+      setError('Location fix expired. Refresh location to continue.');
+    }, Math.max(0, 50000 - age));
+    return () => window.clearTimeout(timer);
+  }, [ready, trip?.status, lastSentAt, onReadyChange]);
 
   useEffect(() => {
     if (trip?.status !== 'IN_PROGRESS' || !trip.trip_id || !navigator.geolocation) return;
@@ -85,13 +98,14 @@ export default function DriverTripLocationPanel({ onReadyChange }: { onReadyChan
           </div>
           <div className="min-w-0 flex-1">
             <p className={`text-sm font-bold ${tracking || ready ? 'text-green-900' : 'text-amber-900'}`}>
-              {tracking ? 'Trip location sharing is active' : ready ? 'Location ready for Start Trip' : 'Location required before Start Trip'}
+              {tracking ? 'Trip location sharing is active' : ready ? 'Location ready' : 'Location needed before departure'}
             </p>
             <p className={`mt-1 text-xs ${tracking || ready ? 'text-green-800' : 'text-amber-800'}`}>
               {tracking
                 ? 'Location is shared only while this trip is active. Tracking stops automatically when the trip ends.'
                 : ready
-                  ? 'Ready to start. Keep location on.' :'Turn on location to start the trip. Raahi does not track you merely for waiting or using Driver Home.'}
+                  ? 'Keep location on. Raahi starts automatically when everyone is aboard.'
+                  : 'Turn on location before departure. Raahi does not track you merely for waiting or using Driver Home.'}
             </p>
             {lastSentAt && <p className="mt-1 text-[11px] text-muted-foreground">Updated {new Date(lastSentAt).toLocaleTimeString()}</p>}
             {error && <p className="mt-2 text-xs font-semibold text-red-700">{error}</p>}

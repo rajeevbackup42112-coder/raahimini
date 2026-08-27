@@ -93,3 +93,12 @@ Future chats must start from `RAAHI_V2_HANDOVER.md`, then consult this Decision 
 64. **Registered Users gets a dedicated guarded read projection.** Do not overload `admin_list_role_accounts()`, which intentionally excludes Drivers for Admin-role management.
 65. **Structural route edits require versioning/future-effective publishing.** Existing `seat_requests` and trips reference current route/stop rows, so stop deletion/reordering must never rewrite live or historical meaning in place.
 66. **Admin complexity remains bounded by canonical commands.** Full control means audited recovery/configuration powers, not raw seat ownership mutation, FIFO bypass, phone-verification bypass or GPS fabrication. See `RAAHI_V2_ADMIN_CONTROL_PLAN.md`.
+
+## 2026-08-27 V7 automatic departure decisions
+
+67. **V7 automatic departure reuses canonical `start_trip`.** Do not duplicate the trip transition in client code or create a second dispatch pathway; the existing RPC remains the sole FIFO/GPS-protected boundary.
+68. **Close Empty Seats remains explicit.** Closing unused capacity is a Driver manifest decision; automatic departure occurs only after the manifest becomes departure-eligible.
+69. **Manual Start Trip UI is removed in V7.** Once departure eligibility and usable GPS are simultaneously true, the client invokes the canonical transition automatically and exactly once per trip attempt.
+70. **UI GPS readiness expires before backend freshness.** The client clears pre-departure readiness at 50 seconds while `start_trip` independently rejects fixes older than 60 seconds or worse than 200m accuracy.
+71. **Complete Trip remains manual in V7.** Automatic completion is a separate lifecycle slice and must not be bundled into the departure change.
+72. **V6 production bundle was verified before V7.** The deployed Passenger bundle contains Requested / On the way / You are aboard / destination-focused behavior and no legacy Driver Progress string; paired authenticated visual acceptance was not separately captured before the user directed the train to continue.

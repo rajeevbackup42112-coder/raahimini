@@ -108,7 +108,7 @@ Current RLS/RPC/live-invariant audit on isolated V2 Dev: **PASS**.
 | Admin | Vehicle capacity 4/5/6/7/8 | BUILT | UI/client updated; V2 Dev `admin_onboard_driver` validation migrated; build passed |
 | Passenger | Real plotted Driver live-location map | PLANNED | Current component is text/freshness only; must render actual coordinates and stale fallback |
 | Driver | Show only pickup/drop-off action stops | BUILT V5; DRIVER LIVE PASS | Driver uses meaningful pickup stops while collecting and destination after Start Trip |
-| Driver | Automatic transition after all pickups / usable GPS | PLANNED V7 | Manual Start Trip remains authoritative through V6; V7 must preserve FIFO/GPS exactly once |
+| Driver | Automatic transition after all pickups / usable GPS | BUILT + VALIDATED V7 | UI automatically invokes canonical `start_trip` exactly when departure eligibility + fresh usable GPS are true; manual Start Trip removed |
 | Driver | Automatic completion after final required drop-off where safe | PLANNED | Existing Complete Trip remains current behavior until redesign |
 | Admin | Dashboard: live health + attention-needed + recent activity | PLANNED V9 | Detailed scope in `RAAHI_V2_ADMIN_CONTROL_PLAN.md` |
 | Admin | Registered Users directory + detail/actions | PLANNED V9 | New guarded all-user read projection; integrate Driver onboarding from user detail |
@@ -140,8 +140,8 @@ The previous mobile/responsive PASS baseline remains historical evidence, but Pa
 |---|---|---:|---:|---:|---:|
 | V4 | Known-good pre-simplification baseline | FROZEN | Existing | Historical PASS | Baseline |
 | V5 | Driver meaningful pickup stops + destination; boarding only at pickup; production test-auth hard block | DEPLOYED | MIGRATED | PASS | Driver destination PASS; Passenger mismatch promoted to V6 fix |
-| V6 | Passenger/Driver next-state alignment; remove Passenger stop-by-stop primary progress | BUILT + LOCALLY VALIDATED | NOT REQUIRED | PASS | PENDING DEPLOY/LIVE |
-| V7 | Automatic Start Trip after manifest resolved + usable GPS, preserving canonical FIFO handoff | PLANNED | PLANNED | PENDING | PENDING |
+| V6 | Passenger/Driver next-state alignment; remove Passenger stop-by-stop primary progress | DEPLOYED | NOT REQUIRED | PASS | Production bundle verified; authenticated paired-screen acceptance not separately captured |
+| V7 | Automatic Start Trip after manifest resolved + usable GPS, preserving canonical FIFO handoff | PUSHED + LOCALLY VALIDATED | NOT REQUIRED | PASS | PENDING ROCKET DEPLOY/LIVE |
 | V8 | Real Passenger Driver-location map + final Passenger simplification | PLANNED | TBD | PENDING | PENDING |
 | V9 | Admin Dashboard + Registered Users + integrated Driver onboarding | PLANNED | PLANNED READ PROJECTION | PENDING | PENDING |
 | V10 | Guarded full Route Management with versioning/future-effective publishing | PLANNED | PLANNED | PENDING | PENDING |
