@@ -16,9 +16,11 @@ export default function DriverActiveCarContent({ locationReady = false, onTripSt
   const [loading, setLoading] = useState(true);
   const [loadingAction, setLoadingAction] = useState<string | null>(null);
   const [showCloseSeatsModal, setShowCloseSeatsModal] = useState(false);
-  const [showCompleteTripModal, setShowCompleteTripModal] = useState(false);
+  const [autoCompleteError, setAutoCompleteError] = useState('');
+  const [autoCompleteRetry, setAutoCompleteRetry] = useState(0);
   const [returnDemandLevel, setReturnDemandLevel] = useState<'Low'|'Medium'|'High'|null>(null);
   const autoStartAttemptRef = useRef<string | null>(null);
+  const autoCompleteAttemptRef = useRef<string | null>(null);
 
   const fetchTrip = useCallback(async () => {
     const data = await getDriverActiveCar();
@@ -53,6 +55,29 @@ export default function DriverActiveCarContent({ locationReady = false, onTripSt
       toast.error(result?.error || 'Action failed');
     }
   };
+
+  useEffect(() => {
+    if (!trip?.trip_id || trip.status !== 'IN_PROGRESS' || trip.next_action !== 'COMPLETE_TRIP') {
+      if (trip?.status !== 'IN_PROGRESS' || trip?.next_action !== 'COMPLETE_TRIP') {
+        autoCompleteAttemptRef.current = null;
+        setAutoCompleteError('');
+      }
+      return;
+    }
+    if (loadingAction || autoCompleteAttemptRef.current === trip.trip_id) return;
+    autoCompleteAttemptRef.current = trip.trip_id;
+    setAutoCompleteError('');
+    setLoadingAction('auto-complete');
+    void completeTrip(trip.trip_id).then((result) => {
+      setLoadingAction(null);
+      if (result?.success) {
+        toast.success('Arrived - trip completed automatically');
+        void fetchTrip();
+      } else {
+        setAutoCompleteError(result?.error || 'Could not finalize the trip automatically');
+      }
+    });
+  }, [trip?.trip_id, trip?.status, trip?.next_action, loadingAction, fetchTrip, autoCompleteRetry]);
 
   useEffect(() => {
     if (!trip?.trip_id || trip.status !== 'ACTIVE_COLLECTING' || !trip.departure_eligible || !locationReady) {
@@ -265,20 +290,27 @@ export default function DriverActiveCarContent({ locationReady = false, onTripSt
         </button>
       )}
 
-      {/* Complete Trip */}
       {trip.status === 'IN_PROGRESS' && atFinalStop && (
-        <button
-          onClick={() => setShowCompleteTripModal(true)}
-          disabled={!!loadingAction}
-          className="btn-primary w-full"
-        >
-          {loadingAction === 'complete-trip' ? (
-            <Loader2 size={18} className="animate-spin" />
-          ) : (
-            <CheckCircle2 size={18} />
+        <div className="rounded-2xl border border-green-200 bg-green-50 px-4 py-3">
+          <div className="flex items-center gap-2 text-sm font-bold text-green-800">
+            <Loader2 size={17} className={loadingAction === 'auto-complete' ? 'animate-spin' : ''} />
+            {autoCompleteError ? 'Arrival recorded - finalization needs a retry' : 'Arrived at destination - completing trip automatically'}
+          </div>
+          {autoCompleteError && (
+            <div className="mt-2">
+              <p className="text-xs text-red-700">{autoCompleteError}</p>
+              <button
+                onClick={() => {
+                  autoCompleteAttemptRef.current = null;
+                  setAutoCompleteRetry((n) => n + 1);
+                }}
+                className="btn-outline mt-2"
+              >
+                Retry finalization
+              </button>
+            </div>
           )}
-          {loadingAction === 'complete-trip' ? 'Completing...' : 'Complete Trip'}
-        </button>
+        </div>
       )}
 
       {/* Close Seats Modal */}
@@ -301,32 +333,6 @@ export default function DriverActiveCarContent({ locationReady = false, onTripSt
               >
                 {loadingAction === 'close-seats' ? <Loader2 size={16} className="animate-spin" /> : <Lock size={16} />}
                 Confirm & Close
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Complete Trip Modal */}
-      {showCompleteTripModal && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 animate-fade-in">
-          <div className="w-full max-w-md bg-card rounded-t-3xl p-6 space-y-4 animate-slide-up">
-            <h2 className="text-lg font-bold text-foreground">Complete Trip?</h2>
-            <p className="text-sm text-muted-foreground">
-              Confirm that you have arrived at the destination and the trip is complete.
-            </p>
-            <div className="flex gap-3">
-              <button onClick={() => setShowCompleteTripModal(false)} className="btn-outline flex-1">Not Yet</button>
-              <button
-                onClick={() => {
-                  setShowCompleteTripModal(false);
-                  handleAction('complete-trip', () => completeTrip(trip.trip_id!), 'Trip completed successfully!');
-                }}
-                disabled={loadingAction === 'complete-trip'}
-                className="btn-primary flex-1"
-              >
-                {loadingAction === 'complete-trip' ? <Loader2 size={16} className="animate-spin" /> : <CheckCircle2 size={16} />}
-                Complete Trip
               </button>
             </div>
           </div>
