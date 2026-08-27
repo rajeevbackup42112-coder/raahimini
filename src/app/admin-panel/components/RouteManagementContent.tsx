@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { AlertTriangle, Archive, ArrowDown, ArrowUp, Copy, Loader2, Pencil, Plus, RefreshCw, Save, Send, Trash2 } from 'lucide-react';
+import { AlertTriangle, Archive, ArrowDown, ArrowUp, Copy, Loader2, Pencil, Plus, RefreshCw, Save, Send, Trash2, GripVertical } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import { adminGetLocations } from '@/lib/raahiApi';
@@ -157,9 +157,11 @@ function DraftEditor({ draft,current,locations,busy,onClose,onSaved,onPublish,on
   const [code,setCode]=useState(draft.code); const [from,setFrom]=useState(draft.from_location_id); const [to,setTo]=useState(draft.to_location_id);
   const [label,setLabel]=useState(draft.direction_label); const [fare,setFare]=useState(String(draft.fare_per_seat));
   const [stops,setStops]=useState<AdminRouteStop[]>(draft.stops.map((s,i)=>({...s,stop_order:i+1})));
+  const [dragIndex,setDragIndex]=useState<number|null>(null);
   const blockerCount=(current?.live_trip_count||0)+(current?.live_queue_count||0)+(current?.active_demand_count||0);
   const move=(index:number,delta:number)=>setStops((items)=>{const next=[...items];const target=index+delta;if(target<0||target>=next.length)return next;[next[index],next[target]]=[next[target],next[index]];return next.map((s,i)=>({...s,stop_order:i+1}));});
   const updateStop=(index:number,key:'name'|'minutes_from_prev',value:string)=>setStops((items)=>items.map((s,i)=>i===index?{...s,[key]:key==='minutes_from_prev'?Number(value):value}:s));
+  const dropAt=(target:number)=>{if(dragIndex===null||dragIndex===target)return;setStops((items)=>{const next=[...items];const [moved]=next.splice(dragIndex,1);next.splice(target,0,moved);return next.map((s,i)=>({...s,stop_order:i+1}));});setDragIndex(null);};
   const save=async()=>{
     const fareNumber=Number(fare);
     if(!Number.isInteger(fareNumber)||fareNumber<20||fareNumber>5000) { toast.error('Fare must be a whole number between ₹20 and ₹5000'); return false; }
@@ -175,13 +177,14 @@ function DraftEditor({ draft,current,locations,busy,onClose,onSaved,onPublish,on
     {blockerCount>0&&<div className="flex items-start gap-2 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800"><AlertTriangle size={14} className="mt-0.5 shrink-0"/>Publishing is currently blocked: {current?.live_trip_count||0} live trip(s), {current?.live_queue_count||0} queued driver(s), {current?.active_demand_count||0} active demand intent(s).</div>}
     <div className="grid gap-3 sm:grid-cols-2"><Field label="Route code" value={code} onChange={setCode}/><Field label="Direction label" value={label} onChange={setLabel}/><LocationSelect label="From" value={from} onChange={setFrom} locations={locations}/><LocationSelect label="To" value={to} onChange={setTo} locations={locations}/><Field label="Fare per seat" value={fare} onChange={setFare} inputMode="numeric"/></div>
     <div className="space-y-2"><div className="flex items-center justify-between"><div><p className="section-label">Stops</p><p className="mt-1 text-xs text-muted-foreground">Order is the published travel order. Travel minutes are from the previous stop.</p></div><button onClick={()=>setStops((items)=>[...items,{stop_order:items.length+1,name:'New Stop',minutes_from_prev:5}])} className="btn-outline px-3 py-2"><Plus size={14}/>Add Stop</button></div>
-      {stops.map((stop,index)=><div key={`${index}-${stop.stop_id||'new'}`} className="grid grid-cols-[auto_1fr_82px_auto] items-center gap-2 rounded-2xl border border-border p-3">
-        <span className="flex h-7 w-7 items-center justify-center rounded-full bg-secondary text-xs font-bold text-primary">{index+1}</span>
+      {stops.map((stop,index)=><div key={`${index}-${stop.stop_id||'new'}`} onDragOver={e=>e.preventDefault()} onDrop={()=>dropAt(index)} className="grid grid-cols-[auto_1fr_82px_auto] items-center gap-2 rounded-2xl border border-border p-3">
+        <div draggable onDragStart={()=>setDragIndex(index)} onDragEnd={()=>setDragIndex(null)} className="flex cursor-grab items-center gap-1 text-muted-foreground active:cursor-grabbing" title="Drag to reorder"><GripVertical size={15}/><span className="flex h-7 w-7 items-center justify-center rounded-full bg-secondary text-xs font-bold text-primary">{index+1}</span></div>
         <input value={stop.name} onChange={e=>updateStop(index,'name',e.target.value)} className="min-w-0 rounded-xl border border-border bg-background px-3 py-2 text-sm" aria-label={`Stop ${index+1} name`}/>
         <input type="number" min={0} max={180} value={index===0?0:stop.minutes_from_prev} disabled={index===0} onChange={e=>updateStop(index,'minutes_from_prev',e.target.value)} className="rounded-xl border border-border bg-background px-2 py-2 text-sm" aria-label={`Stop ${index+1} travel minutes`}/>
         <div className="flex"><button disabled={index===0} onClick={()=>move(index,-1)} className="p-2 text-muted-foreground" aria-label="Move stop up"><ArrowUp size={15}/></button><button disabled={index===stops.length-1} onClick={()=>move(index,1)} className="p-2 text-muted-foreground" aria-label="Move stop down"><ArrowDown size={15}/></button><button disabled={stops.length<=2} onClick={()=>setStops((items)=>items.filter((_,i)=>i!==index).map((s,i)=>({...s,stop_order:i+1})))} className="p-2 text-red-600" aria-label="Remove stop"><Trash2 size={15}/></button></div>
       </div>)}
     </div>
+    <div className="rounded-2xl bg-muted/60 px-4 py-3"><p className="section-label">Publish preview</p><p className="mt-1 text-sm font-bold">{locations.find(l=>l.id===from)?.name||'From'} → {locations.find(l=>l.id===to)?.name||'To'} · {stops.length} stops · ₹{fare||'—'}/seat</p><p className="mt-1 text-xs text-muted-foreground">{stops.map(s=>s.name||'Unnamed stop').join(' → ')}</p></div>
     <div className="flex flex-wrap gap-2"><button disabled={!!busy} onClick={save} className="btn-primary"><Save size={15}/>Save Draft</button><button disabled={!!busy||blockerCount>0} onClick={async()=>{const saved=await save(); if(!saved)return; if(!window.confirm(`Publish ${code} v${draft.version_no}? New journeys will use this exact stop order.`))return; onPublish();}} className="btn-primary"><Send size={15}/>Publish</button><button disabled={!!busy} onClick={onDiscard} className="btn-outline text-red-600"><Trash2 size={15}/>Discard Draft</button></div>
   </section>;
 }

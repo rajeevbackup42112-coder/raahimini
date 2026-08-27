@@ -27,6 +27,8 @@ expect(ui, 'New Route', 'Routes UI must expose new-route draft creation');
 expect(ui, 'Duplicate', 'Routes UI must expose safe duplication');
 expect(ui, 'Save Draft', 'Routes UI must save without publishing');
 expect(ui, 'Add Stop', 'Routes UI must support stop editing');
+expect(ui, 'draggable', 'Routes UI must support drag reordering while retaining touch buttons');
+expect(ui, 'Publish preview', 'Routes UI must preview the exact draft before publish');
 expect(ui, 'Publish', 'Routes UI must expose explicit publish');
 expect(ui, 'Archive', 'Routes UI must expose archive');
 expect(api, "rpc('admin_publish_route_draft'", 'UI must publish through the guarded RPC');
