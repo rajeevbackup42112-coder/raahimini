@@ -61,3 +61,36 @@ export async function adminGetRecentActivity(limit = 12): Promise<AdminRecentAct
   if (error) throw new Error(error.message);
   return (data || []) as AdminRecentActivity[];
 }
+
+export interface AdminLiveTripOperation {
+  trip_id: string;
+  route_id: string;
+  route_code: string;
+  route_label: string;
+  trip_status: 'ACTIVE_COLLECTING' | 'IN_PROGRESS' | string;
+  driver_id: string;
+  driver_name: string;
+  vehicle_number: string;
+  confirmed: number;
+  held: number;
+  driver_closed: number;
+  available: number;
+  capacity: number;
+  current_stop_name: string | null;
+  next_action: string;
+  next_stop_name: string | null;
+  started_at: string | null;
+  created_at: string;
+  gps_state: 'FRESH' | 'STALE' | 'POOR_ACCURACY' | 'MISSING' | string;
+  gps_age_seconds: number | null;
+  gps_accuracy_meters: number | null;
+  gps_captured_at: string | null;
+  open_support_cases: number;
+}
+
+export async function adminGetLiveTripOperations(): Promise<AdminLiveTripOperation[]> {
+  const supabase = createClient();
+  const { data, error } = await supabase.rpc('admin_get_live_trip_operations');
+  if (error) throw new Error(error.message);
+  return (data || []) as AdminLiveTripOperation[];
+}

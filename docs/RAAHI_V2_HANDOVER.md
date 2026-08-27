@@ -204,3 +204,16 @@ Admin Routes now supports New Route, Duplicate, draft-based structural editing, 
 Security/regression: anonymous execute is denied for the new Route Management RPCs; authenticated execute is granted but every RPC checks Admin. Canonical `start_trip` still contains FIFO activation and GPS/freshness guards. V10 does not redefine Start Trip, queue join/activation or seat booking. Validation: 24/24 contracts PASS, TypeScript PASS, production Next.js build PASS.
 
 Next action: deploy latest `rocket-staging-ready` as Rocket Version 10, then visually accept Admin Routes: create/edit a draft without affecting Passenger/Driver, confirm a blocked publish on a busy route if naturally available, and publish only an idle test change after explicit care. Do not begin V11 Operations expansion until V10 is understood live.
+
+
+## 2026-08-27 V10 live acceptance
+
+Rocket V10 is live at `07adb1a549493bbf8778d281e3af8882eb1002e2`; rollback branch `prod-v10-frozen` points to that exact deployment source. Production bundle and authenticated Ajit Admin screen both showed the V10 Route Management UI. A GD-01 draft v2 was created while GD-01 had one live trip, Stop 3 was changed only inside the draft, and the published v1 Stop 3 remained `Bachra Road`. The canonical publish RPC rejected the draft with `Publish is blocked while this route has a live trip`. The test draft was then discarded through the live UI; final state is zero GD-01 drafts, one current active published GD-01 v1 and the same live trip. No real route version was published during acceptance. V11 Operations is the next active production slice.
+
+## 2026-08-27 V11 consolidated Operations candidate
+
+V10 production acceptance is complete and frozen at `prod-v10-frozen` -> `07adb1a549493bbf8778d281e3af8882eb1002e2`; the acceptance-doc checkpoint is `10a15f5724faafc543db05ea11c0af6f0d4dde05`.
+
+V11 branch `v11-operations-candidate` is based on that accepted checkpoint. Operations now consolidates live trip/next-action state, GPS health, queues, support and guarded Driver recovery. Migration `20260827194500_v2_prod_v11_admin_operations.sql` defines only `admin_get_live_trip_operations`; no ride-engine command is redefined. The migration is applied, and an authenticated Admin-context invocation returned the current GD-01 IN_PROGRESS ride as `DRIVE_TO_DESTINATION` with stale GPS, proving the projection executes.
+
+Validation: 25/25 contracts PASS, TypeScript PASS, production build PASS. V11 runtime commit `29b041c760f738d02492c19fa0368d79834f86bd` is pushed to `prod-v11-candidate` and `rocket-staging-ready`. Next action: Rocket Version 11, then authenticated Admin Operations acceptance.

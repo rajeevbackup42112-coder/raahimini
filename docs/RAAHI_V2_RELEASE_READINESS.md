@@ -329,8 +329,31 @@ V10 candidate:
 - [x] TypeScript PASS.
 - [x] Production Next.js build PASS.
 - [x] Final V10 runtime candidate pushed: `ce56d489e19d220862f104b928831ab30e6e56c8`.
-- [ ] Rocket V10 deployed.
-- [ ] Admin Routes live visual acceptance PASS.
-- [ ] Neighboring Passenger/Driver route discovery and Ride Again smoke PASS after a real version publish.
+- [x] Rocket V10 deployed at `07adb1a549493bbf8778d281e3af8882eb1002e2`.
+- [x] Admin Routes live acceptance PASS: authenticated draft create/edit, current-route isolation, busy-route publish rejection, and live UI discard.
+- [~] Neighboring route semantics were preserved during acceptance; a successful real version publish was intentionally not performed on the live two-route network.
 
 Do not begin V11 Operations expansion until V10 live behavior is accepted or any discrepancy is diagnosed.
+
+## 2026-08-27 Version 11 consolidated Operations gate
+
+V10 live acceptance:
+- [x] Rocket V10 authenticated Admin Routes UI verified.
+- [x] GD-01 draft v2 created/edited while v1 had a live trip; published v1/live trip remained unchanged.
+- [x] Canonical Publish rejected the busy route; test draft discarded.
+- [x] V10 rollback frozen at `prod-v10-frozen` -> `07adb1a549493bbf8778d281e3af8882eb1002e2`.
+
+V11 candidate:
+- [x] Live trips, shared next-action truth, GPS health, FIFO queue, support and Driver recovery consolidated.
+- [x] Existing guarded queue reorder/remove, Driver deactivation and support resolution remain the only Operations mutation paths.
+- [x] New `admin_get_live_trip_operations()` migration is read-only and Admin-guarded.
+- [x] Anon execute denied; authenticated execute granted, with `is_admin()` enforced.
+- [x] Production pre/post migration state unchanged: 1 live trip, 0 waiting Drivers, 0 open support cases, 1 live-location row.
+- [x] Authenticated Admin-context projection execution succeeds against current live state.
+- [x] Canonical Start Trip still contains FIFO activation and GPS guard logic.
+- [x] 25/25 contracts PASS.
+- [x] TypeScript PASS.
+- [x] Production Next.js build PASS (23/23 static pages).
+- [x] V11 committed/pushed to Rocket source branch: `29b041c760f738d02492c19fa0368d79834f86bd`.
+- [ ] Rocket Version 11 deployed.
+- [ ] Authenticated Admin Operations visual acceptance PASS.

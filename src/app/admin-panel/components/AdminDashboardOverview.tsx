@@ -81,8 +81,8 @@ export default function AdminDashboardOverview() {
           <p className="section-label">Admin areas</p>
           <div className="mt-3 space-y-2">
             <Link href="/admin-panel/users" className="block rounded-xl border border-border px-3 py-3 hover:bg-muted"><p className="text-sm font-bold text-foreground">Registered Users</p><p className="mt-0.5 text-xs text-muted-foreground">Search people, inspect state, onboard Drivers.</p></Link>
-            <Link href="/admin-panel/route-settings" className="block rounded-xl border border-border px-3 py-3 hover:bg-muted"><p className="text-sm font-bold text-foreground">Routes</p><p className="mt-0.5 text-xs text-muted-foreground">Current safe fare and availability controls.</p></Link>
-            <Link href="/admin-panel/operations" className="block rounded-xl border border-border px-3 py-3 hover:bg-muted"><p className="text-sm font-bold text-foreground">Operations</p><p className="mt-0.5 text-xs text-muted-foreground">Queue and Driver exception controls.</p></Link>
+            <Link href="/admin-panel/route-settings" className="block rounded-xl border border-border px-3 py-3 hover:bg-muted"><p className="text-sm font-bold text-foreground">Routes</p><p className="mt-0.5 text-xs text-muted-foreground">Versioned route configuration, fares and publishing.</p></Link>
+            <Link href="/admin-panel/operations" className="block rounded-xl border border-border px-3 py-3 hover:bg-muted"><p className="text-sm font-bold text-foreground">Operations</p><p className="mt-0.5 text-xs text-muted-foreground">Live trips, GPS, queues, support and safe recovery.</p></Link>
           </div>
         </div>
       </div>

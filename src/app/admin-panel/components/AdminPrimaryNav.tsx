@@ -23,10 +23,10 @@ export default function AdminPrimaryNav({ active }: { active: AdminSection }) {
           <AppLogo size={28} />
           <span className="font-bold text-foreground">Raahi Admin</span>
         </Link>
-        <div className="ml-auto min-w-0 text-right">
+        <Link href="/profile" className="ml-auto min-w-0 rounded-xl px-2 py-1 text-right hover:bg-muted" aria-label="Open Admin profile">
           <p className="max-w-[150px] truncate text-xs font-bold text-foreground">{profile?.display_name || 'Admin'}</p>
-          <p className="text-[10px] text-muted-foreground">Admin access</p>
-        </div>
+          <p className="text-[10px] text-muted-foreground">Account · Admin access</p>
+        </Link>
       </div>
       <nav className="mx-auto grid max-w-screen-2xl grid-cols-4 border-t border-border px-1" aria-label="Admin sections">
         {links.map((item) => (
