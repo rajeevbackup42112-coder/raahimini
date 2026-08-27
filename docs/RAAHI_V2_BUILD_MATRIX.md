@@ -107,17 +107,17 @@ Current RLS/RPC/live-invariant audit on isolated V2 Dev: **PASS**.
 | Admin | Vehicle type controlled dropdown | BUILT | Car/Hatchback/Sedan/SUV/MPV/Van in onboarding UI |
 | Admin | Vehicle capacity 4/5/6/7/8 | BUILT | UI/client updated; V2 Dev `admin_onboard_driver` validation migrated; build passed |
 | Passenger | Real plotted Driver live-location map | PLANNED | Current component is text/freshness only; must render actual coordinates and stale fallback |
-| Driver | Show only pickup/drop-off action stops | PLANNED | Current UI still exposes route-stop progression; needs state-machine-aware simplification |
-| Driver | Automatic transition after all pickups / usable GPS | PLANNED | Manual Start Trip remains authoritative until backend dispatch handoff is redesigned and regression-tested |
+| Driver | Show only pickup/drop-off action stops | BUILT V5; DRIVER LIVE PASS | Driver uses meaningful pickup stops while collecting and destination after Start Trip |
+| Driver | Automatic transition after all pickups / usable GPS | PLANNED V7 | Manual Start Trip remains authoritative through V6; V7 must preserve FIFO/GPS exactly once |
 | Driver | Automatic completion after final required drop-off where safe | PLANNED | Existing Complete Trip remains current behavior until redesign |
-| Admin | Dashboard: live health + attention-needed + recent activity | PLANNED | User-approved product direction |
-| Admin | Registered Users directory + detail/actions | PLANNED | Search/filter users; guarded role/onboarding actions from user detail |
-| Admin | Full guarded Route Management | PLANNED | Create/edit/duplicate/activate/deactivate/archive routes; add/edit/remove/reorder stops; active/history protection required |
+| Admin | Dashboard: live health + attention-needed + recent activity | PLANNED V9 | Detailed scope in `RAAHI_V2_ADMIN_CONTROL_PLAN.md` |
+| Admin | Registered Users directory + detail/actions | PLANNED V9 | New guarded all-user read projection; integrate Driver onboarding from user detail |
+| Admin | Full guarded Route Management | PLANNED V10 | Structural edits require versioning/future-effective publishing; never rewrite live/history stops |
 
 ### Validation impact
 The previous mobile/responsive PASS baseline remains historical evidence, but Passenger live-trip, Driver active-trip and Admin route/user flows are **reopened** for acceptance because approved behavior is changing. For every implemented slice, rerun focused tests, neighboring role flows, TypeScript, production build, relevant contracts and manual real-user acceptance.
 
-## Stage simplification workstream — 2026-08-25
+## Historical Stage simplification workstream — 2026-08-25 (SUPERSEDED)
 
 | Area | Capability | Status | Evidence / next gate |
 |---|---|---:|---|
@@ -132,16 +132,20 @@ The previous mobile/responsive PASS baseline remains historical evidence, but Pa
 | Admin | Dashboard + registered Users | PLANNED | Build after Passenger/Driver next-state flow stabilizes |
 | Admin | Guarded full Route Management | PLANNED | Requires route versioning / future-effective change design |
 
-**Current blocker:** Stage and frozen Prod V4 are not yet proven to use separate Supabase backends. The new operational migration must not be applied to shared Raahi V2 Dev merely to accelerate Stage testing.
+**Historical note:** this Stage-isolation blocker was superseded when the user explicitly approved the one-version-at-a-time production train. The V5 operational migration has since been applied.
 
 ## Production version train — current slice
 
 | Version | Scope | Code | DB | Build | Live acceptance |
 |---|---|---:|---:|---:|---:|
 | V4 | Known-good pre-simplification baseline | FROZEN | Existing | Historical PASS | Baseline |
-| V5 | Driver meaningful pickup stops + destination; boarding only at pickup; production test-auth hard block | DEPLOYED, ACCEPTANCE PATCH IN GIT | MIGRATED | PRIOR PASS; PATCH REVALIDATION PENDING | Driver destination PASS; Passenger mismatch found |
-| V6 | Automatic Start Trip after manifest resolved + usable GPS, preserving canonical FIFO handoff | PLANNED | PLANNED | PENDING | PENDING |
-| Later | Passenger live map, then Admin Users/Dashboard/Routes/Operations | PLANNED | TBD | PENDING | PENDING |
+| V5 | Driver meaningful pickup stops + destination; boarding only at pickup; production test-auth hard block | DEPLOYED | MIGRATED | PASS | Driver destination PASS; Passenger mismatch promoted to V6 fix |
+| V6 | Passenger/Driver next-state alignment; remove Passenger stop-by-stop primary progress | BUILT + LOCALLY VALIDATED | NOT REQUIRED | PASS | PENDING DEPLOY/LIVE |
+| V7 | Automatic Start Trip after manifest resolved + usable GPS, preserving canonical FIFO handoff | PLANNED | PLANNED | PENDING | PENDING |
+| V8 | Real Passenger Driver-location map + final Passenger simplification | PLANNED | TBD | PENDING | PENDING |
+| V9 | Admin Dashboard + Registered Users + integrated Driver onboarding | PLANNED | PLANNED READ PROJECTION | PENDING | PENDING |
+| V10 | Guarded full Route Management with versioning/future-effective publishing | PLANNED | PLANNED | PENDING | PENDING |
+| V11 | Consolidated Admin Operations / emergency controls + cleanup | PLANNED | TBD | PENDING | PENDING |
 
 V5 preflight on 2026-08-25: active trips = 0, live queue entries = 0, HELD requests = 0. The V5 operational migration was applied successfully. Live acceptance then showed Driver correctly destination-focused while Passenger still rendered legacy stop-by-stop progress after boarding.
 
@@ -155,3 +159,8 @@ V5 preflight on 2026-08-25: active trips = 0, live queue entries = 0, HELD reque
 | Passenger | Real live Driver map | PLANNED | Location status remains text-only until the dedicated map slice |
 
 Acceptance patch is application-only; no new database migration is required. Focused contract added at `tests/contracts/passenger-next-state-v5-contract.cjs`. TypeScript/build revalidation is still required before Rocket redeploy because the remote validation device became unavailable during this patch.
+
+
+## Production roadmap after V6 validation
+
+Detailed Admin scope is authoritative in `RAAHI_V2_ADMIN_CONTROL_PLAN.md`. V9–V11 must use audited RPCs and preserve FIFO, GPS, seat ownership, phone verification and historical route semantics.

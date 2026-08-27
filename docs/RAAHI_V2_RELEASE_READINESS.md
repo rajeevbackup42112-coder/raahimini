@@ -210,3 +210,21 @@ Version 5 release gate:
 - [ ] Neighboring Passenger/FIFO/GPS behavior accepted.
 
 Do not begin Version 6 automatic Start Trip until the Version 5 live behavior is accepted or any discovered defect is understood.
+
+
+## 2026-08-27 V6 combined validation result
+
+- [x] V5 frozen application ref retained before V6.
+- [x] V6 rebased onto latest remote production-train baseline instead of overwriting newer Git history.
+- [x] Passenger primary screen removes legacy Driver Progress / route-stop counter.
+- [x] Confirmed in-progress Passenger sees destination / on-the-way state.
+- [x] Pre-pickup Passenger still sees pickup / driver-here state.
+- [x] 19 contract files PASS, including V5 compatibility + V6 operational-sync contracts.
+- [x] TypeScript PASS.
+- [x] Production Next.js build PASS.
+- [x] No V6 database migration required.
+- [ ] V6 commit pushed to the Rocket source branch.
+- [ ] Rocket V6 deployed to `myraahi.referralhub.co.in`.
+- [ ] Same live ride visually accepted on Driver + Passenger screens.
+
+Do not start V7 automatic Start Trip until the V6 live alignment is accepted or any new discrepancy is diagnosed.

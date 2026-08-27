@@ -149,3 +149,12 @@ Git changes on `rocket-staging-ready`:
 - Decision/Build/Handover documentation follows on the same branch.
 
 No database migration is needed for this acceptance patch. Do not begin Version 6 automatic Start Trip until this Passenger patch is revalidated (contract suite + TypeScript + build) and deployed/accepted live. The remote validation device became unavailable while this patch was being prepared, so revalidation is the single next action before Rocket redeploy.
+
+
+## 2026-08-27 V6 combined-baseline validation
+
+GitHub `rocket-staging-ready` had advanced to `7a8817738f2ff799299457cbf819c495afbf3ad3`; V6 work was rebased onto that remote baseline rather than overwriting it. The remote V5 Passenger patch is preserved and V6 supersedes its partial stop-progress behavior.
+
+Combined V6 candidate: all 19 contract files PASS, TypeScript PASS, production Next.js build PASS. No database migration is required. Remaining gate is commit/push → Rocket deployment → live Passenger/Driver visual acceptance.
+
+Admin roadmap is now documented in `RAAHI_V2_ADMIN_CONTROL_PLAN.md`: V9 Dashboard + Registered Users, V10 guarded Route Management, V11 Operations. V7 remains automatic Start Trip; V8 remains real Passenger live map.

@@ -83,3 +83,13 @@ Future chats must start from `RAAHI_V2_HANDOVER.md`, then consult this Decision 
 53. **Production test-auth must fail closed.** `myraahi.referralhub.co.in` is hard-blocked from staging/test-auth endpoints regardless of environment allowlists.
 54. **Every production version is gated.** Code/build/contracts, database preflight, migration, deployment and live acceptance are recorded separately; a later version does not proceed until the current version is understood.
 55. **Passenger and Driver share one operational truth.** Before pickup, Passenger may see pickup progress. Once the passenger is confirmed/boarded and the trip is `IN_PROGRESS`, Passenger must stop showing intermediate route-stop progression and instead show the same next meaningful event as Driver: the trip destination. Role copy may differ, but route state must not disagree.
+
+
+## 2026-08-27 V6 validation and Admin implementation plan
+
+61. **V6 supersedes the partial V5 Passenger patch.** The primary Passenger journey no longer exposes stop-by-stop Driver Progress; it uses Requested → Confirmed → On the way → Arrived and the same destination truth as Driver after Start Trip.
+62. **V7 is now Automatic Start Trip.** Version numbering moved because the live V5 Passenger mismatch required its own accepted production increment first.
+63. **Admin primary navigation will converge on Dashboard · Users · Routes · Operations.** Existing specialist pages may be reused internally but should no longer define the main information architecture.
+64. **Registered Users gets a dedicated guarded read projection.** Do not overload `admin_list_role_accounts()`, which intentionally excludes Drivers for Admin-role management.
+65. **Structural route edits require versioning/future-effective publishing.** Existing `seat_requests` and trips reference current route/stop rows, so stop deletion/reordering must never rewrite live or historical meaning in place.
+66. **Admin complexity remains bounded by canonical commands.** Full control means audited recovery/configuration powers, not raw seat ownership mutation, FIFO bypass, phone-verification bypass or GPS fabrication. See `RAAHI_V2_ADMIN_CONTROL_PLAN.md`.

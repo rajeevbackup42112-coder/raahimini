@@ -788,3 +788,14 @@ Version 5 is the Driver operational-stop simplification only: show and progress 
 The database is forward-only. A frozen application branch is not a database snapshot. If a production migration needs correction, use a reviewed forward repair migration rather than destructive restoration.
 
 Before each production migration, verify there is no live state that makes the transition unsafe. Before each next version, run focused real-user acceptance of the version just released.
+
+
+## 2026-08-27 V6 validation + Admin control roadmap
+
+V6 is now the Passenger/Driver next-state alignment release. Passenger primary ride UI uses Requested → Confirmed → On the way → Arrived, hides the pickup label after boarding, and shows the route destination as the next meaningful event once the trip is in progress. No V6 database migration is required.
+
+Production train after V6: V7 automatic Start Trip with the existing GPS/FIFO safety boundary; V8 real Passenger live Driver map; V9 Admin Dashboard + Registered Users; V10 guarded versioned Route Management; V11 consolidated Operations/emergency controls.
+
+Admin product rule: Dashboard answers what is happening now; Users owns identity/role/Driver onboarding; Routes owns configuration with future-effective versioning; Operations owns exceptions. Full Admin control never means raw mutation of seat ownership, active-trip Driver identity, FIFO, verified-phone state or GPS truth.
+
+Detailed plan: `RAAHI_V2_ADMIN_CONTROL_PLAN.md`.

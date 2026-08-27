@@ -5,11 +5,12 @@ const root = path.resolve(__dirname, '../..');
 const file = fs.readFileSync(path.join(root, 'src/app/request-status-screen/components/RequestStatusContent.tsx'), 'utf8');
 const must = (condition, message) => { if (!condition) throw new Error(message); };
 
-must(file.includes("const isOnTheWay = isConfirmed && req.trip_status === 'IN_PROGRESS'"), 'Passenger in-progress state must be explicit');
-must(file.includes('On your way to ${routeTo}'), 'Passenger must see destination-focused next state after boarding');
-must(file.includes('pickupLabel={isOnTheWay ? undefined : req.pickup_stop_name}'), 'Pickup label must not remain dominant after boarding');
-must(file.includes('Your destination'), 'Passenger must receive a destination card during the trip');
-must(file.includes('req.stops.length > 0 && !isOnTheWay'), 'Stop-by-stop progress must be hidden after confirmed trip start');
-must(file.includes('You are travelling to ${routeTo}.'), 'Confirmed passenger copy must reflect travel toward destination');
+// V6 supersedes the first V5 passenger patch, but must preserve its core guarantee:
+// a confirmed in-progress passenger sees the route destination, not intermediate stops.
+must(file.includes("req.trip_status === 'IN_PROGRESS'"), 'Passenger in-progress state must be explicit');
+must(file.includes("routeTo"), 'Passenger journey must retain the route destination');
+must(file.includes("pickupLabel={isHeld ? req.pickup_stop_name : undefined}"), 'Pickup label must disappear after boarding');
+must(!file.includes('Stop {req.current_stop_order} of {req.stops.length}'), 'Passenger must not expose legacy route-stop counters');
+must(file.includes('Your destination') || file.includes("'Destination'"), 'Passenger must receive a destination-focused next state');
 
-console.log('Passenger next-state Version 5 contract: PASS');
+console.log('Passenger next-state Version 5 compatibility contract: PASS');
