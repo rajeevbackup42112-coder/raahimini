@@ -203,10 +203,28 @@ Version 5 release gate:
 - [x] Production DB preflight: 0 active trips, 0 live queue entries, 0 HELD requests.
 - [x] Version 5 TypeScript check PASS.
 - [x] Version 5 production Next.js build PASS.
-- [ ] Version 5 canonical Git commit pushed.
-- [ ] Version 5 forward migration applied and verified.
-- [ ] Rocket Version 5 deployed to `myraahi.referralhub.co.in`.
-- [ ] Focused live Driver operational-stop journey accepted.
-- [ ] Neighboring Passenger/FIFO/GPS behavior accepted.
+- [x] Version 5 canonical Git commit pushed: `18eeec515e9c2ec2ee76929ff2435f979d748c27`.
+- [x] Version 5 forward migration applied and verified.
+- [x] Rocket Version 5 deployed to `myraahi.referralhub.co.in`.
+- [x] Focused live Driver operational-stop journey accepted: destination-focused Driver screenshot PASS.
+- [~] Neighboring behavior: FIFO/GPS contract boundary remained intact; Passenger mismatch was discovered and promoted to the dedicated V6 fix.
 
 Do not begin Version 6 automatic Start Trip until the Version 5 live behavior is accepted or any discovered defect is understood.
+
+
+## 2026-08-27 V6 combined validation result
+
+- [x] V5 frozen application ref retained before V6.
+- [x] V6 rebased onto latest remote production-train baseline instead of overwriting newer Git history.
+- [x] Passenger primary screen removes legacy Driver Progress / route-stop counter.
+- [x] Confirmed in-progress Passenger sees destination / on-the-way state.
+- [x] Pre-pickup Passenger still sees pickup / driver-here state.
+- [x] 19 contract files PASS, including V5 compatibility + V6 operational-sync contracts.
+- [x] TypeScript PASS.
+- [x] Production Next.js build PASS.
+- [x] No V6 database migration required.
+- [x] V6 commit pushed to the Rocket source branch: `be8eeaf242979cba228225ed297e5b11997331dd`.
+- [ ] Rocket V6 deployed to `myraahi.referralhub.co.in`.
+- [ ] Same live ride visually accepted on Driver + Passenger screens.
+
+Do not start V7 automatic Start Trip until the V6 live alignment is accepted or any new discrepancy is diagnosed.

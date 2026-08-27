@@ -136,3 +136,25 @@ Version 5 candidate implements Driver meaningful-stop progression: unresolved pi
 V5 preflight immediately before release work: 0 active trips, 0 live queue entries, 0 HELD requests. TypeScript PASS and production Next.js build PASS.
 
 Release sequence: commit/push V5 candidate and canonical migration -> apply forward migration -> deploy Rocket Version 5 -> focused live Driver/Passenger acceptance -> only then begin V6 automatic Start Trip.
+
+## 2026-08-26 — Version 5 passenger acceptance patch
+
+Live V5 acceptance proved the Driver screen correctly presents the destination after Start Trip, but the Passenger screen still showed the legacy `Driver Progress / Stop N of M` route-stop model and continued to say the Driver was at the pickup stop after the passenger had already boarded.
+
+Approved correction is application-only: once a passenger request is `CONFIRMED` and the trip is `IN_PROGRESS`, Passenger must show the same next meaningful event as Driver — the trip destination. The pickup label is removed from the dominant trip card, a `Your destination` card is shown, and the intermediate stop-progress card is suppressed for that state. Pre-pickup passenger progress remains unchanged.
+
+Git changes on `rocket-staging-ready`:
+- Passenger UI alignment commit `e2b447dbe604ef167382b0623bda08c0d5c61537`.
+- Focused contract `tests/contracts/passenger-next-state-v5-contract.cjs`, commit `6a46ccbae78bc22431dbeff408f3133f3886597a`.
+- Decision/Build/Handover documentation follows on the same branch.
+
+No database migration is needed for this acceptance patch. Do not begin Version 6 automatic Start Trip until this Passenger patch is revalidated (contract suite + TypeScript + build) and deployed/accepted live. The remote validation device became unavailable while this patch was being prepared, so revalidation is the single next action before Rocket redeploy.
+
+
+## 2026-08-27 V6 combined-baseline validation
+
+GitHub `rocket-staging-ready` had advanced to `7a8817738f2ff799299457cbf819c495afbf3ad3`; V6 work was rebased onto that remote baseline rather than overwriting it. The remote V5 Passenger patch is preserved and V6 supersedes its partial stop-progress behavior.
+
+Combined V6 candidate: all 19 contract files PASS, TypeScript PASS, production Next.js build PASS. No database migration is required. V6 runtime commit is `be8eeaf242979cba228225ed297e5b11997331dd`; remaining gates are Rocket deployment and live Passenger/Driver visual acceptance.
+
+Admin roadmap is now documented in `RAAHI_V2_ADMIN_CONTROL_PLAN.md`: V9 Dashboard + Registered Users, V10 guarded Route Management, V11 Operations. V7 remains automatic Start Trip; V8 remains real Passenger live map.
