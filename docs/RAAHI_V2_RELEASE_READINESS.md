@@ -271,7 +271,7 @@ Do not begin the next lifecycle/UI version until V7 live behavior is observed or
 - [x] TypeScript PASS.
 - [x] Production Next.js build PASS.
 - [x] OpenStreetMap embed endpoint reachable with HTTP 200 from validation device.
-- [ ] V8 candidate pushed to Rocket source branch.
+- [x] V8 candidate pushed to Rocket source branch: `04c5624a09a5712b3e46dbe81137d4a06960d52d`.
 - [ ] Rocket Version 8 deployed.
 - [ ] Real Passenger active-ride map visually accepted, including stale/unavailable fallback if practical.
 

@@ -177,3 +177,5 @@ V7 production bundle check after user deployment: automatic-departure markers pr
 V8 is application-only. `PassengerLiveLocationStatus` now renders the authorized Driver coordinates on a keyless OpenStreetMap embed, polling every 15 seconds. Fresh/last-known/no-location states are distinct and truthful, and the embed sends no Raahi page referrer. The map card includes boarded-at and destination context; during `IN_PROGRESS` the old duplicate confirmation/destination cards are suppressed. Existing phone/share/support actions remain.
 
 Validation: 22/22 contracts PASS, TypeScript PASS, production build PASS, OpenStreetMap embed HTTP 200. No database migration. Next: push V8 candidate to the Rocket source branch, deploy as Version 8, visually accept a real Passenger active ride, then begin Admin V9 Dashboard + Registered Users.
+
+V8 runtime candidate `04c5624a09a5712b3e46dbe81137d4a06960d52d` is pushed to both `prod-v8-candidate` and `rocket-staging-ready`.

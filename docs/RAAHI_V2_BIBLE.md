@@ -820,3 +820,5 @@ V8 turns the existing authenticated live-location projection into the primary ac
 The Passenger map refreshes every ~15 seconds and uses a keyless OpenStreetMap embed centered on the latest authorized Driver coordinates. Fresh data is labeled `Live driver location`; stale data is explicitly `Last known location`; if no coordinates exist the UI says the live map is temporarily unavailable. During an active ride, duplicate confirmation/destination cards are removed so the map plus `Boarded at` / `Destination` context becomes the main visual. No V8 database migration or paid map key is required.
 
 V8 local validation: 22/22 contract files PASS, TypeScript PASS, production Next.js build PASS, and the OpenStreetMap embed endpoint returned HTTP 200 from the validation device. Live Rocket deployment and real Passenger visual acceptance remain the gate before Admin V9.
+
+V8 runtime candidate `04c5624a09a5712b3e46dbe81137d4a06960d52d` is pushed to both `prod-v8-candidate` and `rocket-staging-ready`.
