@@ -131,3 +131,11 @@ Future chats must start from `RAAHI_V2_HANDOVER.md`, then consult this Decision 
 88. **Route deletion is draft-only.** Unpublished drafts may be discarded; published routes use Archive rather than destructive delete.
 89. **Repeat-use shortcuts follow the current version.** Completed-trip display remains historical, while `Ride this route again` uses `repeat_route_id` resolved to the current active published member of that route family.
 90. **V10 does not redefine the ride engine.** `start_trip`, `activate_next_driver`, `join_driver_queue`, `request_seats`, seat ownership, GPS and phone verification remain canonical and unchanged.
+
+## 2026-08-27 V10 live acceptance + V11 Operations decisions
+
+91. **V10 draft isolation is production-proven.** Editing a draft does not alter the current published route or a live trip; server-side Publish remains blocked while live trip/queue/demand exists.
+92. **V11 Operations is observation-first.** Live trip state, GPS health, queues and support are consolidated before recovery controls.
+93. **V11 adds no new emergency mutation primitive.** Queue reorder/remove, Driver deactivation, support resolution and Route controls reuse existing audited RPCs; raw seat/FIFO/GPS/phone/active-Driver mutation remains forbidden.
+94. **Admin GPS health is descriptive.** V11 mirrors fresh/stale/poor/missing location truth and Driver next-action state without writing GPS or trip lifecycle state.
+95. **Admin account access belongs in the header/Profile.** Dashboard · Users · Routes · Operations remains the complete primary operational navigation.

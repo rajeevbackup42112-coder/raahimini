@@ -845,3 +845,11 @@ Publishing archives the prior route version instead of rewriting it. Historical 
 Admin actions include New Route, Duplicate, Edit Draft, add/edit/remove/reorder stops, fare, pause/enable, Publish, Discard Draft and Archive. Reordering supports both drag and touch-friendly arrows. The route editor shows live-trip/queue/demand impact plus a Publish preview. Repeat-use Passenger logic resolves a historical completed trip to its current active route version while retaining the old route/stops for historical display.
 
 V10 migration was applied with one live GD-01 trip and one active DG-01 demand intent present; those states were unchanged because the migration only adds version metadata/RPCs and does not publish a draft. Canonical booking, seats, `start_trip`, `activate_next_driver`, FIFO, GPS and phone verification are unchanged. Final runtime candidate `ce56d489e19d220862f104b928831ab30e6e56c8`; 24/24 contracts, TypeScript and production build PASS.
+
+## 2026-08-27 V10 live acceptance + V11 consolidated Operations
+
+V10 is live-accepted. An authenticated Admin created a GD-01 v2 draft while GD-01 v1 had a live trip, changed a draft-only stop name, verified the published route/live trip remained on v1, saw canonical Publish reject the busy route, and discarded the test draft. `prod-v10-frozen` preserves `07adb1a549493bbf8778d281e3af8882eb1002e2`.
+
+V11 consolidates live trips, Driver GPS health, backend-owned next action, FIFO queues, support and guarded Driver recovery under Operations. It adds one read-only Admin projection, `admin_get_live_trip_operations()`, and no new mutation primitive. Existing queue reorder/remove, Driver deactivation and support-resolution commands remain authoritative. Admin still cannot rewrite seats, replace an active-trip Driver, bypass FIFO/phone verification or fabricate GPS.
+
+V11 validation: 25/25 contracts PASS, TypeScript PASS, production Next.js build PASS. The migration is applied; anon execute is denied, authenticated execute is granted with an internal Admin check, and live trip/queue/support/location counts were unchanged.

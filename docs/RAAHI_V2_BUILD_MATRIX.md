@@ -112,7 +112,7 @@ Current RLS/RPC/live-invariant audit on isolated V2 Dev: **PASS**.
 | Driver | Automatic completion after final required drop-off where safe | PLANNED | Existing Complete Trip remains current behavior until redesign |
 | Admin | Dashboard: live health + attention-needed + recent activity | DEPLOYED V9 | Production bundle verified; authenticated visual acceptance remains evidence to capture |
 | Admin | Registered Users directory + detail/actions | DEPLOYED V9 | Search/filters/detail + integrated canonical Driver onboarding are live |
-| Admin | Full guarded Route Management | BUILT + MIGRATED V10 | Versioned drafts, stop reorder, preview/publish, create/duplicate/archive; Rocket deployment pending |
+| Admin | Full guarded Route Management | DEPLOYED + LIVE ACCEPTED V10 | Versioned drafts, stop reorder, preview/publish, create/duplicate/archive; draft isolation and busy-route guard proven live |
 
 ### Validation impact
 The previous mobile/responsive PASS baseline remains historical evidence, but Passenger live-trip, Driver active-trip and Admin route/user flows are **reopened** for acceptance because approved behavior is changing. For every implemented slice, rerun focused tests, neighboring role flows, TypeScript, production build, relevant contracts and manual real-user acceptance.
@@ -145,7 +145,7 @@ The previous mobile/responsive PASS baseline remains historical evidence, but Pa
 | V8 | Real Passenger Driver-location map + final Passenger simplification | DEPLOYED | NOT REQUIRED | PASS | Production bundle verified; authenticated real-map ride screenshot still pending |
 | V9 | Admin Dashboard + Registered Users + integrated Driver onboarding | DEPLOYED | MIGRATED (READ-ONLY) | PASS | Production bundle verified; authenticated Admin visual acceptance still to capture |
 | V10 | Guarded full Route Management with versioning/future-effective publishing | DEPLOYED `07adb1a` | MIGRATED | PASS | LIVE ACCEPTANCE PASS: draft isolation + busy-route publish guard + discard |
-| V11 | Consolidated Admin Operations / emergency controls + cleanup | PLANNED | TBD | PENDING | PENDING |
+| V11 | Consolidated Admin Operations / emergency controls + cleanup | BUILT + VALIDATED | MIGRATED (READ-ONLY) | PASS | PENDING ROCKET DEPLOY/LIVE |
 
 V5 preflight on 2026-08-25: active trips = 0, live queue entries = 0, HELD requests = 0. The V5 operational migration was applied successfully. Live acceptance then showed Driver correctly destination-focused while Passenger still rendered legacy stop-by-stop progress after boarding.
 

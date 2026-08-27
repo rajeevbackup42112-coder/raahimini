@@ -1,6 +1,6 @@
 # Raahi 2.0 Admin Control Plan
 
-Status: **IN PROGRESS**. V9 Dashboard + Registered Users and V10 guarded Route Management are live. V10 draft isolation and busy-route publish blocking were accepted on production without publishing a synthetic route change. V11 Operations expansion is now the active slice.
+Status: **IN PROGRESS**. V9 Dashboard + Registered Users and V10 guarded Route Management are live. V10 draft isolation and busy-route publish blocking are production-accepted. V11 consolidated Operations is built, validated and its read-only projection is migrated; Rocket V11 deployment/live acceptance remains pending.
 
 ## Product principle
 
@@ -74,7 +74,7 @@ Route editor UX:
 - archive instead of destructive delete once a route/version has operational history
 ## 4. Operations
 
-Keep emergency tools separate from everyday configuration. Planned Operations consolidates active trips, Driver queues, GPS health, support cases, cancellations and carefully scoped manual intervention.
+Keep emergency tools separate from everyday configuration. V11 Operations consolidates active trips, Driver queues, GPS health, support cases and carefully scoped manual intervention. It is observation-first and adds no new emergency mutation primitive.
 
 Existing safe controls such as Driver deactivation, WAITING-queue reorder/remove, support resolution and route enable/disable remain canonical. Admin must not directly rewrite seat ownership, swap the Driver of an active trip, bypass FIFO, bypass phone verification, or fake GPS state.
 
