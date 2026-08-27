@@ -168,3 +168,14 @@ V7 is application-only. `DriverActiveCarContent` removes the Start Trip button/m
 Backend inspection confirmed `start_trip` still owns the authoritative invariants: no HELD requests, confirmed + driver-closed = capacity, fresh location <=60 seconds, accuracy <=200m, trip transition to IN_PROGRESS, and `activate_next_driver(route_id)` same-direction FIFO handoff. No V7 migration is needed.
 
 Validation: 21/21 contract files PASS, TypeScript PASS, production build PASS. V7 runtime/docs candidate `478be880aa458bfb0e1eb74c52f031c6bc521364` is pushed to both `prod-v7-candidate` and `rocket-staging-ready`. Next action: deploy as Rocket Version 7, then exercise one real Driver flow with (a) full manifest automatic start and (b) empty-seat close followed by automatic start if practical.
+
+
+## 2026-08-27 V8 Passenger live-map candidate
+
+V7 production bundle check after user deployment: automatic-departure markers present; manual `Start Trip to` absent. `prod-v7-frozen` now preserves `c0aa81d46f8c8ca18d3901f1190f5b2eb4536dd4`. A real full-manifest automatic-departure ride has not yet been separately captured, so keep that as a neighboring acceptance item.
+
+V8 is application-only. `PassengerLiveLocationStatus` now renders the authorized Driver coordinates on a keyless OpenStreetMap embed, polling every 15 seconds. Fresh/last-known/no-location states are distinct and truthful, and the embed sends no Raahi page referrer. The map card includes boarded-at and destination context; during `IN_PROGRESS` the old duplicate confirmation/destination cards are suppressed. Existing phone/share/support actions remain.
+
+Validation: 22/22 contracts PASS, TypeScript PASS, production build PASS, OpenStreetMap embed HTTP 200. No database migration. Next: push V8 candidate to the Rocket source branch, deploy as Version 8, visually accept a real Passenger active ride, then begin Admin V9 Dashboard + Registered Users.
+
+V8 runtime candidate `04c5624a09a5712b3e46dbe81137d4a06960d52d` is pushed to both `prod-v8-candidate` and `rocket-staging-ready`.

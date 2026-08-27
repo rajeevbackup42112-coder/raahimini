@@ -251,7 +251,28 @@ V7 candidate:
 - [x] Production Next.js build PASS.
 - [x] No V7 database migration required.
 - [x] V7 candidate pushed to Rocket source branch: `478be880aa458bfb0e1eb74c52f031c6bc521364`.
-- [ ] Rocket Version 7 deployed.
+- [x] Rocket Version 7 deployed; production Driver bundle independently verified.
 - [ ] Real Driver automatic-departure acceptance PASS.
 
 Do not begin the next lifecycle/UI version until V7 live behavior is observed or any discrepancy is diagnosed.
+
+
+## 2026-08-27 Version 8 Passenger live-map gate
+
+- [x] V7 production bundle shows automatic-departure code and no manual Start Trip button string.
+- [x] V7 rollback ref frozen as `prod-v7-frozen` at `c0aa81d46f8c8ca18d3901f1190f5b2eb4536dd4`.
+- [x] Existing `get_active_trip_location` authorization/freshness contract inspected: `IN_PROGRESS` only, authorized trip participants/Admin only, 45-second freshness flag.
+- [x] Passenger active ride renders a real Driver-position map using authorized latitude/longitude.
+- [x] Fresh, last-known and unavailable states are explicitly distinguished.
+- [x] Map refreshes about every 15 seconds.
+- [x] No billable map API key or V8 database migration required.
+- [x] Active-ride duplicate confirmation/destination cards removed; map carries boarded-at + destination context.
+- [x] 22/22 contract files PASS.
+- [x] TypeScript PASS.
+- [x] Production Next.js build PASS.
+- [x] OpenStreetMap embed endpoint reachable with HTTP 200 from validation device.
+- [x] V8 candidate pushed to Rocket source branch: `04c5624a09a5712b3e46dbe81137d4a06960d52d`.
+- [ ] Rocket Version 8 deployed.
+- [ ] Real Passenger active-ride map visually accepted, including stale/unavailable fallback if practical.
+
+Do not begin Admin V9 implementation until the V8 candidate is at least pushed and its production deployment state is understood.

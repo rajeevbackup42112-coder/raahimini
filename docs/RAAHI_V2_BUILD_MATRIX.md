@@ -106,7 +106,7 @@ Current RLS/RPC/live-invariant audit on isolated V2 Dev: **PASS**.
 | Admin | Driver Onboarding route reachable for Admin | FIXED | `RoleRouteGuard` now permits `/admin-driver-onboarding`; TypeScript/build passed |
 | Admin | Vehicle type controlled dropdown | BUILT | Car/Hatchback/Sedan/SUV/MPV/Van in onboarding UI |
 | Admin | Vehicle capacity 4/5/6/7/8 | BUILT | UI/client updated; V2 Dev `admin_onboard_driver` validation migrated; build passed |
-| Passenger | Real plotted Driver live-location map | PLANNED | Current component is text/freshness only; must render actual coordinates and stale fallback |
+| Passenger | Real plotted Driver live-location map | BUILT + VALIDATED V8 | Authorized `IN_PROGRESS` coordinates render on a keyless OpenStreetMap embed with live/last-known/unavailable states |
 | Driver | Show only pickup/drop-off action stops | BUILT V5; DRIVER LIVE PASS | Driver uses meaningful pickup stops while collecting and destination after Start Trip |
 | Driver | Automatic transition after all pickups / usable GPS | BUILT + VALIDATED V7 | UI automatically invokes canonical `start_trip` exactly when departure eligibility + fresh usable GPS are true; manual Start Trip removed |
 | Driver | Automatic completion after final required drop-off where safe | PLANNED | Existing Complete Trip remains current behavior until redesign |
@@ -141,8 +141,8 @@ The previous mobile/responsive PASS baseline remains historical evidence, but Pa
 | V4 | Known-good pre-simplification baseline | FROZEN | Existing | Historical PASS | Baseline |
 | V5 | Driver meaningful pickup stops + destination; boarding only at pickup; production test-auth hard block | DEPLOYED | MIGRATED | PASS | Driver destination PASS; Passenger mismatch promoted to V6 fix |
 | V6 | Passenger/Driver next-state alignment; remove Passenger stop-by-stop primary progress | DEPLOYED | NOT REQUIRED | PASS | Production bundle verified; authenticated paired-screen acceptance not separately captured |
-| V7 | Automatic Start Trip after manifest resolved + usable GPS, preserving canonical FIFO handoff | PUSHED + LOCALLY VALIDATED | NOT REQUIRED | PASS | PENDING ROCKET DEPLOY/LIVE |
-| V8 | Real Passenger Driver-location map + final Passenger simplification | PLANNED | TBD | PENDING | PENDING |
+| V7 | Automatic Start Trip after manifest resolved + usable GPS, preserving canonical FIFO handoff | DEPLOYED | NOT REQUIRED | PASS | Production bundle verified; real automatic-departure ride acceptance remains to be captured |
+| V8 | Real Passenger Driver-location map + final Passenger simplification | PUSHED + LOCALLY VALIDATED | NOT REQUIRED | PASS | PENDING ROCKET DEPLOY/LIVE |
 | V9 | Admin Dashboard + Registered Users + integrated Driver onboarding | PLANNED | PLANNED READ PROJECTION | PENDING | PENDING |
 | V10 | Guarded full Route Management with versioning/future-effective publishing | PLANNED | PLANNED | PENDING | PENDING |
 | V11 | Consolidated Admin Operations / emergency controls + cleanup | PLANNED | TBD | PENDING | PENDING |
@@ -156,7 +156,7 @@ V5 preflight on 2026-08-25: active trips = 0, live queue entries = 0, HELD reque
 | Passenger | Same operational truth as Driver after boarding | BUILT IN GIT | Confirmed + `IN_PROGRESS` passenger now sees destination as the next meaningful event |
 | Passenger | Hide obsolete intermediate-stop progress after boarding | BUILT IN GIT | Legacy Driver Progress card is suppressed only for confirmed in-progress rides; pre-pickup progress remains available |
 | Passenger | Destination-focused copy | BUILT IN GIT | `On your way to <destination>` + destination card; pickup label no longer dominates after boarding |
-| Passenger | Real live Driver map | PLANNED | Location status remains text-only until the dedicated map slice |
+| Passenger | Real live Driver map | BUILT V8 | Keyless OpenStreetMap marker uses the existing authorized live-location projection; stale/no-GPS fallbacks remain truthful |
 
 Acceptance patch is application-only; no new database migration is required. Focused contract added at `tests/contracts/passenger-next-state-v5-contract.cjs`. TypeScript/build revalidation is still required before Rocket redeploy because the remote validation device became unavailable during this patch.
 

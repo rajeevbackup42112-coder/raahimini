@@ -86,15 +86,20 @@ export default function RequestStatusContent() {
         </div>
       </UnifiedTripCard>
 
-      <PassengerLiveLocationStatus tripId={req.trip_id} active={req.trip_status === 'IN_PROGRESS' && !isTripCompleted} />
+      <PassengerLiveLocationStatus
+        tripId={req.trip_id}
+        active={isTripInProgress}
+        pickupName={req.pickup_stop_name}
+        destinationName={routeTo}
+      />
 
       {isHeld && <div className="space-y-2"><PayWarningBanner /><div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3"><p className="text-xs font-semibold text-amber-800">Your selected seat{req.seat_count === 1 ? ' is' : 's are'} held until the driver passes your pickup stop.</p><p className="text-xs text-amber-700 mt-1">Meet the driver and pay directly. If you no longer need the ride, withdraw before your stop so the seat can be offered to someone else.</p></div></div>}
 
-      {isConfirmed && <div className="flex items-start gap-3 bg-green-50 border border-green-200 rounded-2xl px-4 py-3"><CheckCircle2 size={20} className="text-green-600 flex-shrink-0 mt-0.5" /><div><p className="text-sm font-bold text-green-800">{isTripCompleted ? 'Trip Completed' : isTripInProgress ? 'You are on your way' : 'Seat Confirmed'}</p><p className="text-xs text-green-700 mt-0.5">{isTripCompleted ? `You have arrived at ${routeTo}. Thank you for riding with Raahi!` : isTripInProgress ? `Next: ${routeTo}.` : `${seatLabel} confirmed. You are aboard and waiting to depart.`}</p></div></div>}
+      {isConfirmed && !isTripInProgress && <div className="flex items-start gap-3 bg-green-50 border border-green-200 rounded-2xl px-4 py-3"><CheckCircle2 size={20} className="text-green-600 flex-shrink-0 mt-0.5" /><div><p className="text-sm font-bold text-green-800">{isTripCompleted ? 'Trip Completed' : isTripInProgress ? 'You are on your way' : 'Seat Confirmed'}</p><p className="text-xs text-green-700 mt-0.5">{isTripCompleted ? `You have arrived at ${routeTo}. Thank you for riding with Raahi!` : isTripInProgress ? `Next: ${routeTo}.` : `${seatLabel} confirmed. You are aboard and waiting to depart.`}</p></div></div>}
 
       {isExpired && <div className="flex items-start gap-3 bg-muted border border-border rounded-2xl px-4 py-3"><AlertCircle size={20} className="text-muted-foreground flex-shrink-0 mt-0.5" /><div><p className="text-sm font-bold text-foreground">{req.status === 'WITHDRAWN' ? 'Request Withdrawn' : 'Request Expired'}</p><p className="text-xs text-muted-foreground mt-0.5">Your seat has been released. You can request again if seats are still available.</p></div></div>}
 
-      {!isExpired && !isTripCompleted && (
+      {!isExpired && !isTripCompleted && !isTripInProgress && (
         <div className="compact-card">
           <p className="section-label">{isTripInProgress ? 'Destination' : isConfirmed ? 'Your destination' : pickupIsCurrent ? 'Pickup now' : 'Next pickup'}</p>
           <div className="mt-2 flex items-start gap-3">
