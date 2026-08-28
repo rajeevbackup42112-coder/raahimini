@@ -407,3 +407,17 @@ V11 is accepted. Any subsequent release should open as a new numbered slice with
 - [ ] Rocket Version 13 deployed.
 - [ ] Headed production regression PASS: anonymous Admin ingress, role loading, Users 390px, fresh Passenger/Driver ride, seat concurrency, two-Driver FIFO.
 - [ ] Final GO LIVE decision recorded only after every blocking case is PASS.
+
+## 2026-08-28 Version 14 auth hydration hotfix gate
+
+- [x] V13 production regression reproduced in headed authenticated Admin and Driver browsers.
+- [x] Root cause isolated to awaiting Supabase profile work inside `onAuthStateChange`.
+- [x] Auth callback made synchronous; profile hydration deferred while protected-role loading remains fail-closed.
+- [x] No DB migration required.
+- [x] 28/28 contract files PASS.
+- [x] TypeScript PASS.
+- [x] Production Next.js build PASS (23/23 pages).
+- [ ] Rocket V14 deployed.
+- [ ] Authenticated Ajit Admin pages load normally.
+- [ ] Naresh Driver page loads without false denial or indefinite loading.
+- [ ] V13 mobile Users and anonymous Admin gate remain PASS.

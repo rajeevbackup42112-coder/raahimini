@@ -1,0 +1,12 @@
+const fs=require('fs');
+const path=require('path');
+const root=path.resolve(__dirname,'../..');
+const auth=fs.readFileSync(path.join(root,'src/contexts/AuthContext.tsx'),'utf8');
+const assert=(ok,msg)=>{if(!ok)throw new Error(msg)};
+assert(auth.includes('const hydrateSession = async'), 'Auth hydration helper is required');
+assert(auth.includes("onAuthStateChange((_event, session) =>"), 'Auth callback must stay synchronous');
+assert(!auth.includes('onAuthStateChange(async'), 'Do not await Supabase work inside auth event callback');
+assert(auth.includes('setTimeout(() => { void hydrateSession(session); }, 0)'), 'Profile hydration must be deferred beyond auth callback');
+assert(auth.includes('setLoading(true);') && auth.includes('await loadProfile(nextSession.user.id);'), 'Loading must cover profile hydration');
+assert(auth.includes('if (active) setLoading(false);'), 'Loading must clear after profile hydration');
+console.log('Auth Hydration Version 14 contract: PASS');

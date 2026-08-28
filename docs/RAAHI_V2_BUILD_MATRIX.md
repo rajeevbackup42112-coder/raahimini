@@ -173,3 +173,11 @@ Detailed Admin scope is authoritative in `RAAHI_V2_ADMIN_CONTROL_PLAN.md`. V9–
 V10 final runtime candidate: `ce56d489e19d220862f104b928831ab30e6e56c8` (foundation commit `2c6191e9512e948c6474c535d9ad7770242682f4`). Migration `v2_prod_v10_route_versioning` is applied. Existing DG-01/GD-01 routes were backfilled as current published v1 without changing their active state. Pre/post migration operational state remained DG-01: 0 live trips / 1 active demand; GD-01: 1 live trip / 0 active demand. No draft was created by migration.
 
 Admin can prepare New Route, Duplicate or Edit as an inactive draft; add/remove/edit/reorder stops using drag or touch buttons; inspect a publish preview; and explicitly Publish. Publishing/archiving is blocked by live trip, live queue or active passenger demand. Historical route/stops remain attached to historical trips. `Ride this route again` now resolves a completed trip to the current active route version instead of an archived route id. Canonical Start Trip/FIFO/GPS functions were not redefined. Validation: 24/24 contracts PASS, TypeScript PASS, production build PASS. Rocket V10 deployment and live Admin acceptance remain pending.
+
+## 2026-08-28 V14 auth hydration hotfix
+
+| Version | Scope | Code | DB | Build | Live acceptance |
+|---|---|---:|---:|---:|---:|
+| V14 | Prevent authenticated profile-hydration deadlock introduced by V13 | CANDIDATE `65c1c4e` | NOT REQUIRED | 28/28 contracts + TS + build PASS | PENDING ROCKET |
+
+V13 anonymous Admin gate, Users mobile-width fix and time-aware demand guards remain retained. V14 changes only auth hydration sequencing and related contracts.
