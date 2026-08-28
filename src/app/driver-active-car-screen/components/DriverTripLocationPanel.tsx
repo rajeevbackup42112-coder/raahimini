@@ -39,9 +39,7 @@ export default function DriverTripLocationPanel({ onReadyChange, refreshToken = 
     const nextReady = Boolean(result.usable_for_start) || trip.status === 'IN_PROGRESS';
     setReady(nextReady);
     onReadyChange?.(nextReady);
-    setError(result.usable_for_start === false && trip.status === 'ACTIVE_COLLECTING'
-      ? 'Location found, but accuracy is still too low to start. Try again in an open area.'
-      : '');
+    setError(result.usable_for_start === false && trip.status === 'ACTIVE_COLLECTING' ?'Location found, but accuracy is still too low to start. Try again in an open area.' :'');
     return true;
   }, [trip?.trip_id, trip?.status, onReadyChange]);
 

@@ -263,13 +263,9 @@ function SeatButton({ seat, selected, onToggle }: { seat: PublicTripSeat; select
   const available = seat.state === 'AVAILABLE';
   const style = selected
     ? 'border-primary bg-secondary text-primary shadow-sm'
-    : seat.state === 'HELD'
-      ? 'border-amber-200 bg-amber-50 text-amber-700'
-      : seat.state === 'CONFIRMED'
-        ? 'border-green-200 bg-green-50 text-green-700'
-        : seat.state === 'DRIVER_CLOSED'
-          ? 'border-border bg-muted text-muted-foreground'
-          : 'border-border bg-card text-foreground hover:border-primary/50';
+    : seat.state === 'HELD' ?'border-amber-200 bg-amber-50 text-amber-700'
+      : seat.state === 'CONFIRMED' ?'border-green-200 bg-green-50 text-green-700'
+        : seat.state === 'DRIVER_CLOSED' ?'border-border bg-muted text-muted-foreground' :'border-border bg-card text-foreground hover:border-primary/50';
   const stateLabel = selected ? 'Selected' : seat.state === 'DRIVER_CLOSED' ? 'Unavailable' : seat.state.charAt(0) + seat.state.slice(1).toLowerCase();
 
   return (

@@ -14,19 +14,16 @@ export default function LoginPage() {
   useEffect(() => {
     if (loading || !user || !profile) return;
 
-    const destination = profile.role === 'admin'
-      ? '/admin-panel'
-      : profile.role === 'driver'
-        ? '/driver-route-selection'
-        : '/';
+    const destination = profile?.role === 'admin' ?'/admin-panel'
+      : profile?.role === 'driver' ?'/driver-route-selection' :'/';
 
-    const phoneVerified = Boolean(user.phone && user.phone_confirmed_at);
+    const phoneVerified = Boolean(user?.phone && user?.phone_confirmed_at);
     if (!phoneVerified) {
-      router.replace(`/profile?next=${encodeURIComponent(destination)}`);
+      router?.replace(`/profile?next=${encodeURIComponent(destination)}`);
       return;
     }
 
-    router.replace(destination);
+    router?.replace(destination);
   }, [loading, profile, router, user]);
 
   const handleGoogle = async () => {

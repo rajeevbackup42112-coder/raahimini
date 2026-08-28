@@ -8,7 +8,7 @@ export default function DriverLoginCompatibilityPage() {
   const router = useRouter();
 
   useEffect(() => {
-    router.replace('/login');
+    router?.replace('/login');
   }, [router]);
 
   return (
