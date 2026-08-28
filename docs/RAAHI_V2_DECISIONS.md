@@ -161,3 +161,9 @@ Future chats must start from `RAAHI_V2_HANDOVER.md`, then consult this Decision 
 102. **Role authorization waits for profile truth.** Initial/sign-in loading remains active until the authenticated profile row resolves, preventing transient false Passenger/Driver/Admin denial screens.
 103. **Expired demand is not operational demand.** Route Publish/Archive blockers and Admin route counts require `status='ACTIVE'` and `latest_at >= now()`; stale status alone must never freeze future route configuration.
 104. **V13 is a hardening-only release.** It does not change seat ownership, FIFO, GPS, Start Trip, Complete Trip, phone verification, route history or any ride lifecycle command.
+
+## 2026-08-28 V14 auth hydration decisions
+
+101. **Do not await Supabase-backed profile work inside `onAuthStateChange`.** The auth event callback must return synchronously; profile hydration is deferred before awaiting database work.
+102. **Protected role screens remain loading until profile truth resolves.** Avoid transient false denials without holding the Supabase auth event lock.
+103. **V14 is application-only.** V13 database hardening remains applied; no ride-engine, FIFO, seat, GPS, phone-verification or route semantics are changed.

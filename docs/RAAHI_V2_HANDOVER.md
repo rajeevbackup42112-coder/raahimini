@@ -241,3 +241,9 @@ V13 runtime commit `fc02d33616cab0fbf26aa5ec04c30a5fcde8ab0a` fixes those four i
 Validation is green: 27/27 contract files, TypeScript and production Next.js build (23/23 pages). Canonical stale-demand cleanup expired 1 old row. Current backend cleanup state is 0 live trips, 0 live queue entries, 0 route drafts and 0 expired-but-ACTIVE demand rows.
 
 Next gate: deploy latest `rocket-staging-ready` as Rocket Version 13. Then rerun headed production acceptance with Ajit/Admin, Rajeev1/Passenger, Naresh/Driver and Rajeev4/second Driver, including mobile Users, anonymous Admin ingress, role-loading behavior, fresh full ride lifecycle, seat concurrency and two-Driver FIFO. Do not declare GO LIVE until all blocking cases pass.
+
+## 2026-08-28 V14 auth hydration hotfix candidate
+
+After Rocket V13 deployment, headed production checks confirmed anonymous `/admin-panel` is correctly gated, but authenticated Ajit Admin pages stayed blank/loading and Naresh Driver pages stayed header-only. Root cause: V13 made `onAuthStateChange` async and awaited `loadProfile`, which can deadlock profile requests behind the auth callback.
+
+V14 fixes only that sequencing: the auth event callback stays synchronous and schedules `hydrateSession` after it returns; loading remains true until profile hydration finishes. Validation is green: 28/28 contracts, TypeScript, production build. Runtime candidate: `65c1c4ed0e01dee12a02d4905e4a53ea289f5c83`. Next gate: Rocket V14, then repeat V13 headed checks before continuing final multi-user acceptance.

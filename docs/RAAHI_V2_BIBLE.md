@@ -877,3 +877,9 @@ The final headed regression then found four pre-go-live defects: anonymous `/adm
 V13 fixes only those hardening issues. Auth loading now waits for profile resolution; the entire `/admin-panel` subtree is wrapped in an Admin role gate; Users grid tracks are allowed to shrink on mobile; and Route Management treats demand as blocking only while `status='ACTIVE' AND latest_at>=now()`. The DB migration redefines only the existing Admin route list/publish/archive functions and does not rewrite demand or ride state.
 
 V13 validation: 27/27 contracts PASS, TypeScript PASS, production build PASS (23/23 pages). Migration `v2_prod_v13_pre_go_live_hardening` is applied; anon execute remains denied and authenticated execute remains granted with Admin checks. One already-expired stale intent was then cleaned through canonical `expire_demand_intents()`. Final pre-deploy state: 0 live trips, 0 live queue entries, 0 route drafts, 0 expired-but-ACTIVE demand rows. Runtime candidate: `fc02d33616cab0fbf26aa5ec04c30a5fcde8ab0a`.
+
+## 2026-08-28 V14 auth hydration hotfix candidate
+
+Production V13 live acceptance exposed a new regression in authenticated role pages: awaiting profile queries directly inside Supabase `onAuthStateChange` can leave the auth callback unresolved, causing Admin pages to remain blank/loading and Driver pages to remain at header-only loading state. Anonymous Admin gating and the V13 mobile/demand fixes themselves were working.
+
+V14 keeps protected screens loading until profile hydration finishes, but the auth-state callback is now synchronous and defers profile hydration to the next task before awaiting database work. No DB migration is required. Validation: 28/28 contracts PASS, TypeScript PASS, production build PASS (23/23 pages). Runtime candidate `65c1c4ed0e01dee12a02d4905e4a53ea289f5c83`.
