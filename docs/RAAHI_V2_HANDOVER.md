@@ -247,3 +247,13 @@ Next gate: deploy latest `rocket-staging-ready` as Rocket Version 13. Then rerun
 After Rocket V13 deployment, headed production checks confirmed anonymous `/admin-panel` is correctly gated, but authenticated Ajit Admin pages stayed blank/loading and Naresh Driver pages stayed header-only. Root cause: V13 made `onAuthStateChange` async and awaited `loadProfile`, which can deadlock profile requests behind the auth callback.
 
 V14 fixes only that sequencing: the auth event callback stays synchronous and schedules `hydrateSession` after it returns; loading remains true until profile hydration finishes. Validation is green: 28/28 contracts, TypeScript, production build. Runtime candidate: `65c1c4ed0e01dee12a02d4905e4a53ea289f5c83`. Next gate: Rocket V14, then repeat V13 headed checks before continuing final multi-user acceptance.
+
+## 2026-08-28 final go-live handover
+
+V14 is the final accepted production source for this release train. Rocket served `38b7519d615e171c59d537b18a61c1ba303c132f`; `prod-v14-frozen` points to that exact source.
+
+Final headed acceptance used Rajeev1 Passenger, Naresh Driver, Rajeev4 second Driver and Ajit Admin. Rajeev4 was onboarded through the guarded Admin flow with TATA TIAGO / JH10RS1234 / 4 seats. Same-direction FIFO was proven live: Naresh collected first, Rajeev4 waited second, and canonical Start Trip promoted Rajeev4 exactly when Naresh departed.
+
+A fresh Rajeev1 + Naresh ride proved booking, boarding/payment, Close Empty Seats, real-browser GPS automatic Start Trip, live Passenger map, stale/recovered GPS display, explicit destination arrival, automatic completion and Passenger Arrived. Final backend state: trip COMPLETED at stop 6, queue DONE, live GPS 0, active share links 0. Final environment cleanup is zero across live trips/queues/HELD/current demand/open support/drafts/GPS.
+
+Release status: GO-LIVE READY. Do not alter FIFO, GPS, seat ownership, phone verification or lifecycle commands during launch-day support; use only existing audited recovery/configuration paths.

@@ -167,3 +167,10 @@ Future chats must start from `RAAHI_V2_HANDOVER.md`, then consult this Decision 
 101. **Do not await Supabase-backed profile work inside `onAuthStateChange`.** The auth event callback must return synchronously; profile hydration is deferred before awaiting database work.
 102. **Protected role screens remain loading until profile truth resolves.** Avoid transient false denials without holding the Supabase auth event lock.
 103. **V14 is application-only.** V13 database hardening remains applied; no ride-engine, FIFO, seat, GPS, phone-verification or route semantics are changed.
+
+## 2026-08-28 final release decision
+
+101. **V14 is the accepted launch source.** `prod-v14-frozen` preserves `38b7519d615e171c59d537b18a61c1ba303c132f` after full headed production acceptance.
+102. **Real-user acceptance closes the historical evidence gaps that were exercised in the final ride.** The final session proved automatic departure with usable real browser GPS, Passenger live/stale/recovered map behavior, paired Passenger/Driver lifecycle truth, FIFO handoff and automatic completion.
+103. **GO-LIVE requires a clean operational state.** Final acceptance ended with zero live trips, live queues, HELD requests, current ACTIVE demand, open support cases, route drafts and live GPS rows.
+104. **Launch support must preserve canonical boundaries.** No launch-day shortcut may bypass FIFO, GPS truth, seat ownership, verified-phone state or backend lifecycle commands.

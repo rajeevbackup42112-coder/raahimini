@@ -181,3 +181,14 @@ Admin can prepare New Route, Duplicate or Edit as an inactive draft; add/remove/
 | V14 | Prevent authenticated profile-hydration deadlock introduced by V13 | CANDIDATE `65c1c4e` | NOT REQUIRED | 28/28 contracts + TS + build PASS | PENDING ROCKET |
 
 V13 anonymous Admin gate, Users mobile-width fix and time-aware demand guards remain retained. V14 changes only auth hydration sequencing and related contracts.
+
+## 2026-08-28 final production acceptance
+
+| Version | Scope | Code | DB | Build | Live acceptance |
+|---|---|---:|---:|---:|---:|
+| V13 | Pre-go-live Admin/auth/responsive/demand hardening | DEPLOYED `6f3ff6b` | MIGRATED | PASS 27/27 | Superseded by V14 auth hotfix |
+| V14 | Auth hydration hotfix preserving V13 hardening | DEPLOYED `38b7519` | NOT REQUIRED | PASS 28/28 | FINAL HEADED ACCEPTANCE PASS |
+
+Final headed production matrix now includes real Passenger seat lifecycle, concurrent seat exclusion, demand recovery 15/30/60, Driver no-show/cancel recovery, support, same-direction two-Driver FIFO, real-browser GPS automatic departure, Passenger live/stale/recovered map, Share My Raahi privacy/revoke, explicit destination arrival, V12 automatic completion, role ingress and mobile overflow checks.
+
+Final cleanup: 0 live trips, 0 live queue entries, 0 HELD requests, 0 current ACTIVE demand, 0 open support cases, 0 route drafts and 0 live GPS rows. Rollback reference: `prod-v14-frozen` -> `38b7519d615e171c59d537b18a61c1ba303c132f`.

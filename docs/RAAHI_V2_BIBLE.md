@@ -883,3 +883,9 @@ V13 validation: 27/27 contracts PASS, TypeScript PASS, production build PASS (23
 Production V13 live acceptance exposed a new regression in authenticated role pages: awaiting profile queries directly inside Supabase `onAuthStateChange` can leave the auth callback unresolved, causing Admin pages to remain blank/loading and Driver pages to remain at header-only loading state. Anonymous Admin gating and the V13 mobile/demand fixes themselves were working.
 
 V14 keeps protected screens loading until profile hydration finishes, but the auth-state callback is now synchronous and defers profile hydration to the next task before awaiting database work. No DB migration is required. Validation: 28/28 contracts PASS, TypeScript PASS, production build PASS (23/23 pages). Runtime candidate `65c1c4ed0e01dee12a02d4905e4a53ea289f5c83`.
+
+## 2026-08-28 final headed production acceptance
+
+V14 is live-accepted. Final headed production testing used real authenticated Passenger, Driver and Admin sessions and a clean anonymous browser. Critical evidence includes guarded role ingress, responsive Admin Users, seat ownership/concurrency, cancellation/no-show recovery, 15/30/60 demand persistence, support resolution, same-direction FIFO handoff, real browser GPS automatic departure, Passenger live/stale/recovered map, Share My Raahi privacy/revocation, explicit destination arrival and V12 automatic completion.
+
+The final fresh GD-01 ride completed with one confirmed Passenger, five explicitly closed seats, real usable GPS, automatic Start Trip, Passenger On the way + live map, explicit Arrived at Dhanbad Station and automatic terminal completion. Backend ended COMPLETED at stop 6, queue DONE, zero live GPS and zero active share links. Final cleanup found zero live trips, queues, HELD requests, current demand, open support, route drafts and live GPS rows. V14 rollback is `prod-v14-frozen` at `38b7519d615e171c59d537b18a61c1ba303c132f`.

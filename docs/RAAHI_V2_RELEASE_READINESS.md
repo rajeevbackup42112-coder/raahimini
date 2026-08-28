@@ -421,3 +421,25 @@ V11 is accepted. Any subsequent release should open as a new numbered slice with
 - [ ] Authenticated Ajit Admin pages load normally.
 - [ ] Naresh Driver page loads without false denial or indefinite loading.
 - [ ] V13 mobile Users and anonymous Admin gate remain PASS.
+
+## 2026-08-28 final go-live acceptance
+
+- [x] V14 auth hydration hotfix live-verified.
+- [x] Anonymous Admin / Driver / Passenger protected ingress correctly gated.
+- [x] Production test-auth endpoint unavailable on production.
+- [x] Passenger seat hold/withdraw and concurrent held-seat exclusion PASS.
+- [x] Driver no-show and Driver cancellation after confirmation PASS.
+- [x] 15 / 30 / 60 minute demand persistence and cleanup PASS.
+- [x] Support create -> Admin Operations -> resolve PASS.
+- [x] Same-direction two-Driver FIFO handoff PASS: Naresh #1 -> Rajeev4 #2 promoted exactly when Naresh started.
+- [x] Real-browser GPS automatic Start Trip PASS without fabricated coordinates.
+- [x] Passenger live map, stale fallback and live recovery PASS.
+- [x] Share My Raahi anonymous privacy + revoke PASS.
+- [x] Fresh Passenger ride: Requested -> Confirmed -> On the way -> Arrived PASS.
+- [x] Explicit destination arrival -> V12 automatic completion PASS.
+- [x] Terminal backend cleanup PASS: queue DONE, live GPS 0, active share links 0.
+- [x] Mobile overflow sweep PASS for Passenger/Admin; Driver primary surface has no horizontal overflow.
+- [x] Final production cleanup PASS: no live trips/queues/HELD/current demand/open support/drafts/GPS.
+- [x] V14 exact deployed source frozen as `prod-v14-frozen` -> `38b7519d615e171c59d537b18a61c1ba303c132f`.
+
+**GO-LIVE STATUS: READY.** No known blocking functional defect remains from the executed final acceptance suite.
