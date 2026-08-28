@@ -10,8 +10,8 @@ const adminLayout = read('src/app/admin-panel/layout.tsx');
 const users = read('src/app/admin-panel/components/AdminUsersDirectory.tsx');
 const migration = read('supabase/migrations/20260828083000_v2_prod_v13_pre_go_live_hardening.sql');
 
-assert(auth.includes('await loadProfile(session.user.id)'), 'Auth loading must wait for profile resolution');
-assert(auth.includes("_event === 'SIGNED_IN' || _event === 'INITIAL_SESSION'"), 'Auth must keep protected gates loading through profile resolution');
+assert(auth.includes('await loadProfile(nextSession.user.id)'), 'Auth loading must wait for profile resolution');
+assert(auth.includes('setLoading(true);') && auth.includes('if (active) setLoading(false);'), 'Auth must keep protected gates loading through profile resolution');
 assert(adminGate.includes('Admin Sign In Required'), 'Anonymous Admin ingress must be gated');
 assert(adminGate.includes("profile?.role !== 'admin'"), 'Non-Admin users must be gated from Admin tree');
 assert(adminLayout.includes('<AdminRoleGate>{children}</AdminRoleGate>'), 'Entire /admin-panel tree must use AdminRoleGate');

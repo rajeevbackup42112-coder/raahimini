@@ -68,26 +68,33 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   useEffect(() => {
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      if (session?.user?.id) await loadProfile(session.user.id);
-      else setProfile(null);
-      setLoading(false);
+    let active = true;
+
+    const hydrateSession = async (nextSession: any) => {
+      if (!active) return;
+      setSession(nextSession);
+      setUser(nextSession?.user ?? null);
+      if (!nextSession?.user?.id) {
+        setProfile(null);
+        setLoading(false);
+        return;
+      }
+      setLoading(true);
+      await loadProfile(nextSession.user.id);
+      if (active) setLoading(false);
+    };
+
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      void hydrateSession(session);
     });
 
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      if (_event === 'SIGNED_IN' || _event === 'INITIAL_SESSION') setLoading(true);
-      setSession(session);
-      setUser(session?.user ?? null);
-      if (session?.user?.id) await loadProfile(session.user.id);
-      else setProfile(null);
-      setLoading(false);
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      // Supabase warns against awaiting other Supabase calls inside this callback.
+      // Defer profile hydration until the auth event callback has returned.
+      setTimeout(() => { void hydrateSession(session); }, 0);
     });
 
-    return () => subscription.unsubscribe();
+    return () => { active = false; subscription.unsubscribe(); };
   }, []);
 
   const signUp = async (email: string, password: string, metadata = {}) => {
