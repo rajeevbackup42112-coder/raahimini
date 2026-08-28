@@ -146,7 +146,8 @@ The previous mobile/responsive PASS baseline remains historical evidence, but Pa
 | V9 | Admin Dashboard + Registered Users + integrated Driver onboarding | DEPLOYED | MIGRATED (READ-ONLY) | PASS | Production bundle verified; authenticated Admin visual acceptance still to capture |
 | V10 | Guarded full Route Management with versioning/future-effective publishing | DEPLOYED `07adb1a` | MIGRATED | PASS | LIVE ACCEPTANCE PASS: draft isolation + busy-route publish guard + discard |
 | V11 | Consolidated Admin Operations / emergency controls + cleanup | DEPLOYED `66c543e` | MIGRATED (READ-ONLY) | PASS | LIVE ACCEPTANCE PASS |
-| V12 | Automatic trip completion after explicit destination arrival | PUSHED + VALIDATED `fe22cae` | NOT REQUIRED | PASS | PENDING ROCKET DEPLOY/LIVE |
+| V12 | Automatic trip completion after explicit destination arrival | DEPLOYED `99c2343` | NOT REQUIRED | PASS | LIVE PASS: explicit destination arrival -> automatic completion; queue/accounting/GPS/share cleanup verified |
+| V13 | Pre-go-live hardening: Admin auth/profile gate, Users mobile width, time-aware route-demand guard | PUSHED `fc02d33` | MIGRATED | PASS | PENDING ROCKET DEPLOY + headed regression |
 
 V5 preflight on 2026-08-25: active trips = 0, live queue entries = 0, HELD requests = 0. The V5 operational migration was applied successfully. Live acceptance then showed Driver correctly destination-focused while Passenger still rendered legacy stop-by-stop progress after boarding.
 

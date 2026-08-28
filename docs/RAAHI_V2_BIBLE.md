@@ -867,3 +867,13 @@ V12 removes the remaining manual Complete Trip decision without making arrival G
 A per-trip attempt guard prevents repeated automatic completion calls. If the canonical command fails transiently, the UI shows `Retry finalization`; this is a recovery action, not a second completion decision. Manual Complete Trip button/modal is removed.
 
 Validation: 26/26 contracts PASS locally, TypeScript PASS, production build PASS (23/23 static pages), plus GitHub Validate Raahi Mini run #315 SUCCESS using a temporary full-suite fan-out shim that was removed afterward. Final runtime/test checkpoint before docs: `fe22cae60217983ac788131f0217605ea0068c30`.
+
+## 2026-08-28 V12 live completion + V13 pre-go-live hardening
+
+V12 production completion is live-proven. In the authenticated headed Naresh Driver browser, `Arrived at Dhanbad Station` was the final explicit action; Raahi then invoked canonical `complete_trip()` automatically and returned the Driver to `No Active Trip`. Backend verification showed trip `COMPLETED`, final stop order 6, queue `DONE`, Driver completed-trip accounting incremented, zero live-location rows and zero active share links.
+
+The final headed regression then found four pre-go-live defects: anonymous `/admin-panel` exposed Admin chrome despite protected data staying hidden; role gates could briefly show false denial while the profile query was still loading; `/admin-panel/users` overflowed a 390px viewport; and expired `demand_intents` rows could remain `ACTIVE` and incorrectly block Route Publish/Archive.
+
+V13 fixes only those hardening issues. Auth loading now waits for profile resolution; the entire `/admin-panel` subtree is wrapped in an Admin role gate; Users grid tracks are allowed to shrink on mobile; and Route Management treats demand as blocking only while `status='ACTIVE' AND latest_at>=now()`. The DB migration redefines only the existing Admin route list/publish/archive functions and does not rewrite demand or ride state.
+
+V13 validation: 27/27 contracts PASS, TypeScript PASS, production build PASS (23/23 pages). Migration `v2_prod_v13_pre_go_live_hardening` is applied; anon execute remains denied and authenticated execute remains granted with Admin checks. One already-expired stale intent was then cleaned through canonical `expire_demand_intents()`. Final pre-deploy state: 0 live trips, 0 live queue entries, 0 route drafts, 0 expired-but-ACTIVE demand rows. Runtime candidate: `fc02d33616cab0fbf26aa5ec04c30a5fcde8ab0a`.
