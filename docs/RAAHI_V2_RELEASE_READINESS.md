@@ -384,6 +384,26 @@ V11 is accepted. Any subsequent release should open as a new numbered slice with
 - [x] Production Next.js build PASS (23/23 static pages).
 - [x] GitHub Validate Raahi Mini run #315 SUCCESS; temporary fan-out shim removed, PR #73 closed unmerged.
 - [x] Runtime/test checkpoint `fe22cae60217983ac788131f0217605ea0068c30`.
-- [ ] Rocket Version 12 deployed.
-- [ ] Live Driver destination-arrival -> automatic completion PASS.
-- [ ] Passenger switches to Arrived/completed state and terminal GPS cleanup remains correct.
+- [x] Rocket Version 12 deployed from final source `99c2343`.
+- [x] Live Driver destination-arrival -> automatic completion PASS in headed Naresh browser.
+- [x] Terminal backend cleanup PASS: trip COMPLETED, queue DONE, Driver accounting incremented, live GPS 0, active share links 0.
+
+## 2026-08-28 Version 13 pre-go-live hardening gate
+
+- [x] Anonymous Admin chrome defect reproduced before fix.
+- [x] Role/profile loading flash reproduced before fix.
+- [x] Admin Users 390px horizontal overflow reproduced before fix.
+- [x] Expired-but-ACTIVE demand Route blocker reproduced before fix.
+- [x] Entire `/admin-panel` tree wrapped in Admin role gate.
+- [x] Auth initial/sign-in loading waits for profile resolution.
+- [x] Users grid/list tracks use `min-w-0` for mobile shrink.
+- [x] Route list/publish/archive demand blockers are time-aware (`latest_at >= now()`).
+- [x] Migration applied; anon execute denied, authenticated execute granted with existing Admin checks.
+- [x] Canonical demand expiry cleaned 1 stale row; final state 0 stale ACTIVE demand, 0 drafts, 0 live trips, 0 live queue entries.
+- [x] 27/27 contracts PASS.
+- [x] TypeScript PASS.
+- [x] Production build PASS (23/23 pages).
+- [x] Runtime `fc02d33616cab0fbf26aa5ec04c30a5fcde8ab0a` pushed to `prod-v13-candidate` and `rocket-staging-ready`.
+- [ ] Rocket Version 13 deployed.
+- [ ] Headed production regression PASS: anonymous Admin ingress, role loading, Users 390px, fresh Passenger/Driver ride, seat concurrency, two-Driver FIFO.
+- [ ] Final GO LIVE decision recorded only after every blocking case is PASS.

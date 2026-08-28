@@ -92,3 +92,7 @@ Admin work should follow the core ride-flow simplification so we do not redesign
 6. **V11** consolidated Operations / emergency controls and Admin cleanup.
 
 Every Admin version requires contracts, TypeScript/build, focused Admin acceptance, neighboring Passenger/Driver regression, audit verification and rollback/forward-repair notes before the next production version.
+
+## 2026-08-28 pre-go-live Admin hardening
+
+The final headed sweep added a V13 hardening gate after the V9-V11 roadmap. Admin navigation must not render for anonymous/non-Admin users while profile authorization is unresolved, and Registered Users must remain horizontally contained at a 390px viewport. Route Management blockers now distinguish genuinely active demand from stale rows whose `latest_at` has passed. This hardening changes no Admin command authority and adds no new mutation capability.

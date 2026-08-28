@@ -154,3 +154,10 @@ Future chats must start from `RAAHI_V2_HANDOVER.md`, then consult this Decision 
 98. **Manual Complete Trip UI is removed.** The final Driver decision is Arrived at destination, not a redundant second confirmation.
 99. **Automatic completion is attempt-guarded.** The client makes one automatic completion attempt per trip state and offers only a retry if canonical finalization fails.
 100. **V12 is application-only.** Final-stop authorization, queue DONE, accounting, behaviour/audit events, GPS cleanup and share expiry remain backend-owned and unchanged.
+
+## 2026-08-28 V13 pre-go-live hardening decisions
+
+101. **A protected Admin tree must not render Admin chrome before authorization resolves.** `/admin-panel` is gated as a whole; anonymous and non-Admin users do not receive Dashboard/Users/Routes/Operations UI.
+102. **Role authorization waits for profile truth.** Initial/sign-in loading remains active until the authenticated profile row resolves, preventing transient false Passenger/Driver/Admin denial screens.
+103. **Expired demand is not operational demand.** Route Publish/Archive blockers and Admin route counts require `status='ACTIVE'` and `latest_at >= now()`; stale status alone must never freeze future route configuration.
+104. **V13 is a hardening-only release.** It does not change seat ownership, FIFO, GPS, Start Trip, Complete Trip, phone verification, route history or any ride lifecycle command.

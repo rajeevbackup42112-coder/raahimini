@@ -231,3 +231,13 @@ V12 removes the Driver Complete Trip button/modal. After the Driver explicitly t
 Backend review confirmed `complete_trip()` still requires the authorized active Driver, `IN_PROGRESS`, and current stop equal to the final route stop; it records COMPLETED, queue DONE, Driver trip count, behaviour and audit. Existing trip-status triggers retain terminal GPS cleanup/share expiry.
 
 Validation: 26/26 contracts PASS, TypeScript PASS, production build PASS (23/23 static pages). GitHub Validate Raahi Mini run #315 also passed; its temporary full-contract CI shim was removed and PR #73 was closed unmerged. Runtime/test checkpoint: `fe22cae60217983ac788131f0217605ea0068c30`. Next action: push final V12 docs checkpoint to `rocket-staging-ready`, deploy Rocket Version 12, then live-test explicit destination arrival -> automatic completion and Passenger Arrived state.
+
+## 2026-08-28 V13 pre-go-live hardening candidate
+
+V12 automatic completion was production-proven in a headed authenticated Driver session: Arrived-at-destination caused canonical automatic completion with terminal queue/accounting/GPS/share cleanup. The final broad headed sweep then found four blockers: Admin chrome visible anonymously, role-profile loading flash, Users mobile overflow at 390px, and expired demand incorrectly blocking Route Publish/Archive.
+
+V13 runtime commit `fc02d33616cab0fbf26aa5ec04c30a5fcde8ab0a` fixes those four issues only and is pushed to `prod-v13-candidate` and `rocket-staging-ready`. Migration `20260828083000_v2_prod_v13_pre_go_live_hardening.sql` / `v2_prod_v13_pre_go_live_hardening` is applied. It only redefines existing Admin route list/publish/archive RPCs to ignore expired demand windows. Privileges remain anon denied / authenticated granted with Admin guard.
+
+Validation is green: 27/27 contract files, TypeScript and production Next.js build (23/23 pages). Canonical stale-demand cleanup expired 1 old row. Current backend cleanup state is 0 live trips, 0 live queue entries, 0 route drafts and 0 expired-but-ACTIVE demand rows.
+
+Next gate: deploy latest `rocket-staging-ready` as Rocket Version 13. Then rerun headed production acceptance with Ajit/Admin, Rajeev1/Passenger, Naresh/Driver and Rajeev4/second Driver, including mobile Users, anonymous Admin ingress, role-loading behavior, fresh full ride lifecycle, seat concurrency and two-Driver FIFO. Do not declare GO LIVE until all blocking cases pass.
