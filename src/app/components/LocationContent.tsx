@@ -109,17 +109,17 @@ export default function LocationContent() {
   return (
     <div className="page-shell space-y-6 animate-fade-in">
       <div className="hero-surface">
-        <div className="inline-flex items-center gap-2 rounded-full bg-white/80 px-3 py-1.5">
+        <div className="inline-flex items-center gap-2 rounded-full bg-white/90 px-3 py-1.5 shadow-sm ring-1 ring-white/20">
           <Navigation size={14} className="text-primary" />
-          <span className="text-xs font-bold text-primary">Clear fare · No platform fee</span>
+          <span className="text-xs font-bold text-primary">Clear fare · Pay the driver directly</span>
         </div>
-        <h1 className="mt-4 text-2xl font-extrabold text-white">
-          {user && profile?.display_name ? `Hi, ${profile.display_name}` : 'Find your Raahi'}
+        <p className="mt-5 text-sm font-semibold text-white/70">{user && profile?.display_name ? `Hi, ${profile.display_name}` : 'Welcome to Raahi'}</p>
+        <h1 className="mt-1 max-w-xl text-2xl font-extrabold tracking-tight text-white sm:text-3xl">
+          {activeRequest ? 'Your Raahi is moving.' : 'Where are you travelling today?'}
         </h1>
-        <p className="mt-1 text-sm text-white/75">
-          {activeRequest ? 'Your current ride is live below. Raahi will keep the next step clear.' : 'Choose where you are. Raahi will show the clearest live ride option first.'}
+        <p className="mt-2 max-w-2xl text-sm leading-relaxed text-white/75">
+          {activeRequest ? 'Your current ride is live below. We’ll keep the next step clear.' : 'Choose where you are. We’ll surface the clearest live ride option first.'}
         </p>
-        {selectedLoc && !activeRequest && <p className="mt-3 text-xs font-semibold text-amber-200">Your current choice: {selectedLoc.name}</p>}
       </div>
 
       {activeRequest && (
@@ -154,14 +154,24 @@ export default function LocationContent() {
       )}
 
       {!activeRequest && !watchedRouteId && recentTrip?.repeat_route_id && recentFrom && recentTo && (
-        <button onClick={() => router.push(`/active-car-screen?route_id=${recentTrip.repeat_route_id}`)} className="feature-card w-full text-left active:scale-[0.99]">
-          <div className="flex items-start gap-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-secondary"><RotateCcw size={18} className="text-primary" /></div>
-            <div className="min-w-0 flex-1"><p className="text-[11px] font-bold uppercase tracking-wide text-primary">My Raahi · Recent trip</p><h2 className="mt-1 text-base font-bold text-foreground">{recentFrom} → {recentTo}</h2><p className="mt-1 text-xs text-muted-foreground">Pickup: {recentTrip.pickup_stop_name}. Nothing is booked until you choose a live car and confirm again.</p></div>
+        <button onClick={() => router.push(`/active-car-screen?route_id=${recentTrip.repeat_route_id}`)} className="group flex w-full items-center gap-3 rounded-2xl border border-border bg-card p-4 text-left card-shadow transition-all hover:border-primary/20 hover:shadow-md active:scale-[0.99]">
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-secondary"><RotateCcw size={18} className="text-primary" /></div>
+          <div className="min-w-0 flex-1">
+            <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground">Ride again</p>
+            <h2 className="mt-0.5 truncate text-sm font-bold text-foreground sm:text-base">{recentFrom} → {recentTo}</h2>
+            <p className="mt-0.5 truncate text-xs text-muted-foreground">Pickup · {recentTrip.pickup_stop_name}</p>
           </div>
-          <div className="mt-3 flex items-center justify-between rounded-2xl bg-secondary/60 px-3 py-2.5"><div><p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Quick action</p><p className="text-sm font-bold text-primary">Ride this route again</p></div><ArrowRight size={18} className="text-primary" /></div>
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-secondary text-primary transition-transform group-hover:translate-x-0.5"><ArrowRight size={17} /></div>
         </button>
       )}
+
+      <div className="flex items-end justify-between gap-4">
+        <div>
+          <p className="section-label">Start here</p>
+          <h2 className="mt-1 text-lg font-extrabold tracking-tight text-foreground">Where are you now?</h2>
+        </div>
+        {selectedLoc && <p className="text-xs font-semibold text-primary">{selectedLoc.name} selected</p>}
+      </div>
 
       {loadingLocations ? (
         <div className="flex justify-center py-8"><Loader2 size={24} className="animate-spin text-primary" /></div>
@@ -182,11 +192,11 @@ export default function LocationContent() {
       )}
 
       {selectedLoc && (
-        <div className="space-y-5 animate-slide-up">
-          {loadingRoutes ? <RouteListSkeleton /> : (
+        <div className="grid gap-5 animate-slide-up lg:grid-cols-2">
+          {loadingRoutes ? <div className="lg:col-span-2"><RouteListSkeleton /></div> : (
             <>
-              {goingFrom.length > 0 && <RouteGroup title={`Going from ${selectedLoc.name}`} routes={goingFrom} />}
-              {comingTo.length > 0 && <RouteGroup title={`Coming to ${selectedLoc.name}`} routes={comingTo} />}
+              {goingFrom.length > 0 && <RouteGroup title={`From ${selectedLoc.name}`} routes={goingFrom} />}
+              {comingTo.length > 0 && <RouteGroup title={`To ${selectedLoc.name}`} routes={comingTo} />}
               {routes.length === 0 && <div className="text-center py-6 text-muted-foreground text-sm"><Car size={32} className="mx-auto mb-2 opacity-30" /><p>No routes available for this location yet</p></div>}
             </>
           )}
@@ -200,5 +210,5 @@ export default function LocationContent() {
 
 function RouteGroup({ title, routes }: { title: string; routes: RouteForLocation[] }) {
   const sorted = [...routes].sort((a, b) => Number(b.has_active_car) - Number(a.has_active_car));
-  return <div><div className="mb-3 flex items-end justify-between gap-3"><div><p className="section-label">{title}</p><p className="mt-1 text-xs text-muted-foreground">Live availability, clear fare and what happens next.</p></div></div><div className="space-y-3">{sorted.map((route) => <PassengerRouteCard key={route.route_id} route={route} />)}</div></div>;
+  return <section><div className="mb-3 flex items-center justify-between gap-3"><h3 className="text-sm font-extrabold tracking-tight text-foreground">{title}</h3><p className="text-[11px] font-semibold text-muted-foreground">Live availability</p></div><div className="space-y-3">{sorted.map((route) => <PassengerRouteCard key={route.route_id} route={route} />)}</div></section>;
 }

@@ -6,8 +6,8 @@ import { Car, Map, Ticket, User } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 
 const passengerNavItems = [
-  { href: '/', label: 'Routes', icon: Map },
-  { href: '/active-car-screen', label: 'Live Ride', icon: Car },
+  { href: '/', label: 'Home', icon: Map },
+  { href: '/active-car-screen', label: 'Find Ride', icon: Car },
   { href: '/request-status-screen', label: 'My Ride', icon: Ticket },
   { href: '/profile', label: 'Profile', icon: User },
 ];

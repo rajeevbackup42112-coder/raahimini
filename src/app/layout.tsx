@@ -20,8 +20,8 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: 'Raahi Mini — Shared Seats',
-  description: 'Discover and request shared car seats on Raahi routes — no advance payment, pay the driver directly.',
+  title: 'Raahi — Shared rides, made clear',
+  description: 'Find live shared rides with clear fares, real seat availability and simple trip progress.',
   icons: {
     icon: [{ url: '/favicon.ico', type: 'image/x-icon' }],
   },

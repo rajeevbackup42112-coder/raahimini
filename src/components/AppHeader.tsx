@@ -53,7 +53,7 @@ export default function AppHeader({ title, showBack = false }: AppHeaderProps) {
               <Link href="/admin-panel" className={`nav-item ${pathname.startsWith('/admin-panel') ? 'active' : ''}`}><ShieldCheck size={16} />Admin Home</Link>
             ) : (
               <>
-                <Link href="/" className={`nav-item ${pathname === '/' ? 'active' : ''}`}><Map size={16} />Routes</Link>
+                <Link href="/" className={`nav-item ${pathname === '/' ? 'active' : ''}`}><Map size={16} />Home</Link>
                 {user && <Link href="/profile" className={`nav-item ${pathname === '/profile' ? 'active' : ''}`}><User size={16} />Profile</Link>}
               </>
             )}
