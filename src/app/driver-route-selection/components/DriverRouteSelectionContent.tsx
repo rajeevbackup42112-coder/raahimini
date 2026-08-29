@@ -149,24 +149,26 @@ export default function DriverRouteSelectionContent() {
 
   if (context.queue_status === 'WAITING') {
     return (
-      <div className="max-w-screen-sm mx-auto px-4 py-8 space-y-4">
-        <div className="card p-5 text-center space-y-3">
-          <div className="w-12 h-12 rounded-2xl bg-secondary mx-auto flex items-center justify-center"><Clock3 size={22} className="text-primary" /></div>
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Driver Queue</p>
-            <h1 className="text-xl font-bold mt-1">You are waiting</h1>
-            <p className="text-sm text-muted-foreground mt-1">{context.queue_route_label}</p>
+      <div className="mx-auto max-w-screen-sm px-4 py-6 sm:px-6 sm:py-8">
+        <section className="overflow-hidden rounded-3xl border border-border bg-card card-shadow-md">
+          <div className="bg-gradient-to-br from-primary to-[#267746] px-5 py-6 text-white sm:px-7">
+            <div className="flex items-start justify-between gap-4">
+              <div><p className="text-[11px] font-bold uppercase tracking-[0.14em] text-amber-200">Driver queue</p><h1 className="mt-2 text-2xl font-extrabold tracking-tight">You’re in line</h1><p className="mt-2 text-sm text-white/75">{context.queue_route_label}</p></div>
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-white/15"><Clock3 size={20} /></div>
+            </div>
+            <div className="mt-6 rounded-3xl border border-white/10 bg-white/10 p-5 text-center backdrop-blur-sm">
+              <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-white/65">Queue position</p>
+              <p className="mt-1 text-5xl font-extrabold tracking-tight">#{context.queue_position ?? '—'}</p>
+            </div>
           </div>
-          <div className="bg-muted rounded-2xl p-4">
-            <p className="text-xs text-muted-foreground">Queue position</p>
-            <p className="text-3xl font-bold text-primary">#{context.queue_position ?? '—'}</p>
+          <div className="space-y-4 p-5 sm:p-6">
+            <div className="rounded-2xl bg-secondary/60 px-4 py-3"><p className="text-sm font-bold text-primary">Raahi is watching your turn</p><p className="mt-1 text-xs leading-relaxed text-muted-foreground">This updates automatically. When your turn starts, Raahi opens your active car.</p></div>
+            <div className="grid grid-cols-2 gap-2">
+              <button className="btn-outline" onClick={refreshContext}><RefreshCw size={16}/>Refresh</button>
+              <button className="btn-outline text-red-600" disabled={leaving} onClick={leaveQueue}>{leaving ? <Loader2 size={16} className="animate-spin"/> : null}Leave queue</button>
+            </div>
           </div>
-          <p className="text-sm text-muted-foreground">This updates automatically. When your turn starts, Raahi will open your active car.</p>
-          <div className="flex gap-2">
-            <button className="btn-outline flex-1" onClick={refreshContext}><RefreshCw size={16}/>Refresh</button>
-            <button className="btn-outline flex-1" disabled={leaving} onClick={leaveQueue}>{leaving ? <Loader2 size={16} className="animate-spin"/> : null}Leave Queue</button>
-          </div>
-        </div>
+        </section>
       </div>
     );
   }
@@ -175,27 +177,33 @@ export default function DriverRouteSelectionContent() {
 
   return (
     <div className="mx-auto max-w-screen-lg space-y-5 px-4 py-5 sm:px-6">
-      <div className="hero-surface">
-        <p className="text-xs font-bold uppercase tracking-wide text-amber-200">Driver home</p>
-        <h1 className="mt-2 text-2xl font-extrabold text-white">{profile?.display_name ? `Ready, ${profile.display_name}?` : 'Ready to drive?'}</h1>
-        <p className="mt-1 text-sm text-white/75">Choose where you are. Raahi will show your next action, current-route demand and earning context.</p>
-      </div>
+      <section className="hero-surface">
+        <div className="flex items-start justify-between gap-4">
+          <div><p className="text-[11px] font-bold uppercase tracking-[0.14em] text-amber-200">Driver home</p><h1 className="mt-2 text-2xl font-extrabold tracking-tight text-white sm:text-3xl">{profile?.display_name ? `Ready, ${profile.display_name}?` : 'Ready to drive?'}</h1><p className="mt-2 max-w-xl text-sm leading-relaxed text-white/75">Choose your current stand, then take the next route action. Demand and earning context update automatically.</p></div>
+          <div className="hidden rounded-full bg-white/10 px-3 py-1.5 text-xs font-bold text-white/80 sm:block">Operational mode</div>
+        </div>
+      </section>
 
-      <div className="grid grid-cols-2 gap-2">
-        {locations.map(loc => (
-          <button key={loc.id} onClick={() => setLocationId(loc.id)} className={`card p-4 text-left border-2 ${locationId === loc.id ? 'border-primary bg-secondary/40' : 'border-transparent'}`}>
-            <MapPin size={18} className="text-primary mb-2" />
-            <p className="font-bold text-sm">{loc.name}</p>
-            <p className="text-xs text-muted-foreground">I am here</p>
-          </button>
-        ))}
-      </div>
+      <section>
+        <div className="mb-2 flex items-center justify-between"><div><p className="section-label">Current stand</p><p className="mt-1 text-sm font-bold text-foreground">Where are you starting from?</p></div></div>
+        <div className="grid grid-cols-2 gap-2">
+          {locations.map(loc => {
+            const active = locationId === loc.id;
+            return (
+              <button key={loc.id} onClick={() => setLocationId(loc.id)} className={`rounded-2xl border-2 p-4 text-left transition-all active:scale-[0.99] ${active ? 'border-primary bg-secondary brand-ring' : 'border-border bg-card hover:border-primary/30'}`}>
+                <div className="flex items-start justify-between gap-3"><div className={`flex h-9 w-9 items-center justify-center rounded-xl ${active ? 'bg-primary text-white' : 'bg-secondary text-primary'}`}><MapPin size={17} /></div>{active && <span className="rounded-full bg-primary px-2 py-1 text-[9px] font-bold uppercase tracking-wide text-white">Here</span>}</div>
+                <p className="mt-3 text-sm font-bold text-foreground">{loc.name}</p>
+              </button>
+            );
+          })}
+        </div>
+      </section>
 
       {selected && (
         <div>
-          <div className="flex items-center justify-between mb-2">
-            <p className="section-label">Going from {selected.name}</p>
-            <button onClick={() => loadRoutes(locationId)} aria-label="Refresh routes"><RefreshCw size={15} className="text-muted-foreground" /></button>
+          <div className="mb-2 flex items-center justify-between">
+            <div><p className="section-label">Routes from {selected.name}</p><p className="mt-1 text-sm font-bold text-foreground">Choose your next action</p></div>
+            <button onClick={() => loadRoutes(locationId)} className="flex h-9 w-9 items-center justify-center rounded-xl border border-border bg-card" aria-label="Refresh routes"><RefreshCw size={15} className="text-muted-foreground" /></button>
           </div>
           <div className="space-y-3">
             {routes.length === 0 && <div className="card p-5 text-center text-sm text-muted-foreground">No active routes depart from {selected.name} right now.</div>}

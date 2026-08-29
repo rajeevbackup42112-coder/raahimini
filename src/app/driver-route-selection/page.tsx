@@ -7,8 +7,8 @@ export default function DriverRouteSelectionPage() {
   return (
     <AppLayout showBottomNav={false}>
       <DriverRoleGate>
-        <DriverDailySummary />
         <DriverRouteSelectionContent />
+        <DriverDailySummary />
       </DriverRoleGate>
     </AppLayout>
   );
