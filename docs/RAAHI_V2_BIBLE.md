@@ -889,3 +889,15 @@ V14 keeps protected screens loading until profile hydration finishes, but the au
 V14 is live-accepted. Final headed production testing used real authenticated Passenger, Driver and Admin sessions and a clean anonymous browser. Critical evidence includes guarded role ingress, responsive Admin Users, seat ownership/concurrency, cancellation/no-show recovery, 15/30/60 demand persistence, support resolution, same-direction FIFO handoff, real browser GPS automatic departure, Passenger live/stale/recovered map, Share My Raahi privacy/revocation, explicit destination arrival and V12 automatic completion.
 
 The final fresh GD-01 ride completed with one confirmed Passenger, five explicitly closed seats, real usable GPS, automatic Start Trip, Passenger On the way + live map, explicit Arrived at Dhanbad Station and automatic terminal completion. Backend ended COMPLETED at stop 6, queue DONE, zero live GPS and zero active share links. Final cleanup found zero live trips, queues, HELD requests, current demand, open support, route drafts and live GPS rows. V14 rollback is `prod-v14-frozen` at `38b7519d615e171c59d537b18a61c1ba303c132f`.
+
+## 30. Demo Ready and go-live infrastructure — 2026-08-30
+
+Raahi now has a permanent parent domain: **`myraahi.co.in`**. The carpooling product should launch at **`ride.myraahi.co.in`**. Keep the current `myraahi.referralhub.co.in` hostname available during cutover until the new domain passes authenticated real-user smoke testing and rollback is proven.
+
+Phone verification remains a Supabase Auth responsibility. Supabase generates and verifies the OTP; Fast2SMS is only the regional delivery pipe through the Supabase **Send SMS Hook**. The hook must validate Supabase Standard Webhooks signatures, accept only Indian mobile numbers, forward the Supabase-generated six-digit OTP to Fast2SMS, never call Fast2SMS verification, never log/store OTPs, and keep provider credentials server-side.
+
+Fast2SMS production enablement requires a provider API key and OTP ID/template plus secure Supabase secrets. Do not enable the hook merely because code exists. First validate the hook without delivery, then send one controlled real OTP, verify it through the normal Raahi/Supabase flow, and only then turn on the Auth Hook for normal traffic.
+
+The Demo Ready audit also exposed one real Admin Access backend defect: `admin_list_role_accounts()` declared a text role but returned the `public.user_role` enum. The forward repair casts `p.role::text` only; existing grant/revoke, self-protection, final-admin and Driver/Admin separation guards remain authoritative.
+
+Launch mapping remains keyless OpenStreetMap for now. Google Maps or Mappls is a later product choice, not a launch dependency. Supabase remains the canonical backend for this release.

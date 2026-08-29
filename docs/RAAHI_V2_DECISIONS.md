@@ -174,3 +174,16 @@ Future chats must start from `RAAHI_V2_HANDOVER.md`, then consult this Decision 
 102. **Real-user acceptance closes the historical evidence gaps that were exercised in the final ride.** The final session proved automatic departure with usable real browser GPS, Passenger live/stale/recovered map behavior, paired Passenger/Driver lifecycle truth, FIFO handoff and automatic completion.
 103. **GO-LIVE requires a clean operational state.** Final acceptance ended with zero live trips, live queues, HELD requests, current ACTIVE demand, open support cases, route drafts and live GPS rows.
 104. **Launch support must preserve canonical boundaries.** No launch-day shortcut may bypass FIFO, GPS truth, seat ownership, verified-phone state or backend lifecycle commands.
+
+## 2026-08-30 Demo Ready / go-live infrastructure decisions
+
+105. **`myraahi.co.in` is the parent Raahi domain.** Raahi 2.0 carpooling will use `ride.myraahi.co.in`; future products may use short sibling subdomains such as `school.myraahi.co.in` and `doctor.myraahi.co.in`.
+106. **The existing production hostname remains a temporary rollback path during cutover.** Do not retire `myraahi.referralhub.co.in` until the new hostname has passed real authenticated Passenger, Driver, Admin, Share and OTP smoke tests.
+107. **Supabase Auth remains the OTP authority.** Supabase generates the six-digit OTP, owns expiry/attempt rules and verifies what the user enters.
+108. **Fast2SMS is delivery only.** The Supabase Send SMS Hook forwards the Supabase-generated OTP to Fast2SMS `POST /dev/otp/send`; Raahi must not call Fast2SMS `/dev/otp/verify` for authentication truth.
+109. **OTP delivery secrets stay server-side.** `FAST2SMS_API_KEY`, `FAST2SMS_OTP_ID` and `SEND_SMS_HOOK_SECRETS` must never enter frontend environment variables, browser bundles or Git history.
+110. **The Send SMS Hook is signature-verified and fail-closed.** Standard Webhooks verification is mandatory; malformed/non-Indian phone input or missing provider configuration must not silently mark a phone verified.
+111. **Do not enable the Fast2SMS hook before controlled delivery proof.** First create the provider OTP ID/API key, configure secrets securely, test one controlled OTP end-to-end, then enable the Auth Hook.
+112. **Admin Access repair is a go-live migration gate.** `admin_list_role_accounts()` must cast `profiles.role::text`; grant/revoke/self/final-admin/Driver-role protections remain unchanged.
+113. **OpenStreetMap remains sufficient for launch.** Google Maps/Mappls can be evaluated later as a product enhancement; no billable map provider is required for this go-live.
+114. **Supabase remains the backend for this launch.** Do not migrate to Convex or another backend merely for free-tier economics; revisit infrastructure only when measured scale/reliability requires it.

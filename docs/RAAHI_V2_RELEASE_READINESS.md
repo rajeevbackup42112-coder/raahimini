@@ -443,3 +443,37 @@ V11 is accepted. Any subsequent release should open as a new numbered slice with
 - [x] V14 exact deployed source frozen as `prod-v14-frozen` -> `38b7519d615e171c59d537b18a61c1ba303c132f`.
 
 **GO-LIVE STATUS: READY.** No known blocking functional defect remains from the executed final acceptance suite.
+
+## 2026-08-30 Demo Ready / new-domain go-live candidate
+
+Demo Ready Screen 16 closed the Admin Access audit and repaired the broken `admin_list_role_accounts()` projection with a forward `p.role::text` cast. The UI now makes Admin authority, self-protection and restricted-account state explicit without changing canonical grant/revoke safeguards. Screen 16 checkpoint: `1f074897059afeba2211a76c04331a554bab8465`.
+
+The first go-live infrastructure candidate is `b937c40996805caab57b804b5f588975a9e97aa6` on `demo-ready-investor-polish`. It adds the `ride.myraahi.co.in` production identity, hard-blocks that hostname from test-auth/staging attestation, and adds a Supabase Send SMS Hook implementation for Fast2SMS delivery only.
+
+Validation on the exact candidate:
+- [x] TypeScript PASS.
+- [x] 30/30 contract files PASS, including the new Fast2SMS hook contract and new-domain test-auth safety checks.
+- [x] Production Next.js build PASS, 23/23 pages.
+- [x] Fast2SMS `/dev/otp/verify` is intentionally absent; Supabase Auth remains OTP verification authority.
+- [x] No Fast2SMS key/template secret is present in browser-exposed configuration or Git.
+- [x] `NEXT_PUBLIC_SITE_URL` candidate value is `https://ride.myraahi.co.in` and production test auth remains disabled.
+
+Not yet production-applied:
+- [ ] Fast2SMS API key / OTP ID and DLT/provider template readiness.
+- [ ] Supabase Edge Function deployment and signed Auth Hook enablement.
+- [ ] One controlled real OTP delivery + Supabase verification proof.
+- [ ] Hosting custom-domain target, GoDaddy DNS record and HTTPS issuance for `ride.myraahi.co.in`.
+- [ ] Supabase Auth redirect allow-list / OAuth cutover configuration.
+- [ ] Admin Access forward migration on production.
+- [ ] New-domain real-account Passenger / Driver / Admin / Share / OTP acceptance.
+- [ ] Final frozen go-live ref and rollback-window closeout.
+
+Production runtime, production Auth Hook, DNS and operational data remain unchanged at this checkpoint.
+
+### 2026-08-30 production preflight snapshot
+
+Read-only production preflight at 03:41 IST returned: 0 live trips, 0 live queue entries, 0 HELD requests, 0 current ACTIVE demand, 0 open support cases, 0 route drafts and 0 live GPS rows. This is a point-in-time observation and must be repeated immediately before any production migration/cutover.
+
+`admin_list_role_accounts()` is still in the known broken pre-repair form: it declares `role text` but currently returns `p.role` without the candidate `::text` cast. Anon execute remains denied and authenticated execute remains granted behind the function's internal Admin guard. The repair migration has not been applied.
+
+Production Supabase currently lists zero Edge Functions. The Fast2SMS `send-sms` function is code-only on the go-live candidate; no SMS Auth Hook or delivery path is active yet.
