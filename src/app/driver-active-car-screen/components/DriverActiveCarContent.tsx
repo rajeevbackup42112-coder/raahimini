@@ -171,22 +171,14 @@ export default function DriverActiveCarContent({ locationReady = false, onTripSt
         seatsFilled={trip.confirmed_count ?? 0}
         seatsTotal={trip.capacity ?? 0}
         seatsLeft={trip.available_count ?? 0}
-        farePerSeat={trip.fare_per_seat ?? null}
-        pickupLabel={trip.current_stop_name}
+        farePerSeat={trip.status === 'ACTIVE_COLLECTING' ? trip.fare_per_seat ?? null : null}
+        pickupLabel={trip.status === 'ACTIVE_COLLECTING' ? trip.current_stop_name : undefined}
         confidenceLabel={nextAction}
       >
         {(trip.held_count ?? 0) > 0 && (
           <p className="border-t border-border pt-3 text-xs font-semibold text-amber-700">Resolve {trip.held_count} held seat{trip.held_count === 1 ? '' : 's'} before departure.</p>
         )}
       </UnifiedTripCard>
-
-      {trip.status === 'IN_PROGRESS' && returnDemandLevel && (
-        <div className="compact-card">
-          <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Return demand after arrival</p>
-          <p className="mt-1 text-base font-bold text-foreground">{trip.to_location} → {trip.from_location}: {returnDemandLevel}</p>
-          <p className="mt-1 text-xs text-muted-foreground">Advisory only · never changes FIFO.</p>
-        </div>
-      )}
 
       {trip.status === 'ACTIVE_COLLECTING' && (trip.departure_eligible ?? false) && !locationReady && (
         <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-800">
@@ -236,6 +228,39 @@ export default function DriverActiveCarContent({ locationReady = false, onTripSt
             </div>
           )}
         </section>
+      )}
+
+      {trip.status === 'IN_PROGRESS' && atFinalStop && (
+        <div className="rounded-2xl border border-green-200 bg-green-50 px-4 py-3">
+          <div className="flex items-center gap-2 text-sm font-bold text-green-800">
+            <Loader2 size={17} className={loadingAction === 'auto-complete' ? 'animate-spin' : ''} />
+            {autoCompleteError ? 'Arrival recorded - finalization needs a retry' : 'Arrived at destination - completing trip automatically'}
+          </div>
+          {autoCompleteError && (
+            <div className="mt-2">
+              <p className="text-xs text-red-700">{autoCompleteError}</p>
+              <button
+                onClick={() => {
+                  autoCompleteAttemptRef.current = null;
+                  setAutoCompleteRetry((n) => n + 1);
+                }}
+                className="btn-outline mt-2"
+              >
+                Retry finalization
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+
+      {trip.status === 'IN_PROGRESS' && returnDemandLevel && (
+        <div className="rounded-2xl border border-border bg-card px-4 py-3 card-shadow-sm">
+          <div className="flex items-start justify-between gap-3">
+            <div><p className="section-label">After arrival</p><p className="mt-1 text-sm font-extrabold text-foreground">Return demand: {returnDemandLevel}</p></div>
+            <p className="text-xs font-semibold text-muted-foreground">{trip.to_location} → {trip.from_location}</p>
+          </div>
+          <p className="mt-1 text-xs text-muted-foreground">Return demand after arrival · advisory only · never changes FIFO.</p>
+        </div>
       )}
 
       {/* Passenger Requests */}
@@ -288,29 +313,6 @@ export default function DriverActiveCarContent({ locationReady = false, onTripSt
           </div>
           <span className="shrink-0 text-[10px] font-bold uppercase tracking-wide">{heldBlocking ? 'Locked' : 'Review'}</span>
         </button>
-      )}
-
-      {trip.status === 'IN_PROGRESS' && atFinalStop && (
-        <div className="rounded-2xl border border-green-200 bg-green-50 px-4 py-3">
-          <div className="flex items-center gap-2 text-sm font-bold text-green-800">
-            <Loader2 size={17} className={loadingAction === 'auto-complete' ? 'animate-spin' : ''} />
-            {autoCompleteError ? 'Arrival recorded - finalization needs a retry' : 'Arrived at destination - completing trip automatically'}
-          </div>
-          {autoCompleteError && (
-            <div className="mt-2">
-              <p className="text-xs text-red-700">{autoCompleteError}</p>
-              <button
-                onClick={() => {
-                  autoCompleteAttemptRef.current = null;
-                  setAutoCompleteRetry((n) => n + 1);
-                }}
-                className="btn-outline mt-2"
-              >
-                Retry finalization
-              </button>
-            </div>
-          )}
-        </div>
       )}
 
       {/* Close Seats Modal */}
