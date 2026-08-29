@@ -7,7 +7,7 @@ import { Loader2 } from 'lucide-react';
 
 export default function ActiveCarPage() {
   return (
-    <AppLayout headerTitle="Active Car" headerBack>
+    <AppLayout headerTitle="Find a ride" headerBack>
       <Suspense fallback={<div className="flex items-center justify-center py-20"><Loader2 size={28} className="animate-spin text-primary" /></div>}>
         <RouteRealtimeRefreshBoundary>
           <RouteFareBanner />

@@ -113,56 +113,62 @@ export default function ActiveCarContent() {
     const interested = demandSummary?.now_count ?? 0;
     const scheduled = demandSummary?.scheduled_count ?? 0;
     return (
-      <div className="mx-auto max-w-screen-md space-y-4 px-4 py-8 sm:px-6 animate-fade-in">
-        <div className="feature-card p-6 text-center">
-          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-secondary"><Car size={22} className="text-primary" /></div>
-          <p className="mt-4 text-xl font-bold text-foreground">No car right now</p>
-          <p className="mt-2 text-sm text-muted-foreground">Tell Raahi how long you can wait.</p>
-
-          {(interested > 0 || scheduled > 0) && (
-            <div className="mt-4 rounded-2xl bg-secondary/70 px-4 py-3">
-              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">People waiting</p>
-              {interested > 0 && <p className="mt-1 text-sm font-bold text-primary">{interested} now</p>}
-              {scheduled > 0 && <p className="mt-1 text-xs font-semibold text-foreground">{scheduled} later</p>}
+      <div className="mx-auto max-w-3xl px-4 py-6 sm:px-6 sm:py-8 animate-fade-in">
+        <section className="overflow-hidden rounded-3xl border border-border bg-card card-shadow-md">
+          <div className="bg-gradient-to-br from-secondary via-card to-card px-5 py-6 sm:px-7 sm:py-8">
+            <div className="flex items-start gap-4">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-primary text-white shadow-sm"><Car size={21} /></div>
+              <div className="min-w-0 flex-1">
+                <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-primary">Route availability</p>
+                <h1 className="mt-1 text-2xl font-extrabold tracking-tight text-foreground">No car is collecting yet</h1>
+                <p className="mt-2 max-w-xl text-sm leading-relaxed text-muted-foreground">Tell Raahi how long you can wait. We’ll keep this route on your radar while you continue with your day.</p>
+              </div>
             </div>
-          )}
+            {(interested > 0 || scheduled > 0) && (
+              <div className="mt-5 inline-flex items-center gap-2 rounded-full border border-primary/10 bg-white px-3 py-1.5 text-xs font-semibold text-primary shadow-sm">
+                <BellRing size={13} />
+                {interested > 0 ? `${interested} waiting now` : ''}{interested > 0 && scheduled > 0 ? ' · ' : ''}{scheduled > 0 ? `${scheduled} planning later` : ''}
+              </div>
+            )}
+          </div>
 
-          {intentId ? (
-            <div className="mt-4 space-y-3">
-              <div className="rounded-2xl border border-green-200 bg-green-50 px-4 py-3 text-left">
-                <div className="flex items-start gap-2">
-                  <BellRing size={17} className="mt-0.5 shrink-0 text-green-700" />
-                  <div>
-                    <p className="text-sm font-bold text-green-800">Raahi is watching this route</p>
-                    <p className="mt-1 text-xs text-green-700">Up to {waitTolerance} min · You can leave this screen. You still need to book explicitly when a car opens.</p>
+          <div className="border-t border-border p-5 sm:p-7">
+            {intentId ? (
+              <div className="space-y-4">
+                <div className="rounded-2xl border border-green-200 bg-green-50 p-4">
+                  <div className="flex items-start gap-3">
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-green-100"><BellRing size={17} className="text-green-700" /></div>
+                    <div><p className="text-sm font-bold text-green-900">Raahi is watching this route</p><p className="mt-1 text-xs leading-relaxed text-green-800">For up to {waitTolerance} minutes. You can leave this screen. You still need to book explicitly when a car opens.</p></div>
                   </div>
                 </div>
+                <button onClick={cancelDemand} disabled={demandBusy} className="quiet-action w-full text-red-600 hover:bg-red-50">{demandBusy ? <Loader2 size={16} className="animate-spin" /> : <X size={16} />} Stop watching this route</button>
               </div>
-              <button onClick={cancelDemand} disabled={demandBusy} className="quiet-action w-full text-red-600 hover:bg-red-50">{demandBusy ? <Loader2 size={16} className="animate-spin" /> : <X size={16} />} Cancel ride request</button>
-            </div>
-          ) : (
-            <div className="mt-5 space-y-3">
-              <div className="text-left">
-                <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">How long can you wait?</p>
-                <div className="mt-2 grid grid-cols-3 gap-2">
+            ) : (
+              <div>
+                <div className="flex items-end justify-between gap-3">
+                  <div><p className="section-label">Your wait window</p><h2 className="mt-1 text-lg font-extrabold tracking-tight text-foreground">How long can you wait?</h2></div>
+                  <span className="text-xs font-bold text-primary">Up to {waitTolerance} min</span>
+                </div>
+                <div className="mt-4 grid grid-cols-3 gap-2">
                   {WAIT_OPTIONS.map((minutes) => (
-                    <button key={minutes} type="button" onClick={() => setWaitTolerance(minutes)} className={`rounded-xl border px-3 py-2.5 text-sm font-bold transition-colors ${waitTolerance === minutes ? 'border-primary bg-secondary text-primary' : 'border-border bg-card text-foreground'}`}>
-                      {minutes} min
-                    </button>
+                    <button key={minutes} type="button" onClick={() => setWaitTolerance(minutes)} className={`rounded-2xl border px-3 py-3 text-sm font-bold transition-all active:scale-95 ${waitTolerance === minutes ? 'border-primary bg-secondary text-primary brand-ring' : 'border-border bg-card text-foreground hover:border-primary/30'}`}>{minutes} min</button>
                   ))}
                 </div>
-                <p className="mt-2 text-xs text-muted-foreground">Drivers see the shortest wait as an urgency signal. It never changes FIFO.</p>
+                <p className="mt-3 text-xs leading-relaxed text-muted-foreground">Your wait time helps drivers read demand urgency. <strong className="font-semibold text-foreground">It never changes FIFO.</strong></p>
+                <button onClick={createDemand} disabled={demandBusy} className="btn-primary mt-5 w-full py-3.5">
+                  {demandBusy ? <Loader2 size={18} className="animate-spin" /> : <BellRing size={18} />}
+                  {demandBusy ? 'Saving request…' : user ? 'Watch this route' : 'Sign in & watch this route'}
+                </button>
+                <p className="mt-2 text-center text-[11px] text-muted-foreground">Watching does not reserve a seat. You choose and book only after a car opens.</p>
               </div>
-              <button onClick={createDemand} disabled={demandBusy} className="btn-primary w-full">
-                {demandBusy ? <Loader2 size={18} className="animate-spin" /> : <BellRing size={18} />}
-                {demandBusy ? 'Saving request…' : user ? 'I need a ride' : 'Sign in & request a ride'}
-              </button>
-            </div>
-          )}
+            )}
 
-          {routeId && <Link href={`/plan-ride?route_id=${routeId}`} className="quiet-action mt-2 w-full"><CalendarClock size={17} /> Plan a ride for later</Link>}
-          <button onClick={() => fetchCar(true)} className="btn-outline mx-auto mt-3"><RefreshCw size={16} className={refreshing ? 'animate-spin' : ''} /> Refresh route</button>
-        </div>
+            <div className="mt-5 grid grid-cols-2 gap-2 border-t border-border pt-5">
+              {routeId && <Link href={`/plan-ride?route_id=${routeId}`} className="btn-outline px-3 py-2.5 text-sm"><CalendarClock size={16} /> Plan for later</Link>}
+              <button onClick={() => fetchCar(true)} className="btn-outline px-3 py-2.5 text-sm"><RefreshCw size={15} className={refreshing ? 'animate-spin' : ''} /> Refresh</button>
+            </div>
+          </div>
+        </section>
       </div>
     );
   }
