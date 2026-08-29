@@ -6,6 +6,7 @@ import { ArrowRight, Car, IndianRupee, MapPin, Users } from 'lucide-react';
 type Tone = 'good' | 'limited' | 'transit' | 'none';
 
 interface Props {
+  eyebrow?: string;
   from: string;
   to: string;
   statusLabel: string;
@@ -28,6 +29,7 @@ const toneClass: Record<Tone, string> = {
 };
 
 export default function UnifiedTripCard({
+  eyebrow = 'Live Raahi',
   from,
   to,
   statusLabel,
@@ -47,7 +49,7 @@ export default function UnifiedTripCard({
     <div className="feature-card">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Live Raahi</p>
+          <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">{eyebrow}</p>
           <div className="mt-1 flex items-center gap-2 text-lg font-bold text-foreground">
             <span className="truncate">{from}</span>
             <ArrowRight size={16} className="shrink-0 text-muted-foreground" />

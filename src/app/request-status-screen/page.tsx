@@ -5,7 +5,7 @@ import RealtimeRefreshBoundary from '@/components/RealtimeRefreshBoundary';
 
 export default function RequestStatusPage() {
   return (
-    <AppLayout headerTitle="Your Request" headerBack>
+    <AppLayout headerTitle="My ride" headerBack>
       <RealtimeRefreshBoundary>
         <RequestStatusRouter />
       </RealtimeRefreshBoundary>

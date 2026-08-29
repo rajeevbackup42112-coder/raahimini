@@ -76,7 +76,7 @@ export default function RequestStatusContent() {
   const seatLabel = req.seat_numbers?.length ? `Seat ${req.seat_numbers.join(', ')}` : `${req.seat_count} seat${req.seat_count === 1 ? '' : 's'}`;
   return (
     <div className="mobile-page space-y-3 animate-fade-in">
-      <UnifiedTripCard from={routeFrom} to={routeTo} statusLabel={liveStatusLabel} statusTone={liveStatusTone} vehicleLabel={`${req.driver_display_name} - ${req.vehicle_number}`} pickupLabel={isHeld ? req.pickup_stop_name : undefined} confidenceLabel={pickupProgressText}>
+      <UnifiedTripCard eyebrow={isTripCompleted ? 'Completed Raahi' : isTripInProgress ? 'Live Raahi' : 'My Raahi'} from={routeFrom} to={routeTo} statusLabel={liveStatusLabel} statusTone={liveStatusTone} vehicleLabel={`${req.driver_display_name} · ${req.vehicle_number}`} pickupLabel={isHeld ? req.pickup_stop_name : undefined} confidenceLabel={pickupProgressText}>
         <div className="flex items-center justify-between gap-3">
           <div><p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Your seat{req.seat_count === 1 ? '' : 's'}</p><p className="text-sm font-bold text-foreground">{seatLabel}</p></div>
           <button onClick={fetchStatus} className="btn-outline px-3 py-2" aria-label="Refresh ride status"><RefreshCw size={14} /> Refresh</button>
@@ -95,7 +95,16 @@ export default function RequestStatusContent() {
 
       {isHeld && <div className="space-y-2"><PayWarningBanner /><div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3"><p className="text-xs font-semibold text-amber-800">Your selected seat{req.seat_count === 1 ? ' is' : 's are'} held until the driver passes your pickup stop.</p><p className="text-xs text-amber-700 mt-1">Meet the driver and pay directly. If you no longer need the ride, withdraw before your stop so the seat can be offered to someone else.</p></div></div>}
 
-      {isConfirmed && !isTripInProgress && <div className="flex items-start gap-3 bg-green-50 border border-green-200 rounded-2xl px-4 py-3"><CheckCircle2 size={20} className="text-green-600 flex-shrink-0 mt-0.5" /><div><p className="text-sm font-bold text-green-800">{isTripCompleted ? 'Trip Completed' : isTripInProgress ? 'You are on your way' : 'Seat Confirmed'}</p><p className="text-xs text-green-700 mt-0.5">{isTripCompleted ? `You have arrived at ${routeTo}. Thank you for riding with Raahi!` : isTripInProgress ? `Next: ${routeTo}.` : `${seatLabel} confirmed. You are aboard and waiting to depart.`}</p></div></div>}
+      {isTripCompleted ? (
+        <div className="rounded-3xl border border-green-200 bg-gradient-to-br from-green-50 to-card px-4 py-4 sm:px-5">
+          <div className="flex items-start gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-green-100"><CheckCircle2 size={19} className="text-green-700" /></div>
+            <div><p className="text-sm font-extrabold text-green-900">You’ve arrived</p><p className="mt-1 text-xs leading-relaxed text-green-800">{routeTo} · Thanks for riding with Raahi.</p></div>
+          </div>
+        </div>
+      ) : isConfirmed && !isTripInProgress ? (
+        <div className="flex items-start gap-3 rounded-2xl border border-green-200 bg-green-50 px-4 py-3"><CheckCircle2 size={20} className="mt-0.5 shrink-0 text-green-600" /><div><p className="text-sm font-bold text-green-800">Seat Confirmed</p><p className="mt-0.5 text-xs text-green-700">{seatLabel} confirmed. You are aboard and waiting to depart.</p></div></div>
+      ) : null}
 
       {isExpired && <div className="flex items-start gap-3 bg-muted border border-border rounded-2xl px-4 py-3"><AlertCircle size={20} className="text-muted-foreground flex-shrink-0 mt-0.5" /><div><p className="text-sm font-bold text-foreground">{req.status === 'WITHDRAWN' ? 'Request Withdrawn' : 'Request Expired'}</p><p className="text-xs text-muted-foreground mt-0.5">Your seat has been released. You can request again if seats are still available.</p></div></div>}
 
