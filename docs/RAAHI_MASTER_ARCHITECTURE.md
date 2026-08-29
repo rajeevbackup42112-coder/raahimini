@@ -79,11 +79,18 @@ There is no user-facing role switcher. Client metadata can never self-promote a 
 ### Sign-in entry rules
 
 - Anonymous passenger browsing has no global login requirement.
-- Passenger Google authentication is initiated only when the user actually requests seats.
-- Unauthenticated drivers have a dedicated **Driver sign in** entry and `/driver-login` flow.
+- V2 normal public UI exposes one **Sign in** entry at `/login` for passenger, driver and admin accounts.
+- The sign-in entry never assigns or asks for a role. After authentication, trusted `profiles.role` determines the destination automatically.
+- Passenger seat-request flows may still initiate Google authentication only when the user actually requests seats, preserving frictionless browse.
 - First-time driver candidates remain passenger-role until trusted admin onboarding.
-- There is no public **Admin sign in** item in passenger navigation.
-- The private `/admin-panel` URL may expose a sign-in action for an authorized admin. Successful Google authentication is still accepted only when the server-side profile already has role `admin` and is unrestricted.
+- Legacy `/driver-login` and `/admin-login` routes may remain temporarily for compatibility/deep links, but they are not normal public role selectors and cannot grant role authority.
+- Successful authentication into driver/admin operations is accepted only when the server-side profile already has the trusted role and is unrestricted.
+
+### Self-service identity commands
+
+- set_my_display_name(display_name) may update only the authenticated user's profiles.display_name; it cannot mutate role, restriction state, phone authority or admin fields.
+- Supabase Auth remains phone authority. After a verified phone change/removal, sync_my_profile_phone() mirrors the current Auth phone into the caller's own profile; browser-supplied phone values are never trusted for this mirror.
+- Both commands require an authenticated caller and expose no role-selection capability.
 
 ## 6. Passenger lifecycle
 
