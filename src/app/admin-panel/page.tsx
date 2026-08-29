@@ -1,7 +1,8 @@
-import AdminPrimaryNav from './components/AdminPrimaryNav';
+﻿import AdminPrimaryNav from './components/AdminPrimaryNav';
 import AdminDashboardOverview from './components/AdminDashboardOverview';
 import AdminRouteHealthOverview from './components/AdminRouteHealthOverview';
 import AdminSupportInbox from './components/AdminSupportInbox';
+import AdminDashboardSecondary from './components/AdminDashboardSecondary';
 
 export default function AdminPanelPage() {
   return (
@@ -10,6 +11,7 @@ export default function AdminPanelPage() {
       <AdminDashboardOverview />
       <AdminRouteHealthOverview />
       <AdminSupportInbox />
+      <AdminDashboardSecondary />
     </div>
   );
 }
