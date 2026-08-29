@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { AlertTriangle, Archive, ArrowDown, ArrowUp, Copy, Loader2, Pencil, Plus, RefreshCw, Save, Send, Trash2, GripVertical } from 'lucide-react';
+import { AlertTriangle, Archive, ArrowDown, ArrowUp, Copy, Loader2, Pencil, Plus, RefreshCw, Save, Send, ShieldCheck, Trash2, GripVertical } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import { adminGetLocations } from '@/lib/raahiApi';
@@ -50,6 +50,16 @@ export default function RouteManagementContent() {
     return [...map.values()].sort((a, b) => (a.current?.code || a.draft?.code || '').localeCompare(b.current?.code || b.draft?.code || ''));
   }, [rows]);
 
+  const routeStats = useMemo(() => ({
+    published: families.filter((family) => family.current).length,
+    active: families.filter((family) => family.current?.is_active).length,
+    drafts: families.filter((family) => family.draft).length,
+    blocked: families.filter((family) => {
+      const current = family.current;
+      return Boolean(current && current.live_trip_count + current.live_queue_count + current.active_demand_count > 0);
+    }).length,
+  }), [families]);
+
   const editingDraft = rows.find((r) => r.route_id === editingDraftId && r.version_status === 'DRAFT');
   const editingFamily = editingDraft ? families.find((f) => f.familyId === editingDraft.route_family_id) : undefined;
 
@@ -88,10 +98,22 @@ export default function RouteManagementContent() {
   return (
     <main className="mx-auto max-w-screen-2xl px-4 py-5 space-y-5">
       <section className="flex flex-wrap items-start justify-between gap-3">
-        <div><p className="section-label">Route management</p><h1 className="mt-1 text-xl font-extrabold">Published routes and safe drafts</h1>
-          <p className="mt-1 max-w-2xl text-xs text-muted-foreground">Structural changes are prepared as a new version. Publish is blocked while that route has a live trip, queue, or active passenger demand.</p></div>
+        <div><p className="section-label">Route management</p><h1 className="mt-1 text-2xl font-extrabold tracking-tight">Published routes and safe drafts</h1>
+          <p className="mt-1 max-w-2xl text-xs leading-relaxed text-muted-foreground">Versioned configuration keeps structural edits away from live journeys. Publish is blocked while that route has a live trip, queue, or active passenger demand.</p></div>
         <div className="flex gap-2"><button onClick={load} className="btn-outline"><RefreshCw size={15}/>Refresh</button><button onClick={() => setShowNew((v) => !v)} className="btn-primary"><Plus size={15}/>New Route</button></div>
       </section>
+
+      <section className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+        <RouteStat label="Published" value={routeStats.published} />
+        <RouteStat label="Active" value={routeStats.active} />
+        <RouteStat label="Drafts" value={routeStats.drafts} attention={routeStats.drafts > 0} />
+        <RouteStat label="Publish blocked" value={routeStats.blocked} attention={routeStats.blocked > 0} />
+      </section>
+
+      <div className="flex items-start gap-3 rounded-2xl border border-green-200 bg-green-50 px-4 py-3">
+        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white text-green-700"><ShieldCheck size={17}/></div>
+        <div><p className="text-xs font-bold text-green-900">Guarded publishing</p><p className="mt-1 text-xs leading-relaxed text-green-800">Drafts stay invisible to Passenger and Driver until Publish succeeds. Live trips, queued drivers and active demand remain protected.</p></div>
+      </div>
       {showNew && <NewRouteForm locations={locations} busy={busy === 'new-route'} onCancel={() => setShowNew(false)} onCreate={async (input) => {
         setBusy('new-route');
         const result = await adminCreateNewRouteDraft(input);
@@ -117,21 +139,24 @@ export default function RouteManagementContent() {
           const route = family.current || family.draft!;
           const current = family.current;
           const blocked = current ? current.live_trip_count + current.live_queue_count + current.active_demand_count > 0 : false;
-          return <div key={family.familyId} className="feature-card p-4 space-y-4">
-            <div className="flex items-start justify-between gap-3"><div><div className="flex items-center gap-2"><span className="rounded-lg bg-secondary px-2 py-1 text-xs font-bold text-primary">{route.code}</span>{current && <span className={`rounded-full px-2 py-1 text-[10px] font-bold ${current.is_active ? 'bg-green-50 text-green-700' : 'bg-amber-50 text-amber-700'}`}>{current.is_active ? 'Active' : 'Paused'}</span>}</div>
-              <h2 className="mt-2 text-base font-bold">{route.direction_label}</h2><p className="mt-1 text-xs text-muted-foreground">{route.from_location_name} → {route.to_location_name}</p></div>
-              <div className="text-right"><p className="text-xs font-bold">v{current?.version_no || route.version_no}</p><p className="text-[10px] text-muted-foreground">₹{current?.fare_per_seat || route.fare_per_seat}/seat</p></div></div>
-            {current && <div className="grid grid-cols-3 gap-2"><MiniMetric label="Live trips" value={current.live_trip_count}/><MiniMetric label="Queue" value={current.live_queue_count}/><MiniMetric label="Demand" value={current.active_demand_count}/></div>}
-            {blocked && <div className="flex items-start gap-2 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800"><AlertTriangle size={14} className="mt-0.5 shrink-0"/>You can edit a draft now, but publishing waits until this route is operationally idle.</div>}
-            {family.draft && <button onClick={() => setEditingDraftId(family.draft!.route_id)} className="w-full rounded-2xl border border-blue-200 bg-blue-50 px-4 py-3 text-left"><p className="text-xs font-bold text-blue-800">Draft v{family.draft.version_no} ready to edit</p><p className="mt-1 text-xs text-blue-700">{family.draft.stop_count} stops · ₹{family.draft.fare_per_seat}/seat</p></button>}
-            {current && <div className="flex flex-wrap gap-2">
-              <button disabled={!!busy || !!family.draft} onClick={() => editCurrent(current)} className="btn-primary px-3 py-2"><Pencil size={14}/>{busy === `edit-${current.route_id}` ? 'Working…' : family.draft ? 'Draft exists' : 'Edit'}</button>
-              <button disabled={!!busy} onClick={() => duplicate(current)} className="btn-outline px-3 py-2"><Copy size={14}/>Duplicate</button>
-              <button disabled={!!busy} onClick={() => run(`active-${current.route_id}`, () => adminSetCurrentRouteActive(current.route_id, !current.is_active), current.is_active ? 'Route paused' : 'Route enabled')} className="btn-outline px-3 py-2">{current.is_active ? 'Pause' : 'Enable'}</button>
-              <button disabled={!!busy} onClick={async () => { const value = window.prompt('Fare per seat for future cars:', String(current.fare_per_seat)); if (!value) return; const fare=Number(value); await run(`fare-${current.route_id}`, () => adminSetCurrentRouteFare(current.route_id,fare), `Fare set to ₹${fare}`); }} className="btn-outline px-3 py-2">Fare</button>
-              <button disabled={!!busy} onClick={async () => { if (!window.confirm(`Archive ${current.code}? This permanently removes it from new journeys but preserves history.`)) return; await run(`archive-${current.route_id}`, () => adminArchiveRoute(current.route_id), 'Route archived'); }} className="btn-outline px-3 py-2 text-red-600"><Archive size={14}/>Archive</button>
+          return <div key={family.familyId} className="overflow-hidden rounded-3xl border border-border bg-card card-shadow-sm">
+            <div className="p-4 sm:p-5">
+              <div className="flex items-start justify-between gap-3">
+                <div><div className="flex flex-wrap items-center gap-2"><span className="rounded-lg bg-secondary px-2 py-1 text-xs font-bold text-primary">{route.code}</span>{current && <span className={`rounded-full px-2 py-1 text-[10px] font-bold ${current.is_active ? 'bg-green-50 text-green-700' : 'bg-amber-50 text-amber-700'}`}>{current.is_active ? 'Active' : 'Paused'}</span>}{family.draft && <span className="rounded-full bg-blue-50 px-2 py-1 text-[10px] font-bold text-blue-700">Draft v{family.draft.version_no}</span>}</div>
+                  <h2 className="mt-3 text-lg font-extrabold tracking-tight text-foreground">{route.direction_label}</h2><p className="mt-1 text-xs text-muted-foreground">{route.from_location_name} → {route.to_location_name}</p></div>
+                <div className="shrink-0 rounded-2xl bg-muted/60 px-3 py-2 text-right"><p className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">Published</p><p className="mt-0.5 text-sm font-extrabold text-foreground">v{current?.version_no || route.version_no} · ₹{current?.fare_per_seat || route.fare_per_seat}</p><p className="text-[10px] text-muted-foreground">per seat</p></div>
+              </div>
+
+              {current && <div className="mt-4"><div className="mb-2 flex items-center justify-between gap-3"><p className="section-label">Publish guard</p><span className={`rounded-full px-2.5 py-1 text-[10px] font-bold ${blocked ? 'bg-amber-50 text-amber-700' : 'bg-green-50 text-green-700'}`}>{blocked ? 'Waiting for idle' : 'Clear'}</span></div><div className="grid grid-cols-3 gap-2"><MiniMetric label="Live trips" value={current.live_trip_count}/><MiniMetric label="Queue" value={current.live_queue_count}/><MiniMetric label="Demand" value={current.active_demand_count}/></div></div>}
+              {blocked ? <div className="mt-3 flex items-start gap-2 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800"><AlertTriangle size={14} className="mt-0.5 shrink-0"/>You can edit a draft now, but publishing waits until this route is operationally idle.</div> : current && <div className="mt-3 flex items-start gap-2 rounded-xl bg-green-50 px-3 py-2 text-xs text-green-800"><ShieldCheck size={14} className="mt-0.5 shrink-0"/>Operationally idle. The live-trip, queue and active-demand publish guards are clear.</div>}
+              {family.draft && <button onClick={() => setEditingDraftId(family.draft!.route_id)} className="mt-3 w-full rounded-2xl border border-blue-200 bg-blue-50 px-4 py-3 text-left transition-colors hover:bg-blue-100"><div className="flex items-center justify-between gap-3"><div><p className="text-xs font-bold text-blue-900">Continue draft v{family.draft.version_no}</p><p className="mt-1 text-xs text-blue-700">{family.draft.stop_count} stops · ₹{family.draft.fare_per_seat}/seat · unpublished</p></div><span className="text-sm font-bold text-blue-700">→</span></div></button>}
+            </div>
+
+            {current && <div className="border-t border-border bg-muted/25 px-4 py-4 sm:px-5">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between"><div><p className="section-label">Versioned changes</p><div className="mt-2 flex flex-wrap gap-2"><button disabled={!!busy || !!family.draft} onClick={() => editCurrent(current)} className="btn-primary px-3 py-2"><Pencil size={14}/>{busy === `edit-${current.route_id}` ? 'Working…' : family.draft ? 'Draft exists' : 'Edit via draft'}</button><button disabled={!!busy} onClick={() => duplicate(current)} className="btn-outline px-3 py-2"><Copy size={14}/>Duplicate</button></div></div>
+                <div><p className="section-label">Live settings</p><div className="mt-2 flex flex-wrap gap-2"><button disabled={!!busy} onClick={() => run(`active-${current.route_id}`, () => adminSetCurrentRouteActive(current.route_id, !current.is_active), current.is_active ? 'Route paused' : 'Route enabled')} className="btn-outline px-3 py-2">{current.is_active ? 'Pause' : 'Enable'}</button><button disabled={!!busy} onClick={async () => { const value = window.prompt('Fare per seat for future cars:', String(current.fare_per_seat)); if (!value) return; const fare=Number(value); await run(`fare-${current.route_id}`, () => adminSetCurrentRouteFare(current.route_id,fare), `Fare set to ₹${fare}`); }} className="btn-outline px-3 py-2">Fare</button><button disabled={!!busy} onClick={async () => { if (!window.confirm(`Archive ${current.code}? This permanently removes it from new journeys but preserves history.`)) return; await run(`archive-${current.route_id}`, () => adminArchiveRoute(current.route_id), 'Route archived'); }} className="btn-outline px-3 py-2 text-red-600"><Archive size={14}/>Archive</button></div></div></div>
+              {family.history.length > 0 && <p className="mt-3 text-[11px] text-muted-foreground">{family.history.length} historical version{family.history.length === 1 ? '' : 's'} preserved.</p>}
             </div>}
-            {family.history.length > 0 && <p className="text-[11px] text-muted-foreground">{family.history.length} historical version{family.history.length === 1 ? '' : 's'} preserved.</p>}
           </div>;
         })}
       </section>
@@ -139,6 +164,7 @@ export default function RouteManagementContent() {
   );
 }
 
+function RouteStat({ label, value, attention = false }: { label: string; value: number; attention?: boolean }) { return <div className={`rounded-2xl border bg-card px-3 py-3 card-shadow-sm ${attention ? 'border-amber-200' : 'border-border'}`}><p className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">{label}</p><p className={`mt-1 text-xl font-extrabold ${attention ? 'text-amber-700' : 'text-foreground'}`}>{value}</p></div>; }
 function MiniMetric({ label, value }: { label: string; value: number }) { return <div className="rounded-xl bg-muted/60 px-3 py-2"><p className="text-[10px] uppercase tracking-wide text-muted-foreground">{label}</p><p className="text-lg font-extrabold">{value}</p></div>; }
 function NewRouteForm({ locations, busy, onCancel, onCreate }: { locations: LocationRow[]; busy: boolean; onCancel: () => void; onCreate: (input: { code: string; fromLocationId: string; toLocationId: string; directionLabel: string; farePerSeat: number }) => void }) {
   const [code,setCode]=useState(''); const [from,setFrom]=useState(locations[0]?.id || ''); const [to,setTo]=useState(locations[1]?.id || ''); const [label,setLabel]=useState(''); const [fare,setFare]=useState('150');
