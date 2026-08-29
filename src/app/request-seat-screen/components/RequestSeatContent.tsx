@@ -148,16 +148,20 @@ export default function RequestSeatContent() {
 
   return (
     <div className="max-w-screen-md mx-auto px-4 py-4 space-y-4 animate-fade-in">
-      <div className="card p-4">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center flex-shrink-0"><MapPin size={18} className="text-primary" /></div>
+      <div className="card p-4 sm:p-5">
+        <div className="flex items-start gap-3">
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-secondary"><MapPin size={18} className="text-primary" /></div>
           <div className="min-w-0 flex-1">
-            <p className="text-xs text-muted-foreground font-medium">Your Raahi car</p>
-            <p className="text-sm font-bold text-foreground truncate">{car.driver_display_name} · {car.vehicle_number}</p>
-            <p className="text-xs text-muted-foreground">{car.vehicle_model} · {car.vehicle_type}</p>
+            <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-muted-foreground">Your Raahi</p>
+            <p className="mt-0.5 truncate text-sm font-bold text-foreground">{car.driver_display_name} · {car.vehicle_number}</p>
+            <p className="mt-0.5 text-xs text-muted-foreground">{car.vehicle_model} · {car.vehicle_type}</p>
+          </div>
+          <div className="shrink-0 rounded-2xl bg-secondary px-3 py-2 text-right">
+            <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Fare</p>
+            <p className="mt-0.5 text-base font-extrabold text-primary">₹{car.fare_per_seat ?? 0}<span className="text-[10px] font-semibold text-muted-foreground"> / seat</span></p>
           </div>
         </div>
-        <div className="flex gap-2 mt-3 pt-3 border-t border-border">
+        <div className="mt-4 grid grid-cols-3 gap-2 border-t border-border pt-4">
           <SeatCountBadge label="Available" count={car.available_count ?? 0} variant="available" />
           <SeatCountBadge label="Held" count={car.held_count ?? 0} variant="held" />
           <SeatCountBadge label="Confirmed" count={car.confirmed_count ?? 0} variant="confirmed" />
@@ -166,8 +170,11 @@ export default function RequestSeatContent() {
 
       <form onSubmit={handleSubmit} className="space-y-5">
         <section>
-          <label className="block text-sm font-semibold text-foreground mb-1.5">Your pickup point <span className="text-red-500">*</span></label>
-          <p className="text-xs text-muted-foreground mb-2">Only stops the driver has not passed are shown.</p>
+          <div className="mb-3">
+            <p className="section-label">Pickup</p>
+            <h2 className="mt-1 text-lg font-extrabold tracking-tight text-foreground">Choose your pickup point <span className="text-red-500">*</span></h2>
+            <p className="mt-1 text-xs text-muted-foreground">Only stops the driver has not passed are shown.</p>
+          </div>
           {availableStops.length === 0 ? (
             <div className="card p-4 text-center text-sm text-muted-foreground"><AlertTriangle size={18} className="mx-auto mb-2 text-amber-500" />Driver has passed all pickup stops.</div>
           ) : (
@@ -190,26 +197,31 @@ export default function RequestSeatContent() {
           )}
         </section>
 
-        <section className="feature-card p-4">
+        <section className="feature-card p-4 sm:p-5">
           <div className="flex items-start justify-between gap-3">
             <div>
-              <p className="text-sm font-bold text-foreground">Choose your seats</p>
+              <p className="section-label">Seats</p>
+              <h2 className="mt-1 text-lg font-extrabold tracking-tight text-foreground">Choose your seats</h2>
               <p className="mt-1 text-xs text-muted-foreground">Tap up to {MAX_SEATS_PER_REQUEST}. Your selection is held together or not at all.</p>
             </div>
-            <span className="rounded-full bg-secondary px-2.5 py-1 text-xs font-bold text-primary">{selectedSeats.length} selected</span>
+            <span className="shrink-0 rounded-full bg-secondary px-2.5 py-1 text-xs font-bold text-primary">{selectedSeats.length ? `${selectedSeats.length} selected` : 'None selected'}</span>
           </div>
 
           {seats.length === 0 ? (
             <div className="mt-4 rounded-2xl bg-muted p-4 text-center text-sm text-muted-foreground">Seat map is refreshing. Please try again.</div>
           ) : (
             <>
-              <div className="mt-4 rounded-2xl border border-border bg-muted/30 p-4">
-                <div className="mx-auto mb-4 w-24 rounded-xl border border-border bg-card px-3 py-2 text-center text-[10px] font-bold uppercase tracking-wide text-muted-foreground">Front of car</div>
-                <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+              <div className="mt-4 rounded-3xl border border-border bg-background p-4 sm:p-5">
+                <div className="mx-auto mb-4 flex max-w-sm items-center gap-3">
+                  <div className="h-px flex-1 bg-border" />
+                  <div className="rounded-full border border-border bg-card px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.12em] text-muted-foreground">Front of car</div>
+                  <div className="h-px flex-1 bg-border" />
+                </div>
+                <div className="mx-auto grid max-w-sm grid-cols-2 gap-3">
                   {seats.map((seat) => <SeatButton key={seat.seat_number} seat={seat} selected={selectedSeats.includes(seat.seat_number)} onToggle={() => toggleSeat(seat)} />)}
                 </div>
               </div>
-              <div className="mt-3 flex flex-wrap gap-x-4 gap-y-2 text-[11px] text-muted-foreground">
+              <div className="mt-3 flex flex-wrap justify-center gap-x-4 gap-y-2 text-[11px] text-muted-foreground">
                 <Legend swatch="border-border bg-card" label="Available" />
                 <Legend swatch="border-primary bg-secondary" label="Selected" />
                 <Legend swatch="border-amber-200 bg-amber-50" label="Held" />
@@ -236,13 +248,13 @@ export default function RequestSeatContent() {
 
         <PayWarningBanner />
 
-        <div className="flex items-start gap-2 bg-muted rounded-xl px-3 py-3">
-          <Users size={14} className="text-muted-foreground mt-0.5 flex-shrink-0" />
-          <p className="text-xs text-muted-foreground">Your selected seats are held temporarily. They become confirmed only after the driver receives your payment in person.</p>
+        <div className="flex items-start gap-3 rounded-2xl border border-border bg-card px-4 py-3">
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-secondary"><Users size={14} className="text-primary" /></div>
+          <div><p className="text-xs font-bold text-foreground">A hold keeps your exact selection together</p><p className="mt-1 text-xs leading-relaxed text-muted-foreground">Seats become confirmed only after the driver receives your payment in person.</p></div>
         </div>
 
-        <button type="submit" disabled={submitting || availableStops.length === 0 || selectedSeats.length === 0 || seats.length === 0} className="btn-primary w-full">
-          {submitting ? <><Loader2 size={18} className="animate-spin" />Holding seats…</> : user ? <><CheckCircle2 size={18} />Hold {selectedSeats.length || ''} Seat{selectedSeats.length === 1 ? '' : 's'}</> : <><Lock size={18} />Sign in & hold selected seats</>}
+        <button type="submit" disabled={submitting || availableStops.length === 0 || selectedSeats.length === 0 || seats.length === 0} className="btn-primary w-full py-3.5">
+          {submitting ? <><Loader2 size={18} className="animate-spin" />Holding seats…</> : user ? <><CheckCircle2 size={18} />{selectedSeats.length === 1 ? `Hold seat ${selectedSeats[0]}` : `Hold ${selectedSeats.length || ''} seats`}</> : <><Lock size={18} />Sign in & hold selected seats</>}
         </button>
       </form>
 
