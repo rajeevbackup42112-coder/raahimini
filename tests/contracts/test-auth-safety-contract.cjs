@@ -15,6 +15,7 @@ must(api.includes("process.env.RAAHI_TEST_AUTH_ENABLED !== 'true'"), 'test-auth 
 must(api.includes('RAAHI_TEST_AUTH_ALLOWED_HOSTS'), 'test-auth API must require an allowlisted host');
 must(api.includes('allowedHosts.size === 0'), 'empty host allowlist must fail closed');
 must(api.includes('HARD_BLOCKED_HOSTS'), 'test-auth API must retain hard production-host blocks');
+must(api.includes("'ride.myraahi.co.in'"), 'new production hostname must be hard-blocked from test-auth');
 must(api.includes('timingSafeEqual'), 'test-auth key comparison must be timing safe');
 must(api.includes('RAAHI_TEST_AUTH_KEY'), 'test-auth API must require a dedicated test key');
 must(api.includes('SUPABASE_SERVICE_ROLE_KEY'), 'test-auth admin operation must use server-only service credentials');

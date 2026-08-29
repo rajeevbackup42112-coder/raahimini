@@ -10,6 +10,7 @@ const HARD_BLOCKED_HOSTS = new Set([
   'raahi-mini.netlify.app',
   'raahi-mini.referralhub.co.in',
   'myraahi.referralhub.co.in',
+  'ride.myraahi.co.in',
 ]);
 
 type PersonaRole = 'passenger' | 'driver' | 'admin';

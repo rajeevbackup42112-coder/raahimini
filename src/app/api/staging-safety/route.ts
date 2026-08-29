@@ -8,6 +8,7 @@ const HARD_BLOCKED_HOSTS = new Set([
   'raahi-mini.netlify.app',
   'raahi-mini.referralhub.co.in',
   'myraahi.referralhub.co.in',
+  'ride.myraahi.co.in',
 ]);
 
 function normalizeHost(value: string | null): string {

@@ -1,0 +1,18 @@
+const fs = require('fs');
+const path = require('path');
+const root = path.resolve(__dirname, '../..');
+const file = fs.readFileSync(path.join(root, 'supabase/functions/send-sms/index.ts'), 'utf8');
+const must = (ok, msg) => { if (!ok) throw new Error(msg); };
+
+must(file.includes('https://www.fast2sms.com/dev/otp/send'), 'Fast2SMS Send OTP endpoint missing');
+must(file.includes('FAST2SMS_API_KEY') && file.includes('FAST2SMS_OTP_ID'), 'Fast2SMS secrets missing');
+must(file.includes('SEND_SMS_HOOK_SECRETS'), 'Supabase hook signing secret missing');
+must(file.includes('new Webhook(secret).verify(payload, headers)'), 'Standard Webhooks signature verification missing');
+must(file.includes('event.sms?.otp'), 'Supabase-generated OTP must be delivered');
+must(file.includes('otp_id: otpId') && file.includes('otp,'), 'Provider request must carry OTP template and supplied OTP');
+must(!file.includes('/dev/otp/verify'), 'Fast2SMS must not become OTP verification authority');
+must(file.includes('^[6-9][0-9]{9}$'), 'India-only mobile normalization guard missing');
+must(file.includes('AbortSignal.timeout(3500)'), 'Hook must stay inside Supabase HTTP-hook time budget');
+must(file.includes('retry-after') && file.includes('503'), 'Retryable provider failure handling missing');
+must(!/console\.(log|debug)\s*\(/.test(file), 'OTP hook must not log OTP/phone payloads');
+console.log('Fast2SMS Send SMS Hook contract: PASS');

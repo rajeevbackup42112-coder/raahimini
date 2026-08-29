@@ -24,6 +24,7 @@ must(safetyRoute.includes(`const V2_DEV_PROJECT_REF = '${v2DevRef}'`), 'safety e
 must(safetyRoute.includes("process.env.RAAHI_TEST_AUTH_ENABLED !== 'true'"), 'safety endpoint must be unavailable outside test-enabled environments');
 must(safetyRoute.includes('RAAHI_TEST_AUTH_ALLOWED_HOSTS'), 'safety endpoint must require an allowed staging host');
 must(safetyRoute.includes('HARD_BLOCKED_HOSTS'), 'safety endpoint must retain hard production-host blocks');
+must(safetyRoute.includes("'ride.myraahi.co.in'"), 'new production hostname must be hard-blocked from staging attestation');
 must(safetyRoute.includes('projectRef === V2_DEV_PROJECT_REF'), 'safety endpoint must compare the actual Supabase project ref');
 must(safetyRoute.includes("'Cache-Control': 'no-store'"), 'safety attestation must not be cached');
 
