@@ -160,8 +160,9 @@ export default function DriverActiveCarContent({ locationReady = false, onTripSt
               ? 'Trip complete at destination'
               : 'Get ready';
   return (
-    <div className="mobile-page space-y-3 animate-fade-in">
+    <div className="mx-auto w-full max-w-screen-lg space-y-3 px-4 py-3 pb-8 animate-fade-in sm:px-6 sm:py-5">
       <UnifiedTripCard
+        eyebrow={trip.status === 'ACTIVE_COLLECTING' ? 'Collecting' : 'Live trip'}
         from={trip.from_location ?? 'Origin'}
         to={trip.to_location ?? 'Destination'}
         statusLabel={trip.status === 'ACTIVE_COLLECTING' ? 'Collecting passengers' : 'Trip in progress'}
@@ -187,14 +188,6 @@ export default function DriverActiveCarContent({ locationReady = false, onTripSt
         </div>
       )}
 
-      {trip.status === 'ACTIVE_COLLECTING' && !(trip.departure_eligible ?? false) && (
-        <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-800">
-          {heldBlocking
-            ? `Resolve ${heldRequests.length} held passenger${heldRequests.length === 1 ? '' : 's'} before you go.`
-            : `${trip.available_count ?? 0} seat${(trip.available_count ?? 0) === 1 ? '' : 's'} still open.`}
-        </div>
-      )}
-
       {trip.status === 'ACTIVE_COLLECTING' && (trip.departure_eligible ?? false) && !locationReady && (
         <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-800">
           Everyone is aboard. Turn on location to continue; Raahi will start the trip automatically.
@@ -209,14 +202,17 @@ export default function DriverActiveCarContent({ locationReady = false, onTripSt
 
       {/* One meaningful next stop only */}
       {nextStop && (
-        <div className="compact-card">
-          <p className="section-label">{nextStop.action === 'PICKUP' ? 'Next pickup' : 'Destination'}</p>
-          <div className="mt-2 flex items-start gap-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-secondary">
-              <Navigation size={18} className="text-primary" />
+        <section className={`rounded-3xl border bg-card p-4 card-shadow-sm sm:p-5 ${trip.next_action === 'PICKUP_NOW' ? 'border-green-200' : 'border-border'}`}>
+          <div className="flex items-center justify-between gap-3">
+            <p className="section-label">{trip.next_action === 'PICKUP_NOW' ? 'Pickup now' : nextStop.action === 'PICKUP' ? 'Next pickup' : 'Destination'}</p>
+            {trip.next_action === 'PICKUP_NOW' && <span className="rounded-full bg-green-50 px-2.5 py-1 text-[10px] font-bold text-green-700">You are here</span>}
+          </div>
+          <div className="mt-3 flex items-start gap-3">
+            <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl ${trip.next_action === 'PICKUP_NOW' ? 'bg-green-100 text-green-700' : 'bg-secondary text-primary'}`}>
+              <Navigation size={19} />
             </div>
             <div className="min-w-0 flex-1">
-              <p className="text-xl font-bold text-foreground">{nextStop.name}</p>
+              <p className="text-xl font-extrabold tracking-tight text-foreground sm:text-2xl">{nextStop.name}</p>
               <p className="mt-1 text-sm text-muted-foreground">
                 {nextStop.action === 'PICKUP'
                   ? `${nextStop.request_count} passenger request${nextStop.request_count === 1 ? '' : 's'} · ${nextStop.seat_count} seat${nextStop.seat_count === 1 ? '' : 's'}`
@@ -235,17 +231,19 @@ export default function DriverActiveCarContent({ locationReady = false, onTripSt
             </button>
           )}
           {trip.next_action === 'PICKUP_NOW' && (
-            <div className="mt-4 rounded-xl bg-green-50 px-3 py-2 text-sm font-semibold text-green-800">
-              You are here. Confirm or mark the waiting passenger absent below.
+            <div className="mt-4 rounded-2xl bg-green-50 px-4 py-3 text-sm font-semibold text-green-800">
+              Resolve the waiting passenger below, then Raahi will show the next action.
             </div>
           )}
-        </div>
+        </section>
       )}
-
 
       {/* Passenger Requests */}
       <div>
-        <p className="section-label mb-2">Passenger Requests ({(trip.passenger_requests ?? []).length})</p>
+        <div className="mb-2 flex items-end justify-between gap-3">
+          <div><p className="section-label">Passengers</p><p className="mt-1 text-sm font-bold text-foreground">{heldRequests.length ? `${heldRequests.length} passenger${heldRequests.length === 1 ? '' : 's'} ${heldRequests.length === 1 ? 'needs' : 'need'} attention` : 'All current requests resolved'}</p></div>
+          <span className="rounded-full bg-secondary px-2.5 py-1 text-[10px] font-bold text-primary">{trip.confirmed_count ?? 0} aboard</span>
+        </div>
         <div className="space-y-2">
           {(trip.passenger_requests ?? []).length === 0 && (
             <div className="compact-card py-5 text-center">
@@ -278,15 +276,17 @@ export default function DriverActiveCarContent({ locationReady = false, onTripSt
         <button
           onClick={() => setShowCloseSeatsModal(true)}
           disabled={heldBlocking || !!loadingAction}
-          className={`w-full flex items-center justify-center gap-2 rounded-2xl px-5 py-4 font-semibold text-base transition-all duration-150 active:scale-95 ${
+          className={`flex w-full items-center justify-between gap-3 rounded-2xl border px-4 py-3.5 text-left transition-all active:scale-[0.99] ${
             heldBlocking
-              ? 'bg-muted text-muted-foreground cursor-not-allowed opacity-60'
-              : 'bg-secondary border border-border text-accent hover:bg-secondary/70'
+              ? 'cursor-not-allowed border-border bg-muted/60 text-muted-foreground'
+              : 'border-border bg-card text-foreground hover:border-primary/30'
           }`}
         >
-          <Lock size={18} />
-          Close {trip.available_count} Empty Seat{(trip.available_count ?? 0) > 1 ? 's' : ''}
-          {heldBlocking && <span className="text-xs">(resolve held requests first)</span>}
+          <div className="flex min-w-0 items-center gap-3">
+            <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${heldBlocking ? 'bg-card' : 'bg-secondary text-primary'}`}><Lock size={16} /></div>
+            <div className="min-w-0"><p className="text-sm font-bold">Close {trip.available_count} empty seat{(trip.available_count ?? 0) > 1 ? 's' : ''}</p><p className="mt-0.5 text-xs text-muted-foreground">{heldBlocking ? 'Resolve held requests first.' : 'Stop accepting more passengers for this trip.'}</p></div>
+          </div>
+          <span className="shrink-0 text-[10px] font-bold uppercase tracking-wide">{heldBlocking ? 'Locked' : 'Review'}</span>
         </button>
       )}
 
@@ -359,10 +359,10 @@ function PassengerRequestRow({
   const isLoadingAbsent = loadingAction === `absent-${request.request_id}`;
 
   return (
-    <div className={`card p-4 border-l-4 ${
-      isConfirmed ? 'border-l-green-500' : isHeld ? 'border-l-amber-500' : 'border-l-border'
+    <div className={`rounded-2xl border bg-card p-4 card-shadow-sm ${
+      isConfirmed ? 'border-green-200' : isHeld && request.is_at_pickup ? 'border-amber-300' : 'border-border'
     }`}>
-      <div className="flex items-start justify-between mb-3">
+      <div className="mb-3 flex items-start justify-between gap-3">
         <div>
           <div className="flex items-center gap-2">
             <span className="text-sm font-bold text-foreground">{request.passenger_display_name}</span>

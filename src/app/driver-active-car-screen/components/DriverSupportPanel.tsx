@@ -17,7 +17,7 @@ export default function DriverSupportPanel() {
   if (!trip?.has_active_trip || !trip.trip_id) return null;
 
   return (
-    <div className="max-w-screen-2xl mx-auto px-4 pb-3">
+    <div className="mx-auto max-w-screen-lg px-4 pb-3 sm:px-6">
       <SupportIssueButton role="driver" tripId={trip.trip_id} />
       <p className="mt-2 text-center text-[11px] text-muted-foreground">Reporting a problem does not cancel this car. Use Cancel This Car separately if the trip cannot continue.</p>
     </div>

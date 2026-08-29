@@ -47,7 +47,7 @@ export default function DriverCancelTripPanel() {
   };
 
   return (
-    <div className="max-w-screen-2xl mx-auto px-4 pt-1 pb-3">
+    <div className="mx-auto max-w-screen-lg px-4 pb-4 pt-1 sm:px-6">
       <button
         onClick={() => setShowConfirm(true)}
         className="w-full flex items-center justify-center gap-2 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700 hover:bg-red-100"

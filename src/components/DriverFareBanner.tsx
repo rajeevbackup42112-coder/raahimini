@@ -21,16 +21,17 @@ export default function DriverFareBanner() {
   if (!loading && fare == null) return null;
 
   return (
-    <div className="max-w-screen-2xl mx-auto px-4 pt-4">
-      <div className="rounded-2xl border border-border bg-card px-4 py-3 flex items-center gap-3">
-        <div className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center shrink-0">
+    <div className="mx-auto max-w-screen-lg px-4 pt-4 sm:px-6">
+      <div className="flex items-center gap-3 rounded-2xl border border-border bg-card px-4 py-3 card-shadow-sm">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-secondary">
           {loading ? <Loader2 size={18} className="animate-spin text-primary" /> : <IndianRupee size={18} className="text-primary" />}
         </div>
-        <div>
-          <p className="text-xs text-muted-foreground">Collect from passenger</p>
-          <p className="text-base font-bold">{loading ? 'Loading…' : `₹${fare} per seat`}</p>
-          <p className="text-[11px] text-muted-foreground">Confirm the request only after receiving payment in person.</p>
+        <div className="min-w-0 flex-1">
+          <p className="section-label">Payment rule</p>
+          <p className="mt-0.5 text-sm font-extrabold text-foreground sm:text-base">{loading ? 'Loading fare…' : `₹${fare} per seat · collect in person`}</p>
+          <p className="mt-1 text-[11px] leading-relaxed text-muted-foreground sm:hidden">Confirm the request only after receiving payment in person.</p>
         </div>
+        <p className="hidden max-w-xs text-right text-[11px] leading-relaxed text-muted-foreground sm:block">Confirm the request only after receiving payment in person.</p>
       </div>
     </div>
   );

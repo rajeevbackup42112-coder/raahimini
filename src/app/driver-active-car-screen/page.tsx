@@ -9,7 +9,7 @@ import RealtimeRefreshBoundary from '@/components/RealtimeRefreshBoundary';
 
 export default function DriverActiveCarPage() {
   return (
-    <AppLayout headerTitle="Driver — Active Car" headerBack>
+    <AppLayout headerTitle="Active car" headerBack showBottomNav={false}>
       <DriverRoleGate>
         <RealtimeRefreshBoundary>
           <DriverFareBanner />
