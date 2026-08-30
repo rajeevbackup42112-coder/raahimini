@@ -10,22 +10,15 @@ interface AppLayoutProps {
   headerBack?: boolean;
 }
 
-export default function AppLayout({
-  children,
-  showBottomNav = true,
-  headerTitle,
-  headerBack = false,
-}: AppLayoutProps) {
+export default function AppLayout({ children, showBottomNav = true, headerTitle, headerBack = false }: AppLayoutProps) {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <AppHeader title={headerTitle} showBack={headerBack} />
-      <main className="flex-1 pb-20 sm:pb-0">
-        {children}
-      </main>
+      <main className="flex-1 pb-20 sm:pb-0">{children}</main>
       <footer className="hidden border-t border-border bg-card/80 sm:block">
         <div className="mx-auto flex max-w-screen-xl items-center justify-between gap-4 px-6 py-4 text-xs text-muted-foreground">
           <p>Raahi stays free for passengers and drivers.</p>
-          <Link href="/contact" className="font-semibold text-primary hover:underline">Contact Raahi · Suggest an idea · Promote your business</Link>
+          <div className="flex items-center gap-3"><Link href="/offers" className="font-semibold text-primary hover:underline">Local Offers</Link><span>·</span><Link href="/contact" className="font-semibold text-primary hover:underline">Contact Raahi · Suggest an idea · Promote your business</Link></div>
         </div>
       </footer>
       {showBottomNav && <BottomNav />}
