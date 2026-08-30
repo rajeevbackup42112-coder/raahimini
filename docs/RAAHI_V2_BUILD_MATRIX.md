@@ -192,3 +192,20 @@ V13 anonymous Admin gate, Users mobile-width fix and time-aware demand guards re
 Final headed production matrix now includes real Passenger seat lifecycle, concurrent seat exclusion, demand recovery 15/30/60, Driver no-show/cancel recovery, support, same-direction two-Driver FIFO, real-browser GPS automatic departure, Passenger live/stale/recovered map, Share My Raahi privacy/revoke, explicit destination arrival, V12 automatic completion, role ingress and mobile overflow checks.
 
 Final cleanup: 0 live trips, 0 live queue entries, 0 HELD requests, 0 current ACTIVE demand, 0 open support cases, 0 route drafts and 0 live GPS rows. Rollback reference: `prod-v14-frozen` -> `38b7519d615e171c59d537b18a61c1ba303c132f`.
+
+## 2026-08-30 Demo Ready / go-live infrastructure
+
+| Area | Capability | Status | Evidence / next gate |
+|---|---|---:|---|
+| Demo UI | Passenger / Driver / Admin investor-polish pass through Admin Access | BUILT + VALIDATED | Screen 16 checkpoint `1f074897`; prior V14 runtime remains frozen |
+| Admin | Admin Access role-account read repair | CODED, NOT PROD-MIGRATED | Forward `p.role::text` fix; production function still pre-repair |
+| OTP | Supabase-generated OTP delivered by Fast2SMS | CODED | `send-sms` Edge Function; Fast2SMS verify API intentionally absent |
+| OTP | Fast2SMS credentials/template | BLOCKED ON EXTERNAL INPUT | Need API key + OTP ID/template, then controlled real OTP proof |
+| Domain | `ride.myraahi.co.in` application identity | CODED | `NEXT_PUBLIC_SITE_URL`; test-auth/staging endpoints hard-block new production host |
+| DNS | `myraahi.co.in` / `ride.myraahi.co.in` | PENDING PROPAGATION / HOSTING SETUP | Initial DNS check did not resolve new apex/subdomain; do not invent DNS target |
+| Maps | Passenger live map | LAUNCH READY | Existing keyless OpenStreetMap remains launch choice |
+| Backend | Supabase | RETAINED | No Convex migration planned for launch |
+| Validation | Candidate `b937c409` | PASS | TypeScript + 30/30 contracts + production build 23/23 |
+| Production preflight | Operational state | CLEAN SNAPSHOT | 2026-08-30 03:41 IST: 0 live trips/queues/HELD/current demand/support/drafts/GPS; recheck before mutation |
+
+Current docs checkpoint after go-live planning: `4941b538d0fc4c21b1b256ff08c20d961e58bc01`.

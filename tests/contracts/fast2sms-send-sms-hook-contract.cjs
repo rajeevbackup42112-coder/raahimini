@@ -13,6 +13,8 @@ must(file.includes('otp_id: otpId') && file.includes('otp,'), 'Provider request 
 must(!file.includes('/dev/otp/verify'), 'Fast2SMS must not become OTP verification authority');
 must(file.includes('^[6-9][0-9]{9}$'), 'India-only mobile normalization guard missing');
 must(file.includes('AbortSignal.timeout(3500)'), 'Hook must stay inside Supabase HTTP-hook time budget');
+must(file.includes('if (!response.ok)'), 'Fast2SMS success must follow the documented HTTP status contract');
+must(file.includes('new ProviderError(503, "Fast2SMS is temporarily unreachable")'), 'Provider network/timeouts must become retryable failures');
 must(file.includes('retry-after') && file.includes('503'), 'Retryable provider failure handling missing');
 must(!/console\.(log|debug)\s*\(/.test(file), 'OTP hook must not log OTP/phone payloads');
 console.log('Fast2SMS Send SMS Hook contract: PASS');

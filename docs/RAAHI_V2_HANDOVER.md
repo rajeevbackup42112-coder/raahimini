@@ -257,3 +257,17 @@ Final headed acceptance used Rajeev1 Passenger, Naresh Driver, Rajeev4 second Dr
 A fresh Rajeev1 + Naresh ride proved booking, boarding/payment, Close Empty Seats, real-browser GPS automatic Start Trip, live Passenger map, stale/recovered GPS display, explicit destination arrival, automatic completion and Passenger Arrived. Final backend state: trip COMPLETED at stop 6, queue DONE, live GPS 0, active share links 0. Final environment cleanup is zero across live trips/queues/HELD/current demand/open support/drafts/GPS.
 
 Release status: GO-LIVE READY. Do not alter FIFO, GPS, seat ownership, phone verification or lifecycle commands during launch-day support; use only existing audited recovery/configuration paths.
+
+## 2026-08-30 Demo Ready → go-live handover
+
+The investor-polish track is now complete through Admin Access. Screen 16 repaired the real `admin_list_role_accounts()` enum/text projection defect in Git while preserving Admin grant/revoke/self/final-admin/Driver-role guards. Screen 16 checkpoint: `1f074897059afeba2211a76c04331a554bab8465`.
+
+Go-live engineering candidate `b937c40996805caab57b804b5f588975a9e97aa6` is pushed to `demo-ready-investor-polish`. It sets the candidate site identity to `https://ride.myraahi.co.in`, hard-blocks the new production hostname from test-auth/staging safety endpoints, and adds a signature-verified Supabase Send SMS Hook implementation that forwards Supabase-generated OTPs to Fast2SMS. Fast2SMS never verifies Raahi OTPs.
+
+Candidate validation: TypeScript PASS, 30/30 contracts PASS, production Next.js build PASS (23/23 pages). Production has not received this code, the Admin Access migration, an Edge Function, an Auth Hook or DNS changes.
+
+Read-only production preflight at 2026-08-30 03:41 IST: 0 live trips, 0 live queue entries, 0 HELD requests, 0 current ACTIVE demand, 0 open support cases, 0 route drafts and 0 live GPS rows. The Admin Access repair is still unapplied; production lists zero Edge Functions. Recheck all operational counts immediately before mutation.
+
+The user owns `myraahi.co.in`. Planned app hostname: `ride.myraahi.co.in`. Initial DNS lookup immediately after purchase returned no apex or `ride` resolution, so wait for registration/nameserver propagation and obtain the exact custom-domain DNS target from the hosting provider; do not guess A/CNAME values. Keep `myraahi.referralhub.co.in` as rollback during cutover.
+
+Next action: obtain Fast2SMS API key + OTP ID/template and the hosting custom-domain target. Then, with explicit production approval, deploy `send-sms`, configure secrets + signed Supabase Auth Hook, prove one real OTP through Supabase verification, apply the Admin Access forward migration, configure `ride.myraahi.co.in`, and run the full new-domain real-account acceptance in `docs/RAAHI_V2_GO_LIVE_PLAN.md`.

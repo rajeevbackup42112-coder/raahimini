@@ -61,26 +61,30 @@ async function sendWithFast2Sms(mobile: string, otp: string): Promise<void> {
   const apiKey = requiredEnv("FAST2SMS_API_KEY");
   const otpId = requiredEnv("FAST2SMS_OTP_ID");
 
-  const response = await fetch("https://www.fast2sms.com/dev/otp/send", {
-    method: "POST",
-    headers: {
-      Authorization: apiKey,
-      Accept: "application/json",
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      mobile,
-      otp_id: otpId,
-      otp,
-      otp_length: 6,
-    }),
-    signal: AbortSignal.timeout(3500),
-  });
+  let response: Response;
+  try {
+    response = await fetch("https://www.fast2sms.com/dev/otp/send", {
+      method: "POST",
+      headers: {
+        Authorization: apiKey,
+        Accept: "application/json",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        mobile,
+        otp_id: otpId,
+        otp,
+        otp_length: 6,
+      }),
+      signal: AbortSignal.timeout(3500),
+    });
+  } catch {
+    throw new ProviderError(503, "Fast2SMS is temporarily unreachable");
+  }
 
   let data: unknown = null;
   try { data = await response.json(); } catch { /* Provider returned non-JSON. */ }
-  const accepted = response.ok && Boolean((data as Record<string, unknown> | null)?.return);
-  if (!accepted) throw new ProviderError(response.status, safeProviderMessage(data));
+  if (!response.ok) throw new ProviderError(response.status, safeProviderMessage(data));
 }
 Deno.serve(async (req: Request) => {
   if (req.method !== "POST") return jsonResponse(405, { error: "Method not allowed" });
