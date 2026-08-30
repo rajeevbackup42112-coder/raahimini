@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, CarFront, Loader2, LogIn, MapPinned, ShieldCheck } from 'lucide-react';
 import AppLogo from '@/components/ui/AppLogo';
@@ -111,6 +112,9 @@ export default function LoginPage() {
                 <button onClick={() => router.push('/')} className="mt-5 w-full text-center text-sm font-semibold text-primary hover:underline">
                   Browse routes without signing in
                 </button>
+                <Link href="/contact" className="mt-3 block w-full text-center text-sm font-semibold text-primary hover:underline">
+                  Contact Raahi · Suggest an idea · Promote your business
+                </Link>
                 <p className="mt-5 text-center text-[11px] leading-relaxed text-muted-foreground">
                   Raahi uses Google for account sign-in. Trip and role access remain governed by your verified Raahi profile.
                 </p>
