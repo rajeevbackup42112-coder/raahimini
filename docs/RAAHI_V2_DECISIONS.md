@@ -187,3 +187,12 @@ Future chats must start from `RAAHI_V2_HANDOVER.md`, then consult this Decision 
 112. **Admin Access repair is a go-live migration gate.** `admin_list_role_accounts()` must cast `profiles.role::text`; grant/revoke/self/final-admin/Driver-role protections remain unchanged.
 113. **OpenStreetMap remains sufficient for launch.** Google Maps/Mappls can be evaluated later as a product enhancement; no billable map provider is required for this go-live.
 114. **Supabase remains the backend for this launch.** Do not migrate to Convex or another backend merely for free-tier economics; revisit infrastructure only when measured scale/reliability requires it.
+
+## 2026-08-30 fixed-route supply expansion
+
+115. **Parasnath → Madhuban joins the fixed-route network as `PM-01`.** The initial Dev route is current/published/active at ₹150 per seat with a direct Parasnath → Madhuban segment; Admin Route Management remains authoritative for future fare, stop or version changes.
+116. **Driver demand alerts are persistent route-family preferences.** A Driver may opt into one or more routes for demand alerts; preferences follow the route family so a later published route version does not silently drop the Driver's choice.
+117. **Route-alert preference is advisory notification state only.** Subscribing or unsubscribing must never join/leave a Driver queue, change FIFO position, activate a car, reserve seats, alter GPS requirements or change trip lifecycle state.
+118. **Existing Drivers inherit only their most recently served route family.** New routes require explicit opt-in; adding a route must not suddenly send every Driver its demand alerts.
+119. **Queue participation remains explicit.** A Driver can receive demand alerts for a route without joining its queue; the existing one-live-queue-per-Driver and per-route FIFO rules remain unchanged.
+120. **Current demand alerts are in-app realtime.** Future push/WhatsApp notification delivery may reuse the same preference table, but no external notification channel is implied by this slice.

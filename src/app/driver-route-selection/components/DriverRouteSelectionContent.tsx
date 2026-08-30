@@ -11,10 +11,13 @@ import {
   getActiveLocations,
   getDriverDepartingRoutes,
   getDriverHomeContext,
+  getMyDriverRoutePreferences,
   joinDriverQueue,
   leaveDriverQueue,
+  setMyDriverRoutePreference,
   type DriverDepartingRoute,
   type DriverHomeContext,
+  type DriverRoutePreference,
   type Location,
 } from '@/lib/raahiApi';
 import DriverRouteCard from './DriverRouteCard';
@@ -26,16 +29,19 @@ export default function DriverRouteSelectionContent() {
   const [context, setContext] = useState<DriverHomeContext>({});
   const [locationId, setLocationId] = useState('');
   const [routes, setRoutes] = useState<DriverDepartingRoute[]>([]);
+  const [preferences, setPreferences] = useState<DriverRoutePreference[]>([]);
   const [demandByRoute, setDemandByRoute] = useState<Record<string, RouteDemandSummary>>({});
   const [loading, setLoading] = useState(true);
   const [joining, setJoining] = useState<string | null>(null);
+  const [preferenceBusy, setPreferenceBusy] = useState<string | null>(null);
   const [leaving, setLeaving] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
-    const [locs, ctx] = await Promise.all([getActiveLocations(), getDriverHomeContext()]);
+    const [locs, ctx, prefs] = await Promise.all([getActiveLocations(), getDriverHomeContext(), getMyDriverRoutePreferences()]);
     setLocations(locs);
     setContext(ctx);
+    setPreferences(prefs);
     if (ctx.has_active_trip) {
       router.replace('/driver-active-car-screen');
       return;
@@ -100,35 +106,54 @@ export default function DriverRouteSelectionContent() {
     }
   };
 
-  useEffect(() => {
-    if (!user || profile?.role !== 'driver' || !locationId || context.queue_status === 'WAITING' || routes.length === 0) return;
+  const toggleRouteAlert = async (route: DriverDepartingRoute) => {
+    if (profile?.role !== 'driver') return;
+    const subscribed = preferences.some(pref => pref.route_id === route.route_id);
+    setPreferenceBusy(route.route_id);
+    const result = await setMyDriverRoutePreference(route.route_id, !subscribed);
+    setPreferenceBusy(null);
+    if (!result.success) {
+      toast.error(result.error || 'Could not update route alerts');
+      return;
+    }
+    setPreferences(await getMyDriverRoutePreferences());
+    toast.success(!subscribed ? `Demand alerts on for ${route.direction_label}` : `Demand alerts off for ${route.direction_label}`);
+  };
 
-    const routeById = new Map(routes.map(route => [route.route_id, route]));
+  useEffect(() => {
+    if (!user || profile?.role !== 'driver' || context.queue_status === 'WAITING' || preferences.length === 0) return;
+
+    const preferenceByRouteId = new Map(preferences.map(pref => [pref.route_id, pref]));
+    const visibleRouteById = new Map(routes.map(route => [route.route_id, route]));
     const supabase = createClient();
     const channel = supabase
-      .channel(`driver_demand_notifications_${user.id}_${locationId}`)
+      .channel(`driver_demand_notifications_${user.id}`)
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'raahi_invalidation_events' }, async payload => {
         const event = payload.new as { route_id?: string; source_table?: string; event_kind?: string };
         if (event.source_table !== 'demand_notification' || !event.route_id || !event.event_kind) return;
         if (!['DEMAND_LOW', 'DEMAND_MEDIUM', 'DEMAND_HIGH', 'DEMAND_URGENCY'].includes(event.event_kind)) return;
 
-        const route = routeById.get(event.route_id);
-        if (!route || route.has_active_car) return;
+        const preference = preferenceByRouteId.get(event.route_id);
+        if (!preference) return;
+        const visibleRoute = visibleRouteById.get(event.route_id);
+        if (visibleRoute?.has_active_car) return;
 
-        const summary = await getRouteDemandSummary(route.route_id);
+        const summary = await getRouteDemandSummary(preference.route_id);
         if (summary.now_count < 1) return;
-        setDemandByRoute(previous => ({ ...previous, [route.route_id]: summary }));
+        setDemandByRoute(previous => ({ ...previous, [preference.route_id]: summary }));
 
-        const passengerText = `${summary.now_count} passenger${summary.now_count === 1 ? '' : 's'} ${summary.now_count === 1 ? 'is' : 'are'} looking for ${route.from_location_name} -> ${route.to_location_name}.`;
+        const passengerText = `${summary.now_count} passenger${summary.now_count === 1 ? '' : 's'} ${summary.now_count === 1 ? 'is' : 'are'} looking for ${preference.from_location_name} -> ${preference.to_location_name}.`;
         const message = event.event_kind === 'DEMAND_URGENCY' ? `Demand is getting more urgent. ${passengerText}` : passengerText;
         toast(message, {
-          action: { label: 'Go Available', onClick: () => { void join(route); } },
+          action: visibleRoute && locationId === preference.from_location_id
+            ? { label: 'Go Available', onClick: () => { void join(visibleRoute); } }
+            : { label: 'View route', onClick: () => setLocationId(preference.from_location_id) },
         });
       })
       .subscribe();
 
     return () => { void supabase.removeChannel(channel); };
-  }, [context.queue_status, locationId, profile?.role, routes, user]);
+  }, [context.queue_status, locationId, preferences, profile?.role, routes, user]);
 
   const leaveQueue = async () => {
     if (!context.queue_route_id) return;
@@ -179,7 +204,7 @@ export default function DriverRouteSelectionContent() {
     <div className="mx-auto max-w-screen-lg space-y-5 px-4 py-5 sm:px-6">
       <section className="hero-surface">
         <div className="flex items-start justify-between gap-4">
-          <div><p className="text-[11px] font-bold uppercase tracking-[0.14em] text-amber-200">Driver home</p><h1 className="mt-2 text-2xl font-extrabold tracking-tight text-white sm:text-3xl">{profile?.display_name ? `Ready, ${profile.display_name}?` : 'Ready to drive?'}</h1><p className="mt-2 max-w-xl text-sm leading-relaxed text-white/75">Choose your current stand, then take the next route action. Demand and earning context update automatically.</p></div>
+          <div><p className="text-[11px] font-bold uppercase tracking-[0.14em] text-amber-200">Driver home</p><h1 className="mt-2 text-2xl font-extrabold tracking-tight text-white sm:text-3xl">{profile?.display_name ? `Ready, ${profile.display_name}?` : 'Ready to drive?'}</h1><p className="mt-2 max-w-xl text-sm leading-relaxed text-white/75">Choose your current stand, choose which routes you want demand alerts for, then take the next route action. FIFO stays route-specific.</p></div>
           <div className="hidden rounded-full bg-white/10 px-3 py-1.5 text-xs font-bold text-white/80 sm:block">Operational mode</div>
         </div>
       </section>
@@ -213,6 +238,10 @@ export default function DriverRouteSelectionContent() {
                 route={route}
                 demand={demandByRoute[route.route_id]}
                 joining={joining === route.route_id}
+                alertsAvailable={profile?.role === 'driver'}
+                subscribed={preferences.some(pref => pref.route_id === route.route_id)}
+                preferenceBusy={preferenceBusy === route.route_id}
+                onToggleSubscription={() => toggleRouteAlert(route)}
                 onJoin={() => join(route)}
               />
             ))}

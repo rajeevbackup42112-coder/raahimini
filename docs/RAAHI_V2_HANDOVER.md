@@ -271,3 +271,17 @@ Read-only production preflight at 2026-08-30 03:41 IST: 0 live trips, 0 live que
 The user owns `myraahi.co.in`. Planned app hostname: `ride.myraahi.co.in`. Initial DNS lookup immediately after purchase returned no apex or `ride` resolution, so wait for registration/nameserver propagation and obtain the exact custom-domain DNS target from the hosting provider; do not guess A/CNAME values. Keep `myraahi.referralhub.co.in` as rollback during cutover.
 
 Next action: obtain Fast2SMS API key + OTP ID/template and the hosting custom-domain target. Then, with explicit production approval, deploy `send-sms`, configure secrets + signed Supabase Auth Hook, prove one real OTP through Supabase verification, apply the Admin Access forward migration, configure `ride.myraahi.co.in`, and run the full new-domain real-account acceptance in `docs/RAAHI_V2_GO_LIVE_PLAN.md`.
+
+## 2026-08-30 Parasnath fixed-route + Driver alert-preference checkpoint
+
+New Dev route `PM-01` is live in the existing Raahi V2 Dev backend: Parasnath → Madhuban, ₹150/seat, current/published/active, with endpoint stops Parasnath (0) and Madhuban (46 minutes). Passenger and Driver canonical route discovery both return the new route.
+
+Migration `20260830111500_demo_ready_driver_route_preferences_parasnath.sql` adds `driver_route_preferences` keyed by Driver + route family. Existing active Drivers were seeded only to their most recently served route; all current existing Drivers therefore remained GD-01-only and PM-01 requires explicit opt-in.
+
+Driver Home now exposes a separate Demand alerts On/Off choice per departing route. This preference filters realtime demand notifications but does not join the queue. Queue join, one-live-queue-per-Driver and per-route FIFO remain unchanged. When demand arrives for a subscribed route at another stand, the in-app action takes the Driver to that route rather than silently joining.
+
+A reversible authenticated Beta1 Driver proof subscribed PM-01, read back GD-01 + PM-01, unsubscribed PM-01 and returned to GD-01-only. A Passenger write attempt was rejected with `Active Driver access required`. RPC privileges are anon denied / authenticated granted with internal Driver checks.
+
+Validation: TypeScript PASS, 31/31 contracts PASS, production Next.js build PASS (23/23 pages). Dev operational state remained 0 live trips, 0 live queues, 0 HELD, 0 current demand and 0 route drafts.
+
+Next product slice after this checkpoint: general Contact Raahi → Driver verification foundation → Outstation lead/quote marketplace → Local Offers → branding integration → hosted-domain acceptance.

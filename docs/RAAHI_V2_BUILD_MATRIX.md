@@ -209,3 +209,16 @@ Final cleanup: 0 live trips, 0 live queue entries, 0 HELD requests, 0 current AC
 | Production preflight | Operational state | CLEAN SNAPSHOT | 2026-08-30 03:41 IST: 0 live trips/queues/HELD/current demand/support/drafts/GPS; recheck before mutation |
 
 Current docs checkpoint after go-live planning: `4941b538d0fc4c21b1b256ff08c20d961e58bc01`.
+
+## 2026-08-30 Parasnath route + Driver alert preferences
+
+| Area | Capability | Status | Evidence / next gate |
+|---|---|---:|---|
+| Fixed route | `PM-01` Parasnath → Madhuban | DEV MIGRATED | Current/published/active, ₹150/seat, direct 46-minute segment |
+| Driver | Persistent route demand-alert choices | BUILT + DEV MIGRATED | Stored by route family; explicit On/Off control is separate from queue join |
+| Driver | Existing preference migration | VERIFIED | Every existing active Driver retained only GD-01 from most recent served-route history; PM-01 requires opt-in |
+| Security | Preference read/write boundary | VERIFIED | anon denied; authenticated allowed with internal active/unrestricted Driver guard; Passenger write rejected |
+| Ride engine | FIFO / seat / trip isolation | VERIFIED | Preference migration does not mutate Driver queue, trips or seat requests; queue participation remains explicit |
+| Discovery | Passenger + Driver see PM-01 | VERIFIED | Both canonical route projections return Parasnath → Madhuban correctly |
+| Validation | Final candidate | PASS | TypeScript PASS · 31/31 contracts PASS · production build 23/23 PASS |
+| Dev state | Operational pre/post migration | CLEAN | 0 live trips · 0 live queues · 0 HELD · 0 current demand · 0 drafts |
