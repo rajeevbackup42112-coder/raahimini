@@ -3,6 +3,7 @@ import AppLayout from '@/components/AppLayout';
 import LocationContent from './components/LocationContent';
 import RealtimeRefreshBoundary from '@/components/RealtimeRefreshBoundary';
 import RideModeTabs from '@/components/RideModeTabs';
+import SponsoredLocalOffer from '@/components/SponsoredLocalOffer';
 
 export default function LocationPage() {
   return (
@@ -11,6 +12,7 @@ export default function LocationPage() {
       <RealtimeRefreshBoundary>
         <LocationContent />
       </RealtimeRefreshBoundary>
+      <SponsoredLocalOffer />
     </AppLayout>
   );
 }
