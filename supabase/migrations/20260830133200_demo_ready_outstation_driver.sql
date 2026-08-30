@@ -39,9 +39,9 @@ create or replace function public.driver_send_outstation_quote(
 )
 returns jsonb language plpgsql security definer set search_path to 'public'
 as $function$
-declare v_driver public.drivers; v_profile public.profiles; v_vehicle public.vehicles; v_verify public.driver_verifications; v_request public.outstation_requests; v_quote_id uuid; v_expiry timestamptz;
+declare v_driver public.drivers; v_vehicle public.vehicles; v_verify public.driver_verifications; v_request public.outstation_requests; v_quote_id uuid; v_expiry timestamptz;
 begin
-  select d.*,p.* into v_driver,v_profile from public.drivers d join public.profiles p on p.id=d.profile_id
+  select d.* into v_driver from public.drivers d join public.profiles p on p.id=d.profile_id
   where d.profile_id=auth.uid() and d.is_active=true and not p.is_restricted;
   if v_driver.id is null then return jsonb_build_object('success',false,'error','Active Driver access required'); end if;
   select * into v_vehicle from public.vehicles where id=v_driver.vehicle_id and is_active=true;
