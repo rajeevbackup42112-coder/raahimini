@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { AlertTriangle, Car, CheckCircle2, ChevronRight, Loader2, RefreshCw, Search, Shield, UserPlus, Users, X } from 'lucide-react';
+import { AlertTriangle, Car, CheckCircle2, ChevronRight, Loader2, RefreshCw, Search, Shield, ShieldCheck, UserPlus, Users, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import { adminListRegisteredUsers, type RegisteredUser } from '@/lib/adminControlApi';
@@ -72,7 +72,7 @@ export default function AdminUsersDirectory() {
     <main className="mx-auto max-w-screen-2xl px-4 py-5">
       <div className="flex items-start justify-between gap-3">
         <div><p className="section-label">Users</p><h1 className="mt-1 text-2xl font-extrabold text-foreground">Registered Users</h1><p className="mt-1 text-xs text-muted-foreground">Identity, verification and operational state in one guarded directory.</p></div>
-        <button onClick={load} disabled={loading} className="btn-outline px-3 py-2">{loading?<Loader2 size={15} className="animate-spin"/>:<RefreshCw size={15}/>} Refresh</button>
+        <div className="flex flex-wrap justify-end gap-2"><Link href="/admin-panel/verifications" className="btn-outline px-3 py-2"><ShieldCheck size={15}/> Driver verification</Link><button onClick={load} disabled={loading} className="btn-outline px-3 py-2">{loading?<Loader2 size={15} className="animate-spin"/>:<RefreshCw size={15}/>} Refresh</button></div>
       </div>
 
       <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
@@ -141,7 +141,7 @@ function UserDetailCard({ selected, busy, onToggleRestriction }: { selected: Reg
       {selected.driver_id&&<div className="mt-4 rounded-2xl bg-muted/60 p-3"><p className="section-label">Driver & vehicle</p><p className="mt-2 text-sm font-bold text-foreground">{selected.registration_number||'No vehicle'}{selected.vehicle_model?` · ${selected.vehicle_model}`:''}</p><p className="mt-1 text-xs text-muted-foreground">{selected.vehicle_type||'Vehicle'} · {selected.capacity||'—'} seats · {selected.trips_completed||0} completed trips</p></div>}
       <div className="mt-4 space-y-2">
         {selected.role==='passenger'&&!selected.is_restricted&&<Link href={`/admin-driver-onboarding?profile=${selected.profile_id}`} className="btn-primary w-full"><UserPlus size={16}/> Make Driver</Link>}
-        {selected.role==='driver'&&<Link href={`/admin-driver-onboarding?profile=${selected.profile_id}`} className="btn-outline w-full"><Car size={16}/> Driver / vehicle settings</Link>}
+        {selected.role==='driver'&&<><Link href="/admin-panel/verifications" className="btn-primary w-full"><ShieldCheck size={16}/> Review verification</Link><Link href={`/admin-driver-onboarding?profile=${selected.profile_id}`} className="btn-outline w-full"><Car size={16}/> Driver / vehicle settings</Link></>}
         {(selected.role==='passenger'||selected.role==='admin')&&<Link href="/admin-panel/admins" className="btn-outline w-full"><Shield size={16}/> Manage Admin access</Link>}
         <button onClick={onToggleRestriction} disabled={busy} className={`w-full ${selected.is_restricted?'btn-outline text-green-700':'btn-outline text-red-600'}`}>{busy?<Loader2 size={16} className="animate-spin"/>:selected.is_restricted?<CheckCircle2 size={16}/>:<AlertTriangle size={16}/>} {selected.is_restricted?'Restore account':'Restrict account'}</button>
       </div>

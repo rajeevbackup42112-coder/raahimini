@@ -203,3 +203,11 @@ Future chats must start from `RAAHI_V2_HANDOVER.md`, then consult this Decision 
 122. **Contact Raahi works before and after login.** The public submit RPC is available to anonymous and authenticated users, but direct table access remains denied and server-side validation/rate limiting is mandatory.
 123. **Local-business promotion enquiries are an explicit Contact category.** Raahi may explain that local promotions help keep the service free, but every eventual promotion must remain clearly marked and non-intrusive.
 124. **Admin general-contact handling stays under Operations without changing primary navigation.** General contact has its own inbox and audited resolve action; Dashboard · Users · Routes · Operations remains the primary Admin structure.
+
+## 2026-08-30 Driver trust verification
+
+126. **Driver verification is real reviewed state, not a decorative badge.** Driving Licence, vehicle RC and car photos have independent MISSING / PENDING / VERIFIED / REJECTED states owned by guarded backend commands.
+127. **Driving Licence and RC scans are private.** They are stored in a private Supabase Storage bucket and are readable only by the Driver themself and Raahi Admin; passengers receive verification booleans, never raw DL/RC files.
+128. **Verified car photos remain relationship-scoped.** Admin, Driver self and a Passenger with a confirmed Raahi relationship may read approved car photos. Outstation may later extend the same trust helper to request/quote participants.
+129. **Replacing or removing a document invalidates prior verification.** New uploads return the relevant group to PENDING; removing the last current document returns it to MISSING. Old private Storage objects are deleted from the Driver's own folder where possible.
+130. **Verification does not alter transport authority.** It does not change FIFO, queue membership, seat ownership, GPS, phone verification, trip lifecycle or fixed-route dispatch.

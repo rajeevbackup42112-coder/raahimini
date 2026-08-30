@@ -235,3 +235,16 @@ Current docs checkpoint after go-live planning: `4941b538d0fc4c21b1b256ff08c20d9
 | Abuse guard | Repeat contact throttle | VERIFIED | Same contact cannot submit again within 10 minutes |
 | Validation | Contact candidate | PASS | TypeScript PASS · 32/32 contracts PASS · production build 25/25 PASS |
 | Browser | Public Contact responsive + submit | PASS | 390px + 1440px no overflow; synthetic PROMOTION reached Message received and was cleaned |
+
+## 2026-08-30 Driver verification checkpoint
+
+| Area | Capability | Status | Evidence / next gate |
+|---|---|---:|---|
+| Driver trust | DL / RC / car-photo upload | BUILT + DEV MIGRATED | Private `driver-verification` bucket, 8 MB guard, Driver-own upload/delete policies |
+| Driver trust | Admin review | BUILT + DEV MIGRATED | Dedicated Users-area review page; VERIFIED/REJECTED are Admin-only guarded RPC outcomes |
+| Privacy | Raw DL/RC exposure | BLOCKED BY DESIGN | Passenger trust projection contains booleans + vehicle identity only; raw scans stay Driver/Admin-only |
+| Privacy | Approved car photos | GUARDED | Relationship helper allows Admin, Driver self or confirmed Passenger; Outstation may extend explicitly |
+| Lifecycle | Replace/remove semantics | VERIFIED BY CONTRACT + DB | Replacement -> PENDING; remove -> MISSING/PENDING as appropriate; private object cleanup wired |
+| Ride engine | FIFO / seats / GPS / trip isolation | PRESERVED | No ride-engine function redefined |
+| Validation | Driver verification candidate | PASS | TypeScript PASS · 33/33 contracts PASS · production build 27/27 pages PASS |
+| Headed upload/review | Real-account click-through | PENDING | Remote execution guard blocked the automated private-document preview; perform later with real headed browsers if needed |

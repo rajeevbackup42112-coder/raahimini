@@ -297,3 +297,15 @@ Admin primary navigation is unchanged. Operations Support Inbox links to `/admin
 Validation: anonymous submit + duplicate guard + Passenger Admin denial + Admin read/resolve all passed with synthetic cleanup; TypeScript PASS; 32/32 contracts PASS; production build PASS (25/25 pages). Public headed acceptance on local isolated port 4028 passed at 390px and 1440px with no overflow and successful PROMOTION submission. Synthetic data was removed.
 
 Next slice: Driver verification foundation for Driving Licence, Vehicle RC and car photos. Raw document assets must remain Admin-only; passengers should later see verified status plus approved vehicle/car-photo information, not unrestricted document scans.
+
+## 2026-08-30 Driver verification checkpoint
+
+Driver Verification is implemented on `demo-ready-investor-polish` after Contact Raahi. The Dev backend has a private `driver-verification` Storage bucket plus reviewed `driver_verifications` / `driver_verification_documents` state. Driver Home links to `/driver-verification`; Admin Users links to `/admin-panel/verifications`.
+
+DL and RC are private to Driver/Admin. Approved car-photo/trust access is relationship-scoped through `can_view_driver_trust()`: Admin, Driver self, or a Passenger with a CONFIRMED fixed-route seat relationship. Outstation should extend that helper only for the Passenger/Driver participants of a real request/quote; do not make the bucket or trust projection globally authenticated-readable.
+
+Replacing an identity document resets its group to PENDING and attempts to delete the retired private object. Removing a current document updates verification state and deletes the Driver-owned Storage object through a Driver-own DELETE policy. Admin review cannot verify a group with no current upload.
+
+Backend proof: unrelated Passenger trust request denied; Driver self and Admin allowed; private bucket and INSERT/SELECT/DELETE policies verified. Engineering: TypeScript PASS, 33/33 contracts PASS, build 27/27. Automated headed private-document preview was blocked by the remote execution safety layer, so real headed upload/review remains a later manual acceptance item.
+
+Next product slice: **Outstation request + quote marketplace**, reusing verified Driver state and route/location origins without touching fixed-route FIFO.

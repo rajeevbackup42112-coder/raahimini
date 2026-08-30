@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useCallback, useEffect, useState } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Clock3, Loader2, MapPin, RefreshCw, ShieldCheck } from 'lucide-react';
 import { toast } from 'sonner';
@@ -208,6 +209,12 @@ export default function DriverRouteSelectionContent() {
           <div className="hidden rounded-full bg-white/10 px-3 py-1.5 text-xs font-bold text-white/80 sm:block">Operational mode</div>
         </div>
       </section>
+
+      <Link href="/driver-verification" className="feature-card flex items-center gap-3 p-4 transition hover:border-primary/30 sm:p-5">
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-secondary text-primary"><ShieldCheck size={20}/></div>
+        <div className="min-w-0 flex-1"><p className="text-sm font-extrabold text-foreground">Driver verification</p><p className="mt-1 text-xs leading-relaxed text-muted-foreground">Upload Driving Licence, vehicle RC and car photos for Raahi Admin review.</p></div>
+        <span className="text-xs font-bold text-primary">Open</span>
+      </Link>
 
       <section>
         <div className="mb-2 flex items-center justify-between"><div><p className="section-label">Current stand</p><p className="mt-1 text-sm font-bold text-foreground">Where are you starting from?</p></div></div>

@@ -1,0 +1,27 @@
+const fs=require('fs'); const path=require('path');
+const root=path.resolve(__dirname,'../..');
+const read=p=>fs.readFileSync(path.join(root,p),'utf8');
+const sql=read('supabase/migrations/20260830123000_demo_ready_driver_verification.sql');
+const hardening=[read('supabase/migrations/20260830124500_demo_ready_driver_trust_relationship_guard.sql'),read('supabase/migrations/20260830124600_demo_ready_driver_trust_photo_read_guard.sql'),read('supabase/migrations/20260830124700_demo_ready_driver_trust_projection_guard.sql'),read('supabase/migrations/20260830124800_demo_ready_driver_verification_delete_own.sql')].join('\n');
+const driver=read('src/app/driver-verification/DriverVerificationContent.tsx');
+const admin=read('src/app/admin-panel/verifications/AdminDriverVerificationReview.tsx');
+const users=read('src/app/admin-panel/components/AdminUsersDirectory.tsx');
+function must(condition,message){if(!condition){console.error('FAIL:',message);process.exit(1)}}
+must(sql.includes("'driver-verification','driver-verification',false"),'verification bucket must be private');
+must(sql.includes("document_type in ('DRIVING_LICENCE','VEHICLE_RC','CAR_PHOTO')"),'document types must be constrained');
+must(sql.includes("doc.document_type='CAR_PHOTO'")&&sql.includes("v.car_photos_status='VERIFIED'"),'only verified car photos may cross Driver/Admin read boundary');
+const trustBlock=sql.slice(sql.indexOf('create or replace function public.get_driver_trust_badge'),sql.indexOf('create or replace function public.get_driver_verified_car_photos'));
+must(!trustBlock.includes('storage_path'),'trust badge must not expose raw document paths');
+must(sql.includes("driving_licence_status='PENDING'")&&sql.includes("vehicle_rc_status='PENDING'")&&sql.includes("car_photos_status='PENDING'"),'new uploads must reset review state');
+must(sql.includes("Driving Licence")===false,'migration should not contain UI-only public document copy');
+must(driver.includes('Raw Licence and RC files stay private'),'Driver UI must explain raw-document privacy');
+must(driver.includes("type==='CAR_PHOTO'&&file.type==='application/pdf'"),'car photo PDF must be rejected client-side');
+must(driver.includes("storage.from('driver-verification').remove"),'Driver remove/replace must clean private Storage objects');
+must(hardening.includes('Raahi driver verification delete own'),'Storage delete must be Driver-own-folder only');
+must(admin.includes("createSignedUrl(doc.storage_path,120)"),'Admin previews must use short-lived signed URLs');
+must(admin.includes('Passenger trust cards receive only verified status'),'Admin UI must preserve passenger privacy boundary');
+must(hardening.includes('can_view_driver_trust')&&hardening.includes("sr.status='CONFIRMED'"),'verified trust access must require a real Driver/Passenger relationship');
+must(hardening.includes('public.can_view_driver_trust(doc.driver_id)'),'verified car-photo storage reads must enforce trust relationship');
+must(hardening.includes("Driver trust access required"),'trust badge must fail closed without relationship');
+must(users.includes('/admin-panel/verifications'),'Registered Users must expose verification review entry');
+console.log('Driver verification Demo Ready contract: PASS');

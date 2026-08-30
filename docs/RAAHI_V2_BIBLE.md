@@ -911,3 +911,11 @@ General contact writes only through `submit_contact_message`; the `contact_messa
 The sustainability message is intentionally transparent: Raahi stays free for passengers and drivers, while clearly marked local promotions may help support the service. This does not authorize intrusive ads, ride-screen interruptions or hidden sponsorship.
 
 Validation for this slice: backend anon/auth/Admin boundary proof, TypeScript PASS, 32/32 contracts PASS, production build 25/25 PASS, and public responsive submit acceptance at 390px/1440px with synthetic data removed afterward.
+
+## 31. Driver trust verification — 2026-08-30
+
+Raahi Driver trust is backed by reviewed state, not self-asserted copy. A Driver uploads a Driving Licence, vehicle RC and up to four car photos into a private Supabase Storage bucket. Raahi Admin reviews each group independently. Uploading/replacing resets that group to PENDING; Admin may mark VERIFIED or REJECTED with notes; removing current evidence invalidates the corresponding verification.
+
+Raw Driving Licence and RC documents never belong in Passenger UI. Passenger-facing trust data is limited to verified/not-verified flags plus normal vehicle identity. Approved car photos are also relationship-scoped rather than generally authenticated-readable. The fixed-route trust helper currently allows Admin, Driver self or a Passenger with a confirmed seat relationship; Outstation may deliberately extend the helper for real request/quote participants.
+
+Verification is independent of the ride engine. No verification action joins a queue, changes FIFO, reserves a seat, bypasses phone verification, fabricates GPS or changes a trip. Outstation may require a fully verified Driver before quoting, but that is an eligibility gate around the marketplace rather than a modification of fixed-route dispatch.

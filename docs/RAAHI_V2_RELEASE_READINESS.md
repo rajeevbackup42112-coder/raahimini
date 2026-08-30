@@ -477,3 +477,11 @@ Read-only production preflight at 03:41 IST returned: 0 live trips, 0 live queue
 `admin_list_role_accounts()` is still in the known broken pre-repair form: it declares `role text` but currently returns `p.role` without the candidate `::text` cast. Anon execute remains denied and authenticated execute remains granted behind the function's internal Admin guard. The repair migration has not been applied.
 
 Production Supabase currently lists zero Edge Functions. The Fast2SMS `send-sms` function is code-only on the go-live candidate; no SMS Auth Hook or delivery path is active yet.
+
+## 2026-08-30 pre-go-live feature expansion: Contact + Driver verification
+
+The user approved completing selected growth/trust features before hosting. Contact Raahi is built/Dev-migrated and Driver Verification is built/Dev-migrated. These additions are **not production-applied** and expand the final hosted acceptance matrix.
+
+Driver Verification release gates now include: private Storage bucket and RLS policy replay, Driver upload/replace/remove, Admin Verify/Reject, unrelated-Passenger denial, relationship-scoped approved car photos, and confirmation that raw DL/RC never appear in Passenger UI. Current engineering evidence is TypeScript PASS, 33/33 contracts PASS and production build 27/27 pages. A real headed upload/review click-through remains pending.
+
+Do not copy these Dev migrations to production independently of the final candidate. They must move with the reviewed pre-go-live feature set after Outstation / Local Offers / branding are complete and the user explicitly approves the hosted production migration sequence.
