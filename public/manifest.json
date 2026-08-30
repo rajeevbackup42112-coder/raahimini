@@ -1,7 +1,7 @@
 {
-  "name": "Raahi Mini",
+  "name": "Raahi Carpool",
   "short_name": "Raahi",
-  "description": "Shared-seat local transport coordination",
+  "description": "Shared local rides and verified-driver outstation quotes.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
