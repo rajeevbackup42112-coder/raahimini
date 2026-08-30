@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
-import { ArrowRight, CarFront, Loader2, Settings2, UsersRound, Waypoints } from 'lucide-react';
+import { ArrowRight, CarFront, Loader2, Megaphone, Settings2, UsersRound, Waypoints } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { adminGetRecentActivity, type AdminRecentActivity } from '@/lib/adminControlApi';
 
@@ -40,6 +40,7 @@ export default function AdminDashboardSecondary() {
     { href: '/admin-panel/outstation', title: 'Outstation', text: 'Observe Passenger leads, Driver quotes and accepted cars.', icon: <CarFront size={18} /> },
     { href: '/admin-panel/users', title: 'Registered Users', text: 'Search people, inspect state and onboard Drivers.', icon: <UsersRound size={18} /> },
     { href: '/admin-panel/route-settings', title: 'Routes', text: 'Versioned configuration, fares and publishing.', icon: <Waypoints size={18} /> },
+    { href: '/admin-panel/promotions', title: 'Local Offers', text: 'Publish clearly marked local sponsorships and record collected amount.', icon: <Megaphone size={18} /> },
   ];
 
   return (
