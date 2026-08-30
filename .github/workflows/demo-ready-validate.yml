@@ -1,0 +1,38 @@
+name: Demo Ready Validate
+
+on:
+  push:
+    branches:
+      - demo-ready-investor-polish
+  workflow_dispatch:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Use Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: TypeScript
+        run: npm run type-check
+
+      - name: Contracts
+        shell: bash
+        run: |
+          set -euo pipefail
+          for file in tests/contracts/*.cjs; do
+            node "$file"
+          done
+
+      - name: Production build
+        run: npm run build
