@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
-import { ArrowRight, Loader2, Settings2, UsersRound, Waypoints } from 'lucide-react';
+import { ArrowRight, CarFront, Loader2, Settings2, UsersRound, Waypoints } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { adminGetRecentActivity, type AdminRecentActivity } from '@/lib/adminControlApi';
 
@@ -16,6 +16,9 @@ const actionLabels: Record<string, string> = {
   start_trip: 'Trip started',
   complete_trip: 'Trip completed',
   driver_cancel_trip: 'Trip cancelled',
+  create_outstation_request: 'Outstation request created',
+  driver_send_outstation_quote: 'Outstation quote sent',
+  accept_outstation_quote: 'Outstation quote accepted',
 };
 
 export default function AdminDashboardSecondary() {
@@ -34,6 +37,7 @@ export default function AdminDashboardSecondary() {
 
   const areas = [
     { href: '/admin-panel/operations', title: 'Operations', text: 'Live trips, GPS, queues, support and safe recovery.', icon: <Settings2 size={18} /> },
+    { href: '/admin-panel/outstation', title: 'Outstation', text: 'Observe Passenger leads, Driver quotes and accepted cars.', icon: <CarFront size={18} /> },
     { href: '/admin-panel/users', title: 'Registered Users', text: 'Search people, inspect state and onboard Drivers.', icon: <UsersRound size={18} /> },
     { href: '/admin-panel/route-settings', title: 'Routes', text: 'Versioned configuration, fares and publishing.', icon: <Waypoints size={18} /> },
   ];
