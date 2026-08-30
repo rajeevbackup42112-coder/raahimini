@@ -1,7 +1,8 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { CheckCircle2, HelpCircle, Loader2, RefreshCw } from 'lucide-react';
+import Link from 'next/link';
+import { CheckCircle2, HelpCircle, Loader2, MessagesSquare, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 import { createClient } from '@/lib/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -66,7 +67,10 @@ export default function AdminSupportInbox() {
             <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-secondary"><HelpCircle size={19} className="text-primary" /></div>
             <div><p className="text-xs font-bold uppercase tracking-wide text-primary">Support inbox</p><h2 className="mt-1 text-base font-bold text-foreground">{loading ? 'Checking reports…' : cases.length ? `${cases.length} open report${cases.length === 1 ? '' : 's'}` : 'No open support reports'}</h2></div>
           </div>
-          <button onClick={load} disabled={loading} className="btn-outline px-3 py-2" aria-label="Refresh support inbox">{loading ? <Loader2 size={15} className="animate-spin" /> : <RefreshCw size={15} />}</button>
+          <div className="flex items-center gap-2">
+            <Link href="/admin-panel/contact" className="btn-outline px-3 py-2"><MessagesSquare size={15}/>General contact</Link>
+            <button onClick={load} disabled={loading} className="btn-outline px-3 py-2" aria-label="Refresh support inbox">{loading ? <Loader2 size={15} className="animate-spin" /> : <RefreshCw size={15} />}</button>
+          </div>
         </div>
 
         {!loading && cases.length > 0 && (
