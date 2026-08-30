@@ -285,3 +285,15 @@ A reversible authenticated Beta1 Driver proof subscribed PM-01, read back GD-01 
 Validation: TypeScript PASS, 31/31 contracts PASS, production Next.js build PASS (23/23 pages). Dev operational state remained 0 live trips, 0 live queues, 0 HELD, 0 current demand and 0 route drafts.
 
 Next product slice after this checkpoint: general Contact Raahi → Driver verification foundation → Outstation lead/quote marketplace → Local Offers → branding integration → hosted-domain acceptance.
+
+## 2026-08-30 Contact Raahi checkpoint
+
+General Contact Raahi is now implemented and migrated on Raahi V2 Dev. `/contact` is public and available before or after sign-in with categories for Suggestion, Promote my business, Driver / partner enquiry, General help and Other. It explicitly keeps ride-specific problems on the existing in-ride `Need Help?` path.
+
+Migration `20260830114500_demo_ready_contact_raahi.sql` adds `contact_messages` plus one public validated submit RPC and two Admin-only read/resolve RPCs. Direct table access is revoked. The public path accepts anon/authenticated callers, validates lengths/categories and blocks repeat submissions from the same contact for 10 minutes. Admin resolution is audited.
+
+Admin primary navigation is unchanged. Operations Support Inbox links to `/admin-panel/contact`, which lists open general enquiries and resolves them without touching ride state.
+
+Validation: anonymous submit + duplicate guard + Passenger Admin denial + Admin read/resolve all passed with synthetic cleanup; TypeScript PASS; 32/32 contracts PASS; production build PASS (25/25 pages). Public headed acceptance on local isolated port 4028 passed at 390px and 1440px with no overflow and successful PROMOTION submission. Synthetic data was removed.
+
+Next slice: Driver verification foundation for Driving Licence, Vehicle RC and car photos. Raw document assets must remain Admin-only; passengers should later see verified status plus approved vehicle/car-photo information, not unrestricted document scans.

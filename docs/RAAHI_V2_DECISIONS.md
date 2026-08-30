@@ -196,3 +196,10 @@ Future chats must start from `RAAHI_V2_HANDOVER.md`, then consult this Decision 
 118. **Existing Drivers inherit only their most recently served route family.** New routes require explicit opt-in; adding a route must not suddenly send every Driver its demand alerts.
 119. **Queue participation remains explicit.** A Driver can receive demand alerts for a route without joining its queue; the existing one-live-queue-per-Driver and per-route FIFO rules remain unchanged.
 120. **Current demand alerts are in-app realtime.** Future push/WhatsApp notification delivery may reuse the same preference table, but no external notification channel is implied by this slice.
+
+## 2026-08-30 Contact Raahi
+
+121. **General Contact Raahi is separate from ride support.** Suggestions, promotion enquiries, Driver/partner enquiries and general questions must not create or mutate a ride-support case, trip, queue, seat or demand intent.
+122. **Contact Raahi works before and after login.** The public submit RPC is available to anonymous and authenticated users, but direct table access remains denied and server-side validation/rate limiting is mandatory.
+123. **Local-business promotion enquiries are an explicit Contact category.** Raahi may explain that local promotions help keep the service free, but every eventual promotion must remain clearly marked and non-intrusive.
+124. **Admin general-contact handling stays under Operations without changing primary navigation.** General contact has its own inbox and audited resolve action; Dashboard · Users · Routes · Operations remains the primary Admin structure.

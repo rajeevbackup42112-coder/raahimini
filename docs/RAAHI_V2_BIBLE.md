@@ -901,3 +901,13 @@ Fast2SMS production enablement requires a provider API key and OTP ID/template p
 The Demo Ready audit also exposed one real Admin Access backend defect: `admin_list_role_accounts()` declared a text role but returned the `public.user_role` enum. The forward repair casts `p.role::text` only; existing grant/revoke, self-protection, final-admin and Driver/Admin separation guards remain authoritative.
 
 Launch mapping remains keyless OpenStreetMap for now. Google Maps or Mappls is a later product choice, not a launch dependency. Supabase remains the canonical backend for this release.
+
+## 31. Contact Raahi — 2026-08-30
+
+Raahi now has a general public contact channel separate from operational ride support. `/contact` accepts Suggestion, Promote my business, Driver / partner enquiry, General help and Other before or after login. The existing in-ride `Need Help?` flow remains the correct path for trip-specific problems because it carries ride context.
+
+General contact writes only through `submit_contact_message`; the `contact_messages` table is not directly writable/readable by browser roles. The public RPC validates input and applies a simple 10-minute repeat-contact throttle. Admin reads and resolves general messages through Admin-only guarded RPCs, with resolution recorded in the audit log.
+
+The sustainability message is intentionally transparent: Raahi stays free for passengers and drivers, while clearly marked local promotions may help support the service. This does not authorize intrusive ads, ride-screen interruptions or hidden sponsorship.
+
+Validation for this slice: backend anon/auth/Admin boundary proof, TypeScript PASS, 32/32 contracts PASS, production build 25/25 PASS, and public responsive submit acceptance at 390px/1440px with synthetic data removed afterward.

@@ -222,3 +222,16 @@ Current docs checkpoint after go-live planning: `4941b538d0fc4c21b1b256ff08c20d9
 | Discovery | Passenger + Driver see PM-01 | VERIFIED | Both canonical route projections return Parasnath → Madhuban correctly |
 | Validation | Final candidate | PASS | TypeScript PASS · 31/31 contracts PASS · production build 23/23 PASS |
 | Dev state | Operational pre/post migration | CLEAN | 0 live trips · 0 live queues · 0 HELD · 0 current demand · 0 drafts |
+
+## 2026-08-30 Contact Raahi checkpoint
+
+| Area | Capability | Status | Evidence / next gate |
+|---|---|---:|---|
+| Contact | Public suggestions / general enquiry | BUILT + DEV MIGRATED | `/contact` works without login through guarded RPC |
+| Contact | Local business promotion enquiry | BUILT + DEV MIGRATED | Dedicated PROMOTION category and transparent free-service message |
+| Contact | Driver / partner enquiry | BUILT + DEV MIGRATED | Dedicated DRIVER_PARTNER category |
+| Admin | General contact inbox + resolve | BUILT + DEV MIGRATED | Separate from ride Support Inbox; Admin-only read/resolve RPCs |
+| Security | Direct contact table access | VERIFIED DENIED | anon/auth table access revoked; anon may execute validated submit RPC only |
+| Abuse guard | Repeat contact throttle | VERIFIED | Same contact cannot submit again within 10 minutes |
+| Validation | Contact candidate | PASS | TypeScript PASS · 32/32 contracts PASS · production build 25/25 PASS |
+| Browser | Public Contact responsive + submit | PASS | 390px + 1440px no overflow; synthetic PROMOTION reached Message received and was cleaned |
