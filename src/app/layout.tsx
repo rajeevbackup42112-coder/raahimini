@@ -6,48 +6,23 @@ import { Toaster } from 'sonner';
 import { AuthProvider } from '@/contexts/AuthContext';
 import RoleRouteGuard from '@/components/RoleRouteGuard';
 
-const dmSans = DM_Sans({
-  subsets: ['latin'],
-  weight: ['400', '500', '600', '700'],
-  variable: '--font-dm-sans',
-  display: 'swap',
-});
+const dmSans = DM_Sans({ subsets: ['latin'], weight: ['400', '500', '600', '700'], variable: '--font-dm-sans', display: 'swap' });
 
-export const viewport: Viewport = {
-  width: 'device-width',
-  initialScale: 1,
-  themeColor: '#166534',
-};
+export const viewport: Viewport = { width: 'device-width', initialScale: 1, themeColor: '#166534' };
 
 export const metadata: Metadata = {
-  title: 'Raahi — Shared rides, made clear',
-  description: 'Find live shared rides with clear fares, real seat availability and simple trip progress.',
-  icons: {
-    icon: [{ url: '/favicon.ico', type: 'image/x-icon' }],
-  },
+  title: 'Raahi Carpool — Shared rides, made clear',
+  description: 'Find shared local rides or compare outstation quotes from verified local Drivers. Raahi stays free for passengers and drivers.',
+  icons: { icon: [{ url: '/favicon.ico', type: 'image/x-icon' }] },
   manifest: '/manifest.json',
 };
 
-export default function RootLayout({
-  children,
-}: Readonly<{ children: React.ReactNode }>) {
+export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en" className={dmSans.variable}>
       <body className={dmSans.className}>
-        <AuthProvider>
-          <RoleRouteGuard />
-          {children}
-        </AuthProvider>
-        <Toaster
-          position="bottom-center"
-          toastOptions={{
-            style: {
-              borderRadius: '12px',
-              fontFamily: 'var(--font-dm-sans)',
-              fontSize: '14px',
-            },
-          }}
-        />
+        <AuthProvider><RoleRouteGuard />{children}</AuthProvider>
+        <Toaster position="bottom-center" toastOptions={{ style: { borderRadius: '12px', fontFamily: 'var(--font-dm-sans)', fontSize: '14px' } }} />
       </body>
     </html>
   );
