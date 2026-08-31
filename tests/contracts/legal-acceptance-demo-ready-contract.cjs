@@ -1,4 +1,4 @@
-﻿const fs=require('node:fs');
+const fs=require('node:fs');
 const read=p=>fs.readFileSync(p,'utf8');
 const migration=read('supabase/migrations/20260831120442_demo_ready_legal_acceptance_v1.sql');
 const gate=read('src/components/legal/LegalAcceptanceGate.tsx');
@@ -28,4 +28,3 @@ must(read('src/app/terms/page.tsx').includes('Raahi does not itself drive'),'pla
 must(read('src/app/privacy/page.tsx').includes('Licence and RC scans are not shown to passengers'),'verification privacy disclosure missing');
 must(read('src/app/driver-terms/page.tsx').includes('FIFO'),'Driver FIFO terms missing');
 console.log('Legal acceptance Demo Ready contract: PASS');
-
