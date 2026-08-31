@@ -16,6 +16,7 @@ must(migration.includes('revoke all on function public.admin_list_registered_use
 must(!/\b(update|insert|delete)\s+public\./i.test(migration), 'V9 Admin projections must remain read-only');
 
 for (const label of ['Dashboard','Users','Routes','Operations']) must(nav.includes(label), `Admin primary nav missing ${label}`);
+must(nav.includes('aria-label="Sign out"') && nav.includes('await signOut()'), 'Admin primary nav must expose a working sign out action');
 for (const label of ['Passengers','Drivers','Admins','Unverified','Restricted']) must(users.includes(label), `Users filter missing ${label}`);
 must(users.includes('Make Driver'), 'eligible Passenger must expose integrated Driver onboarding');
 must(users.includes('/admin-driver-onboarding?profile='), 'Driver onboarding must deep-link the selected user');

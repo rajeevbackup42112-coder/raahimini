@@ -1,7 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import { Activity, LayoutDashboard, Route, Users } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { Activity, LayoutDashboard, LogOut, Route, Users } from 'lucide-react';
 import AppLogo from '@/components/ui/AppLogo';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -15,7 +16,9 @@ const links: { id: AdminSection; label: string; href: string; icon: React.ReactN
 ];
 
 export default function AdminPrimaryNav({ active }: { active: AdminSection }) {
-  const { profile } = useAuth();
+  const router = useRouter();
+  const { profile, signOut } = useAuth();
+  const handleSignOut = async () => { try { await signOut(); router.replace('/login'); } catch {} };
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-card/95 backdrop-blur-sm">
       <div className="mx-auto flex h-14 max-w-screen-2xl items-center gap-3 px-4">
@@ -27,6 +30,7 @@ export default function AdminPrimaryNav({ active }: { active: AdminSection }) {
           <p className="max-w-[150px] truncate text-xs font-bold text-foreground">{profile?.display_name || 'Admin'}</p>
           <p className="text-[10px] text-muted-foreground">Account · Admin access</p>
         </Link>
+        <button onClick={handleSignOut} className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-muted-foreground hover:bg-muted hover:text-foreground" aria-label="Sign out" title="Sign out"><LogOut size={16} /></button>
       </div>
       <nav className="mx-auto grid max-w-screen-2xl grid-cols-4 border-t border-border px-1" aria-label="Admin sections">
         {links.map((item) => (
