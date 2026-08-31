@@ -515,12 +515,12 @@ Do not copy these Dev migrations to production independently of the final candid
 
 ## Remaining release gates
 
-- [ ] Clean checkpoint commit pushed to `demo-ready-investor-polish`.
-- [ ] GitHub CI green for the exact checkpoint SHA.
+- [x] Clean checkpoint `0e455f00ad52d0dfa95d3cf32f74aee338cfe490` pushed to `demo-ready-investor-polish`.
+- [x] GitHub `Demo Ready Validate` run `33357751663` green for that exact checkpoint SHA.
 - [ ] Netlify candidate prepared/deployed without DNS cutover.
 - [ ] Hosted anonymous/public and fail-closed safety acceptance.
 - [ ] Owner approval before production migration, GoDaddy DNS, production OAuth, Auth Hook/Fast2SMS or irreversible settings.
 - [ ] Real hosted Passenger, Driver and Admin acceptance after owner-only configuration is complete.
 - [ ] Final release ref only after hosted acceptance.
 
-Current status: **code/database candidate validated; repository and hosting closure in progress; production cutover not authorized.**
+Current status: **code/database candidate validated; repository checkpoint pushed and CI green; Netlify/hosted closure next; production cutover not authorized.**

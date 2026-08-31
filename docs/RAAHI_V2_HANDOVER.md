@@ -311,7 +311,7 @@ Backend proof: unrelated Passenger trust request denied; Driver self and Admin a
 Next product slice: **Outstation request + quote marketplace**, reusing verified Driver state and route/location origins without touching fixed-route FIFO.
 # Launch-closure handover — 2026-08-31
 
-The current local candidate starts from `39097d70258ce6f4fff0981058d36a54e8503357` and contains the validated uncommitted release closure for Outstation Areas v2, master Raahi branding, deterministic dependencies/CI, `.env` untracking and dependency security upgrades. Raahi V2 Dev includes migration `20260831082254_demo_ready_outstation_service_areas_v2`.
+The validated Demo Ready checkpoint is `0e455f00ad52d0dfa95d3cf32f74aee338cfe490` on remote `demo-ready-investor-polish`. It contains Outstation Areas v2, master Raahi branding, deterministic dependencies/CI, `.env` untracking and dependency security upgrades. GitHub `Demo Ready Validate` run `33357751663` passed for that exact checkpoint. Raahi V2 Dev includes migration `20260831082254_demo_ready_outstation_service_areas_v2`.
 
 Validated evidence carried into closure: TypeScript PASS; 36/36 contracts PASS; `git diff --check` PASS; production `npm audit` 0 vulnerabilities; production build PASS with 32/32 pages; isolated production-route smoke PASS. Synthetic Outstation and Areas v2 data was removed. Port 4030 and Raahi School were not touched.
 
@@ -319,11 +319,9 @@ Supabase triage found no launch-breaking platform health issue. Performance noti
 
 Immediate continuation sequence:
 
-1. Review the complete diff/status and canonical docs.
-2. Re-run release checks proportionate to the documentation-only closure.
-3. Commit a clean checkpoint and push it to `demo-ready-investor-polish`.
-4. Verify GitHub CI for the exact pushed commit.
-5. Prepare Netlify and run hosted acceptance only as far as current access allows.
-6. Stop for owner approval before GoDaddy DNS, production OAuth, production DB/Auth Hook/Fast2SMS activation or any irreversible production setting.
+1. Preserve checkpoint `0e455f00ad52d0dfa95d3cf32f74aee338cfe490` and its green CI evidence.
+2. Prepare Netlify and run hosted acceptance only as far as current access allows.
+3. Confirm the exact Netlify custom-domain DNS target before any GoDaddy edit.
+4. Stop for owner approval before GoDaddy DNS, production OAuth, production DB/Auth Hook/Fast2SMS activation or any irreversible production setting.
 
 Never touch Raahi School or port 4030. Preserve `prod-v14-frozen` → `38b7519d615e171c59d537b18a61c1ba303c132f` and keep the old public hostname available as rollback until new-domain acceptance is complete.

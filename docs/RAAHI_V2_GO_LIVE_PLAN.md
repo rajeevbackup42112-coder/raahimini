@@ -131,11 +131,11 @@ The validated candidate now includes Outstation Areas v2, master Raahi branding,
 
 ## Gate A — source checkpoint and CI
 
-- [ ] Review final status/diff, including deletion of tracked `.env` and addition of `package-lock.json`.
-- [ ] Commit the complete validated candidate plus canonical documentation.
-- [ ] Push local HEAD to remote `demo-ready-investor-polish` without force.
-- [ ] Record exact checkpoint SHA.
-- [ ] Verify every GitHub workflow required for that SHA is green.
+- [x] Review final status/diff, including deletion of tracked `.env` and addition of `package-lock.json`.
+- [x] Commit the complete validated candidate plus canonical documentation.
+- [x] Push checkpoint `0e455f00ad52d0dfa95d3cf32f74aee338cfe490` to remote `demo-ready-investor-polish` without force.
+- [x] Record exact checkpoint SHA: `0e455f00ad52d0dfa95d3cf32f74aee338cfe490`.
+- [x] GitHub `Demo Ready Validate` run `33357751663` completed successfully for that exact checkpoint.
 
 ## Gate B — Netlify without production cutover
 
