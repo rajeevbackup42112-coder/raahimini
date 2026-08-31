@@ -1,0 +1,31 @@
+﻿const fs=require('node:fs');
+const read=p=>fs.readFileSync(p,'utf8');
+const migration=read('supabase/migrations/20260831120442_demo_ready_legal_acceptance_v1.sql');
+const gate=read('src/components/legal/LegalAcceptanceGate.tsx');
+const seat=read('src/app/request-seat-screen/components/RequestSeatContent.tsx');
+const resume=read('src/app/resume-seat-request/page.tsx');
+const outstation=read('src/app/outstation/OutstationContent.tsx');
+const driverOutstation=read('src/app/driver-outstation/DriverOutstationContent.tsx');
+const driverRoutes=read('src/app/driver-route-selection/components/DriverRouteSelectionContent.tsx');
+const must=(ok,msg)=>{if(!ok)throw new Error(msg);};
+
+must(migration.includes('create table if not exists public.user_legal_acceptances'),'legal acceptance ledger missing');
+must(migration.includes("'2026-08-31-v1'"),'legal document version missing');
+must(migration.includes('get_my_legal_acceptance_state'),'legal acceptance state RPC missing');
+must(migration.includes('accept_my_legal_documents'),'legal acceptance mutation RPC missing');
+must(migration.includes('LEGAL_ACCEPTANCE_REQUIRED:PASSENGER'),'Passenger database enforcement missing');
+must(migration.includes('LEGAL_ACCEPTANCE_REQUIRED:DRIVER'),'Driver database enforcement missing');
+for(const table of ['seat_requests','outstation_requests','driver_queue','outstation_quotes']) must(migration.includes(`on public.${table}`),`legal trigger missing for ${table}`);
+must(gate.includes('A quick agreement, once'),'one-time acceptance copy missing');
+must(gate.includes('/terms')&&gate.includes('/privacy')&&gate.includes('/driver-terms'),'legal document links missing');
+must(seat.includes("useLegalAcceptanceGate('passenger')"),'Shared Ride seat gate missing');
+must(resume.includes("useLegalAcceptanceGate('passenger')"),'resumed seat gate missing');
+must(outstation.includes("useLegalAcceptanceGate('passenger')"),'Outstation Passenger gate missing');
+must(driverOutstation.includes("useLegalAcceptanceGate('driver')"),'Outstation Driver gate missing');
+must(driverRoutes.includes("useLegalAcceptanceGate('driver')"),'Shared Ride Driver gate missing');
+for(const page of ['src/app/terms/page.tsx','src/app/privacy/page.tsx','src/app/driver-terms/page.tsx']) must(fs.existsSync(page),`${page} missing`);
+must(read('src/app/terms/page.tsx').includes('Raahi does not itself drive'),'platform-role disclosure missing');
+must(read('src/app/privacy/page.tsx').includes('Licence and RC scans are not shown to passengers'),'verification privacy disclosure missing');
+must(read('src/app/driver-terms/page.tsx').includes('FIFO'),'Driver FIFO terms missing');
+console.log('Legal acceptance Demo Ready contract: PASS');
+

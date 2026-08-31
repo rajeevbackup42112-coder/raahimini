@@ -22,10 +22,12 @@ import {
   type Location,
 } from '@/lib/raahiApi';
 import DriverRouteCard from './DriverRouteCard';
+import { useLegalAcceptanceGate } from '@/components/legal/LegalAcceptanceGate';
 
 export default function DriverRouteSelectionContent() {
   const router = useRouter();
   const { user, profile, loading: authLoading } = useAuth();
+  const { guard: guardLegal, dialog: legalDialog } = useLegalAcceptanceGate('driver');
   const [locations, setLocations] = useState<Location[]>([]);
   const [context, setContext] = useState<DriverHomeContext>({});
   const [locationId, setLocationId] = useState('');
@@ -90,21 +92,18 @@ export default function DriverRouteSelectionContent() {
   }, [locationId, context.queue_status, loadRoutes]);
 
   const join = async (route: DriverDepartingRoute) => {
-    setJoining(route.route_id);
-    const result = await joinDriverQueue(route.route_id, locationId);
-    setJoining(null);
-    if (!result.success) {
-      toast.error(result.error || 'Could not join queue');
-      return;
-    }
-    const ctx = await getDriverHomeContext();
-    setContext(ctx);
-    if (ctx.has_active_trip) {
-      toast.success(`You are now collecting on ${route.direction_label}`);
-      router.push('/driver-active-car-screen');
-    } else {
-      toast.success(`Joined queue for ${route.direction_label}`);
-    }
+    try { await guardLegal(async () => {
+      setJoining(route.route_id);
+      const result = await joinDriverQueue(route.route_id, locationId);
+      setJoining(null);
+      if (!result.success) { toast.error(result.error || 'Could not join queue'); return; }
+      const ctx = await getDriverHomeContext();
+      setContext(ctx);
+      if (ctx.has_active_trip) {
+        toast.success(`You are now collecting on ${route.direction_label}`);
+        router.push('/driver-active-car-screen');
+      } else { toast.success(`Joined queue for ${route.direction_label}`); }
+    }); } catch (e: any) { setJoining(null); toast.error(e?.message || 'Could not check the Driver agreement.'); }
   };
 
   const toggleRouteAlert = async (route: DriverDepartingRoute) => {
@@ -202,7 +201,7 @@ export default function DriverRouteSelectionContent() {
   const selected = locations.find(l => l.id === locationId);
 
   return (
-    <div className="mx-auto max-w-screen-lg space-y-5 px-4 py-5 sm:px-6">
+    <>{legalDialog}<div className="mx-auto max-w-screen-lg space-y-5 px-4 py-5 sm:px-6">
       <section className="hero-surface">
         <div className="flex items-start justify-between gap-4">
           <div><p className="text-[11px] font-bold uppercase tracking-[0.14em] text-amber-200">Driver home</p><h1 className="mt-2 text-2xl font-extrabold tracking-tight text-white sm:text-3xl">{profile?.display_name ? `Ready, ${profile.display_name}?` : 'Ready to drive?'}</h1><p className="mt-2 max-w-xl text-sm leading-relaxed text-white/75">Choose your current stand, choose which routes you want demand alerts for, then take the next route action. FIFO stays route-specific.</p></div>
@@ -255,7 +254,7 @@ export default function DriverRouteSelectionContent() {
           </div>
         </div>
       )}
-    </div>
+    </div></>
   );
 }
 

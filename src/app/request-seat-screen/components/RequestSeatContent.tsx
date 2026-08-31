@@ -8,6 +8,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import PayWarningBanner from '@/components/ui/PayWarningBanner';
 import SeatCountBadge from '@/components/ui/SeatCountBadge';
 import { clearDemandWatch } from '@/lib/demandWatch';
+import { useLegalAcceptanceGate } from '@/components/legal/LegalAcceptanceGate';
 
 const MAX_SEATS_PER_REQUEST = 4;
 
@@ -17,6 +18,7 @@ export default function RequestSeatContent() {
   const routeId = searchParams.get('route_id');
   const tripId = searchParams.get('trip_id');
   const { user, signInWithGoogle, requestPhoneVerification, verifyPhoneChange } = useAuth();
+  const { guard: guardLegal, dialog: legalDialog } = useLegalAcceptanceGate('passenger');
 
   const [car, setCar] = useState<ActiveCarPublic | null>(null);
   const [loadingCar, setLoadingCar] = useState(true);
@@ -62,6 +64,7 @@ export default function RequestSeatContent() {
   };
 
   const doSubmitRequest = async () => {
+    try { await guardLegal(async () => {
     const effectiveTripId = tripId || car?.trip_id;
     if (!effectiveTripId || !selectedStopId || selectedSeats.length === 0) return;
 
@@ -85,6 +88,7 @@ export default function RequestSeatContent() {
       const available = new Set(refreshed.seats.filter((seat) => seat.state === 'AVAILABLE').map((seat) => seat.seat_number));
       setSelectedSeats((current) => current.filter((number) => available.has(number)));
     }
+    }); } catch (e: any) { toast.error(e?.message || 'Could not check the booking agreement.'); }
   };
 
   const savePendingContext = () => {
@@ -258,6 +262,7 @@ export default function RequestSeatContent() {
         </button>
       </form>
 
+      {legalDialog}
       {showAuthModal && <AuthModal onComplete={() => setShowAuthModal(false)} onClose={() => { setShowAuthModal(false); setPendingSubmit(false); }} signInWithGoogle={signInWithGoogle} />}
       {showPhoneModal && (
         <PhoneVerificationModal

@@ -7,11 +7,12 @@ import { ArrowRight, CalendarClock, CarFront, CheckCircle2, Loader2, MapPin, Ref
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import { acceptOutstationQuote, cancelOutstationRequest, createOutstationRequest, getDriverCarPhotoUrls, getMyOutstationQuotes, getMyOutstationRequests, getOutstationServiceAreas, type OutstationArea, type OutstationQuote, type OutstationRequest } from '@/lib/outstationApi';
+import { useLegalAcceptanceGate } from '@/components/legal/LegalAcceptanceGate';
 
 function localInput(date:Date){const p=(n:number)=>String(n).padStart(2,'0');return `${date.getFullYear()}-${p(date.getMonth()+1)}-${p(date.getDate())}T${p(date.getHours())}:${p(date.getMinutes())}`;}
 
 export default function OutstationContent(){
-  const router=useRouter(); const {user,profile,loading:authLoading}=useAuth();
+  const router=useRouter(); const {user,profile,loading:authLoading}=useAuth(); const {guard:guardLegal,dialog:legalDialog}=useLegalAcceptanceGate('passenger');
   const [areas,setAreas]=useState<OutstationArea[]>([]); const [requests,setRequests]=useState<OutstationRequest[]>([]); const [quotes,setQuotes]=useState<Record<string,OutstationQuote[]>>({});
   const [originArea,setOriginArea]=useState(''); const [pickupText,setPickupText]=useState(''); const [destination,setDestination]=useState(''); const [travelType,setTravelType]=useState<'ONE_WAY'|'ROUND_TRIP'>('ONE_WAY');
   const [departure,setDeparture]=useState(localInput(new Date(Date.now()+2*60*60*1000))); const [returnAt,setReturnAt]=useState(localInput(new Date(Date.now()+26*60*60*1000)));
@@ -21,12 +22,12 @@ export default function OutstationContent(){
   useEffect(()=>{if(!authLoading) void load();},[authLoading,load]);
   const openCount=useMemo(()=>requests.filter(r=>r.status==='OPEN').length,[requests]);
 
-  const submit=async(e:FormEvent)=>{e.preventDefault();if(!user){router.push('/login');return;}if(profile?.role!=='passenger')return toast.error('Use a Passenger account to request an outstation car');setBusy(true);try{await createOutstationRequest({originAreaId:originArea,pickupText,destination,travelType,departureAt:new Date(departure).toISOString(),returnAt:travelType==='ROUND_TRIP'?new Date(returnAt).toISOString():null,passengerCount,notes});toast.success('Outstation request sent to eligible Raahi drivers');setDestination('');setPickupText('');setNotes('');await load();}catch(e:any){toast.error(e.message);}finally{setBusy(false);}};
+  const submit=async(e:FormEvent)=>{e.preventDefault();if(!user){router.push('/login');return;}if(profile?.role!=='passenger')return toast.error('Use a Passenger account to request an outstation car');try{await guardLegal(async()=>{setBusy(true);try{await createOutstationRequest({originAreaId:originArea,pickupText,destination,travelType,departureAt:new Date(departure).toISOString(),returnAt:travelType==='ROUND_TRIP'?new Date(returnAt).toISOString():null,passengerCount,notes});toast.success('Outstation request sent to eligible Raahi drivers');setDestination('');setPickupText('');setNotes('');await load();}finally{setBusy(false);}});}catch(e:any){toast.error(e.message||'Could not check the booking agreement.');}};
   const showQuotes=async(requestId:string)=>{try{const rows=await getMyOutstationQuotes(requestId);setQuotes(q=>({...q,[requestId]:rows}));}catch(e:any){toast.error(e.message);}};
-  const accept=async(quote:OutstationQuote)=>{if(!window.confirm(`Choose ${quote.driver_name} for ₹${quote.total_price.toLocaleString('en-IN')} total? Other quotes will close.`))return;setBusy(true);try{await acceptOutstationQuote(quote.quote_id);toast.success('Driver selected. Contact details are now available.');await load();}catch(e:any){toast.error(e.message);}finally{setBusy(false);}};
+  const accept=async(quote:OutstationQuote)=>{if(!window.confirm(`Choose ${quote.driver_name} for ₹${quote.total_price.toLocaleString('en-IN')} total? Other quotes will close.`))return;try{await guardLegal(async()=>{setBusy(true);try{await acceptOutstationQuote(quote.quote_id);toast.success('Driver selected. Contact details are now available.');await load();}finally{setBusy(false);}});}catch(e:any){toast.error(e.message||'Could not check the booking agreement.');}};
   const cancel=async(id:string)=>{if(!window.confirm('Cancel this outstation request?'))return;setBusy(true);try{await cancelOutstationRequest(id);toast.success('Outstation request cancelled');await load();}catch(e:any){toast.error(e.message);}finally{setBusy(false);}};
 
-  return <div className="page-shell space-y-5">
+  return <><div className="page-shell space-y-5">
     <div className="grid grid-cols-2 rounded-2xl bg-muted p-1 text-sm font-bold"><Link href="/" className="rounded-xl px-3 py-2.5 text-center text-muted-foreground">Shared Ride</Link><span className="rounded-xl bg-card px-3 py-2.5 text-center text-primary card-shadow-sm">Outstation</span></div>
     <section className="hero-surface"><p className="text-[11px] font-bold uppercase tracking-[0.14em] text-amber-200">Raahi Outstation</p><h1 className="mt-2 text-2xl font-extrabold text-white sm:text-3xl">Request a car. Compare verified local drivers.</h1><p className="mt-2 max-w-2xl text-sm leading-relaxed text-white/75">Choose a Raahi pickup area, add the exact pickup point and enter any destination. Eligible drivers can send a total quote; you choose one only when you are ready.</p></section>
     <section className="rounded-2xl border border-green-200 bg-green-50 p-4"><div className="flex gap-3"><ShieldCheck className="mt-0.5 shrink-0 text-green-700" size={19}/><div><p className="text-sm font-extrabold text-green-900">Quotes come only from fully verified Drivers</p><p className="mt-1 text-xs leading-relaxed text-green-800">Raahi verifies Driving Licence, vehicle RC and car photos. Licence and RC scans stay private; you see verification badges, vehicle details and approved car photos.</p></div></div></section>
@@ -43,7 +44,7 @@ export default function OutstationContent(){
     </form>
 
     {user&&profile?.role==='passenger'&&<section className="space-y-3"><div className="flex items-end justify-between"><div><p className="section-label">My Outstation</p><h2 className="mt-1 text-lg font-extrabold">Requests & quotes</h2></div><button onClick={load} className="btn-outline px-3 py-2"><RefreshCw size={14}/>Refresh</button></div>{loading&&<div className="flex justify-center py-8"><Loader2 className="animate-spin text-primary"/></div>}{!loading&&requests.length===0&&<div className="feature-card p-6 text-center text-sm text-muted-foreground">No outstation requests yet.</div>}{requests.map(r=><RequestCard key={r.request_id} request={r} quotes={quotes[r.request_id]} onShowQuotes={()=>showQuotes(r.request_id)} onAccept={accept} onCancel={()=>cancel(r.request_id)} busy={busy}/>) }{openCount>0&&<p className="text-[11px] text-muted-foreground">Open requests are leads only. Nothing is booked until you accept one Driver quote.</p>}</section>}
-  </div>;
+  </div>{legalDialog}</>;
 }
 
 function RequestCard({request,quotes,onShowQuotes,onAccept,onCancel,busy}:{request:OutstationRequest;quotes?:OutstationQuote[];onShowQuotes:()=>void;onAccept:(q:OutstationQuote)=>void;onCancel:()=>void;busy:boolean}){

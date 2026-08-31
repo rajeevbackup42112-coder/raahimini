@@ -1,0 +1,15 @@
+import LegalDocumentPage from '@/components/legal/LegalDocumentPage';
+
+export default function DriverTermsPage() {
+  return <LegalDocumentPage title="Driver Terms" version="2026-08-31-v1" intro="These additional terms apply when a Driver joins Shared Ride FIFO, operates an active trip or sends an Outstation quote through Raahi.">
+    <section><h2>1. Independent Driver responsibility</h2><p>You provide transport independently and are responsible for lawful driving, vehicle operation, permits, insurance, taxes and any other obligation applicable to you or your vehicle. Raahi coordinates local demand; it is not your employer and does not operate your vehicle.</p></section>
+    <section><h2>2. Verification must stay accurate</h2><p>You must provide genuine Driving Licence, vehicle RC and car photos and promptly tell Raahi if a document expires, is suspended, changes materially or no longer reflects the vehicle you use. Verification may be reviewed, paused or revoked.</p></section>
+    <section><h2>3. Shared Ride FIFO</h2><p>Joining a Shared Ride route means accepting Raahi's route-specific FIFO and operational rules. Do not manipulate queue position, use another Driver's account, misstate your location or bypass route/vehicle controls.</p></section>
+    <section><h2>4. Outstation quotes</h2><p>Quote only for requests you genuinely intend and are able to serve. Your total quote and stated inclusions should be clear. Once a Passenger accepts your quote, use the shown contact details only to coordinate that trip and related support.</p></section>
+    <section><h2>5. Payment and conduct</h2><p>Unless Raahi explicitly introduces a different payment method, the Passenger pays you directly. Do not misrepresent a fare shown or accepted in Raahi, demand undisclosed mandatory charges, harass passengers or use contact information for unrelated solicitation.</p></section>
+    <section><h2>6. Safety and capacity</h2><ul><li>Drive lawfully and do not operate when impaired, dangerously fatigued or otherwise unfit.</li><li>Respect vehicle passenger capacity and reasonable luggage limits.</li><li>Do not pressure passengers to ignore safety requirements.</li><li>Use Raahi location and trip controls honestly so passengers receive accurate service state.</li></ul></section>
+    <section><h2>7. Cancellations and account action</h2><p>Cancel promptly if you cannot safely complete an accepted trip. Repeated no-shows, unsafe conduct, false verification, queue manipulation, abusive behaviour or material payment disputes may result in restriction or Driver deactivation.</p></section>
+    <section><h2>8. Privacy</h2><p>Passenger phone numbers, pickup details and trip information are provided only for legitimate trip coordination. Do not retain, publish, sell or reuse passenger information for unrelated purposes.</p></section>
+    <section><h2>9. Updates</h2><p>Driver operations require the current Driver Terms in addition to the current Raahi Terms and Privacy Policy. Material changes may require a new acceptance before joining FIFO or sending Outstation quotes.</p></section>
+  </LegalDocumentPage>;
+}

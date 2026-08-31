@@ -5,10 +5,12 @@ import { useRouter } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
 import { requestSeats } from '@/lib/raahiApi';
 import { useAuth } from '@/contexts/AuthContext';
+import { useLegalAcceptanceGate } from '@/components/legal/LegalAcceptanceGate';
 
 export default function ResumeSeatRequestPage() {
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
+  const { guard: guardLegal, dialog: legalDialog } = useLegalAcceptanceGate('passenger');
   const started = useRef(false);
   const [error, setError] = useState('');
 
@@ -42,7 +44,10 @@ export default function ResumeSeatRequestPage() {
       return;
     }
 
-    const result = await requestSeats(tripId, stopId, seatCount, seatNumbers);
+    let result: any;
+    try { await guardLegal(async () => { result = await requestSeats(tripId, stopId, seatCount, seatNumbers); }); }
+    catch (e: any) { setError(e?.message || 'Could not check the booking agreement.'); return; }
+    if (!result) return;
     if (!result.success) {
       setError(result.error || 'Could not complete your seat request. Your selected seats may no longer be available.');
       return;
@@ -67,7 +72,7 @@ export default function ResumeSeatRequestPage() {
   }, [authLoading, user, router]);
 
   if (error) {
-    return (
+    return (<>{legalDialog}
       <div className="max-w-md mx-auto px-4 py-12 text-center space-y-4">
         <h1 className="text-lg font-bold">Your seats need another look</h1>
         <p className="text-sm text-muted-foreground">{error}</p>
@@ -75,17 +80,17 @@ export default function ResumeSeatRequestPage() {
           <button onClick={() => { started.current = false; void run(); }} className="btn-primary flex-1">Try Again</button>
           <button onClick={() => { clearPending(); router.replace('/'); }} className="btn-outline flex-1">Choose Seats Again</button>
         </div>
-      </div>
+      </div></>
     );
   }
 
   return (
-    <div className="max-w-md mx-auto px-4 py-16 text-center space-y-4">
+    <>{legalDialog}<div className="max-w-md mx-auto px-4 py-16 text-center space-y-4">
       <Loader2 size={34} className="mx-auto animate-spin text-primary" />
       <div>
         <h1 className="text-lg font-bold">Holding your selected seats</h1>
         <p className="text-sm text-muted-foreground mt-1">Your pickup point and exact seat choices were saved before sign-in.</p>
       </div>
-    </div>
+    </div></>
   );
 }
