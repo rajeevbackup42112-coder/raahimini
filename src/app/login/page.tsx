@@ -20,7 +20,7 @@ export default function LoginPage() {
     router.replace(destination);
   }, [loading, profile, router, user]);
 
-  const handleGoogle = async () => { setBusy(true); try { await signInWithGoogle('/login'); } finally { setBusy(false); } };
+  const handleGoogle = async () => { setBusy(true); try { await signInWithGoogle(); } finally { setBusy(false); } };
   const resolving = loading || Boolean(user && !profile);
 
   return (

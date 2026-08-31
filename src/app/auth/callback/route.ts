@@ -32,10 +32,17 @@ export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get('code');
   const publicOrigin = getPublicOrigin(origin);
-  const destination = safeRedirectPath(searchParams.get('next') ?? '/');
+  const storedNext = request.cookies.get('raahi_oauth_next')?.value;
+  let decodedNext = '/';
+  if (storedNext) {
+    try { decodedNext = decodeURIComponent(storedNext); } catch {}
+  }
+  const destination = safeRedirectPath(decodedNext);
 
   if (!code) {
-    return NextResponse.redirect(`${publicOrigin}/?auth_error=oauth_callback`);
+    const failed = NextResponse.redirect(`${publicOrigin}/?auth_error=oauth_callback`);
+    failed.cookies.set('raahi_oauth_next', '', { path: '/', maxAge: 0, sameSite: 'lax', secure: process.env.NODE_ENV === 'production' });
+    return failed;
   }
 
   // Return a small completion document so auth cookies are committed before
@@ -74,8 +81,10 @@ export async function GET(request: NextRequest) {
   );
 
   const { error } = await supabase.auth.exchangeCodeForSession(code);
+  response.cookies.set('raahi_oauth_next', '', { path: '/', maxAge: 0, sameSite: 'lax', secure: process.env.NODE_ENV === 'production' });
   if (error) {
     const failed = NextResponse.redirect(`${publicOrigin}/?auth_error=oauth_callback`);
+    failed.cookies.set('raahi_oauth_next', '', { path: '/', maxAge: 0, sameSite: 'lax', secure: process.env.NODE_ENV === 'production' });
     failed.headers.set('Cache-Control', 'private, no-store');
     return failed;
   }

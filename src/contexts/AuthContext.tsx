@@ -194,14 +194,19 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   // Google OAuth
   const signInWithGoogle = async (redirectTo?: string) => {
-    const callbackUrl = `${window.location.origin}/auth/callback${redirectTo ? `?next=${encodeURIComponent(redirectTo)}` : ''}`;
+    const safeNext = redirectTo && redirectTo.startsWith('/') && !redirectTo.startsWith('//') ? redirectTo : '/';
+    document.cookie = `raahi_oauth_next=${encodeURIComponent(safeNext)}; Path=/; Max-Age=600; SameSite=Lax${window.location.protocol === 'https:' ? '; Secure' : ''}`;
+    const callbackUrl = `${window.location.origin}/auth/callback`;
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
         redirectTo: callbackUrl,
       },
     });
-    if (error) throw error;
+    if (error) {
+      document.cookie = `raahi_oauth_next=; Path=/; Max-Age=0; SameSite=Lax${window.location.protocol === 'https:' ? '; Secure' : ''}`;
+      throw error;
+    }
     return data;
   };
 
