@@ -248,3 +248,23 @@ Current docs checkpoint after go-live planning: `4941b538d0fc4c21b1b256ff08c20d9
 | Ride engine | FIFO / seats / GPS / trip isolation | PRESERVED | No ride-engine function redefined |
 | Validation | Driver verification candidate | PASS | TypeScript PASS · 33/33 contracts PASS · production build 27/27 pages PASS |
 | Headed upload/review | Real-account click-through | PENDING | Remote execution guard blocked the automated private-document preview; perform later with real headed browsers if needed |
+# 2026-08-31 validated Demo Ready candidate
+
+Candidate base before checkpoint: `39097d70258ce6f4fff0981058d36a54e8503357` on local branch `demo-ready-investor-polish-local`, targeting remote branch `demo-ready-investor-polish`.
+
+- Outstation post-accept stale refresh: fixed.
+- Outstation Areas v2: implemented in code and applied to Raahi V2 Dev as migration `20260831082254_demo_ready_outstation_service_areas_v2`.
+- Independent areas: Gomoh, Dhanbad, Parasnath, Madhuban and Bokaro.
+- Live Areas v2 proof: Bokaro-opted Driver saw 1 lead; non-opted Driver saw 0; Shared Ride preferences were unchanged; synthetic request/preference rows were cleaned to 0.
+- Full synthetic Outstation lifecycle: request → verified Driver lead → quote → pre-accept phone privacy → one accepted quote → contact unlock; cleanup passed.
+- Branding: master name is Raahi across metadata, PWA, OAuth callback and visible/accessibility surfaces.
+- Dependency/release hardening: committed deterministic lockfile, CI uses `npm ci`, `.env` is untracked but retained locally, Next.js `15.5.24`, Supabase JS `2.112.4`, scoped PostCSS/Sharp overrides.
+- TypeScript: PASS.
+- Contract suite: 36/36 PASS.
+- `git diff --check`: PASS.
+- Production dependency audit: 0 vulnerabilities.
+- Production build: PASS, 32/32 pages.
+- Local production smoke on isolated port 4028: primary Passenger, Driver, Admin, Outstation, Offers and Contact routes returned 200; test-auth/staging safety failed closed; server shut down after testing.
+- Port 4030 and Raahi School: untouched.
+
+Supabase advisor snapshot (Raahi V2 Dev, 2026-08-31): project healthy on PostgreSQL 17; 37 performance notices (9 unindexed foreign keys, 8 RLS init-plan optimizations, 14 unused indexes, 6 multiple-permissive-policy notices). Security notices are predominantly expected linter visibility over the guarded `SECURITY DEFINER` RPC boundary; direct tables remain RLS-protected and the important role/ownership/privacy guards have separate contract and live acceptance evidence. Leaked-password protection is disabled and is an owner-controlled Auth hardening item if password authentication is enabled. No advisor-driven schema change was made during release closure.

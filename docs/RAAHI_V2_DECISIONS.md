@@ -211,3 +211,28 @@ Future chats must start from `RAAHI_V2_HANDOVER.md`, then consult this Decision 
 128. **Verified car photos remain relationship-scoped.** Admin, Driver self and a Passenger with a confirmed Raahi relationship may read approved car photos. Outstation may later extend the same trust helper to request/quote participants.
 129. **Replacing or removing a document invalidates prior verification.** New uploads return the relevant group to PENDING; removing the last current document returns it to MISSING. Old private Storage objects are deleted from the Driver's own folder where possible.
 130. **Verification does not alter transport authority.** It does not change FIFO, queue membership, seat ownership, GPS, phone verification, trip lifecycle or fixed-route dispatch.
+# Decisions added 2026-08-31
+
+## D-2026-08-31-01 — Raahi is the master brand
+
+Use **Raahi** in product metadata, PWA, OAuth and user-facing/accessibility surfaces. “Raahi Mini” and “Raahi Carpool” are retired as launch product names.
+
+## D-2026-08-31-02 — Separate Outstation areas from Shared Ride routes
+
+Shared Ride route participation controls directional FIFO mobility. Outstation eligibility is controlled independently by explicit Driver service-area preferences. Bokaro is the proof case: it is supported for Outstation without any Shared Ride location or route dependency. No automatic nearby-area expansion at launch.
+
+## D-2026-08-31-03 — Expand through local-liquidity cells
+
+Raahi expands area by area rather than claiming broad geography. Outstation attracts verified Driver supply; Shared Ride follows where corridor density develops; trust and local operations compound in each area.
+
+## D-2026-08-31-04 — Freeze launch scope
+
+Launch includes Shared Ride, Outstation Areas v2, Driver Verification, Contact Raahi and Admin-managed Local Offers. Raahi Ads self-service, QR claim/redemption, Events and Nearby are post-launch. Advertising must never enter booking, quote comparison, authentication, phone verification, Driver queue/live-trip, GPS, payment or safety surfaces.
+
+## D-2026-08-31-05 — Advisor triage does not justify a late database rewrite
+
+The RPC-controlled architecture intentionally uses guarded `SECURITY DEFINER` functions with RLS-denied direct tables. Advisor warnings are tracked and reviewed, but generic linter output is not treated as proof of an authorization defect. The 2026-08-31 performance findings are a measured post-launch optimization backlog; no index/policy churn is introduced after the candidate passed its full acceptance suite. Leaked-password protection is an owner-controlled gate if password Auth becomes part of launch.
+
+## D-2026-08-31-06 — Owner-only production gates
+
+Netlify preparation and non-destructive hosted checks may proceed. GoDaddy DNS, production OAuth changes, production database migrations, Auth Hook activation, Fast2SMS secrets/traffic and irreversible production settings require explicit owner approval. The rollback ref `prod-v14-frozen` → `38b7519d615e171c59d537b18a61c1ba303c132f` remains sacrosanct.

@@ -309,3 +309,21 @@ Replacing an identity document resets its group to PENDING and attempts to delet
 Backend proof: unrelated Passenger trust request denied; Driver self and Admin allowed; private bucket and INSERT/SELECT/DELETE policies verified. Engineering: TypeScript PASS, 33/33 contracts PASS, build 27/27. Automated headed private-document preview was blocked by the remote execution safety layer, so real headed upload/review remains a later manual acceptance item.
 
 Next product slice: **Outstation request + quote marketplace**, reusing verified Driver state and route/location origins without touching fixed-route FIFO.
+# Launch-closure handover — 2026-08-31
+
+The current local candidate starts from `39097d70258ce6f4fff0981058d36a54e8503357` and contains the validated uncommitted release closure for Outstation Areas v2, master Raahi branding, deterministic dependencies/CI, `.env` untracking and dependency security upgrades. Raahi V2 Dev includes migration `20260831082254_demo_ready_outstation_service_areas_v2`.
+
+Validated evidence carried into closure: TypeScript PASS; 36/36 contracts PASS; `git diff --check` PASS; production `npm audit` 0 vulnerabilities; production build PASS with 32/32 pages; isolated production-route smoke PASS. Synthetic Outstation and Areas v2 data was removed. Port 4030 and Raahi School were not touched.
+
+Supabase triage found no launch-breaking platform health issue. Performance notices are tracked as a post-launch tuning batch; no late schema optimization was mixed into the accepted candidate. Security advisor warnings are largely consequences of the deliberate guarded-RPC boundary and must be evaluated function-by-function, never “fixed” by weakening guards or broadly exposing tables. Leaked-password protection needs an owner decision only if password sign-in is enabled.
+
+Immediate continuation sequence:
+
+1. Review the complete diff/status and canonical docs.
+2. Re-run release checks proportionate to the documentation-only closure.
+3. Commit a clean checkpoint and push it to `demo-ready-investor-polish`.
+4. Verify GitHub CI for the exact pushed commit.
+5. Prepare Netlify and run hosted acceptance only as far as current access allows.
+6. Stop for owner approval before GoDaddy DNS, production OAuth, production DB/Auth Hook/Fast2SMS activation or any irreversible production setting.
+
+Never touch Raahi School or port 4030. Preserve `prod-v14-frozen` → `38b7519d615e171c59d537b18a61c1ba303c132f` and keep the old public hostname available as rollback until new-domain acceptance is complete.

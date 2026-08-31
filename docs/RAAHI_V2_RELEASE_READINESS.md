@@ -485,3 +485,42 @@ The user approved completing selected growth/trust features before hosting. Cont
 Driver Verification release gates now include: private Storage bucket and RLS policy replay, Driver upload/replace/remove, Admin Verify/Reject, unrelated-Passenger denial, relationship-scoped approved car photos, and confirmation that raw DL/RC never appear in Passenger UI. Current engineering evidence is TypeScript PASS, 33/33 contracts PASS and production build 27/27 pages. A real headed upload/review click-through remains pending.
 
 Do not copy these Dev migrations to production independently of the final candidate. They must move with the reviewed pre-go-live feature set after Outstation / Local Offers / branding are complete and the user explicitly approves the hosted production migration sequence.
+# 2026-08-31 Demo Ready release closure
+
+## Candidate engineering — PASS
+
+- [x] Outstation Areas v2 implemented and Dev-migrated.
+- [x] Bokaro proven independent of Shared Ride routes/preferences.
+- [x] Outstation quote/contact privacy lifecycle proven and synthetic rows cleaned.
+- [x] Outstation post-accept refresh defect fixed.
+- [x] Master Raahi branding completed.
+- [x] `.env` removed from Git tracking and retained locally.
+- [x] Deterministic `package-lock.json` plus `npm ci` validation workflows.
+- [x] Security-sensitive dependencies upgraded; production audit 0 vulnerabilities.
+- [x] TypeScript PASS.
+- [x] Contracts 36/36 PASS.
+- [x] `git diff --check` PASS.
+- [x] Production build PASS, 32/32 pages.
+- [x] Isolated production-server route smoke PASS; safety endpoints fail closed.
+- [x] Raahi School and port 4030 untouched.
+
+## Supabase triage — PASS WITH TRACKED HARDENING
+
+- [x] Raahi V2 Dev is ACTIVE_HEALTHY on PostgreSQL 17.
+- [x] Areas v2 migration version is present in remote migration history.
+- [x] Performance advisors classified: 9 unindexed foreign keys, 8 RLS init-plan improvements, 14 unused-index observations and 6 multiple-permissive-policy observations.
+- [x] No late advisor-driven schema mutation introduced after acceptance.
+- [x] RPC/RLS security model retained; warnings require function-specific guard review, not broad grant changes.
+- [ ] Owner decision: enable leaked-password protection if password Auth is or becomes a real login path.
+
+## Remaining release gates
+
+- [ ] Clean checkpoint commit pushed to `demo-ready-investor-polish`.
+- [ ] GitHub CI green for the exact checkpoint SHA.
+- [ ] Netlify candidate prepared/deployed without DNS cutover.
+- [ ] Hosted anonymous/public and fail-closed safety acceptance.
+- [ ] Owner approval before production migration, GoDaddy DNS, production OAuth, Auth Hook/Fast2SMS or irreversible settings.
+- [ ] Real hosted Passenger, Driver and Admin acceptance after owner-only configuration is complete.
+- [ ] Final release ref only after hosted acceptance.
+
+Current status: **code/database candidate validated; repository and hosting closure in progress; production cutover not authorized.**

@@ -125,3 +125,39 @@ Only after Gate 6 passes:
 2. Fast2SMS OTP ID/template.
 3. Hosting-provider custom-domain target for `ride.myraahi.co.in`.
 4. Explicit approval immediately before production migration, production Edge Function/hook enablement, or DNS cutover.
+# 2026-08-31 revised closure sequence
+
+The validated candidate now includes Outstation Areas v2, master Raahi branding, deterministic dependencies and the completed dependency-security upgrade. Local evidence is TypeScript PASS, 36/36 contracts PASS, `git diff --check` PASS, production audit 0 vulnerabilities, production build 32/32 pages and isolated route smoke PASS.
+
+## Gate A — source checkpoint and CI
+
+- [ ] Review final status/diff, including deletion of tracked `.env` and addition of `package-lock.json`.
+- [ ] Commit the complete validated candidate plus canonical documentation.
+- [ ] Push local HEAD to remote `demo-ready-investor-polish` without force.
+- [ ] Record exact checkpoint SHA.
+- [ ] Verify every GitHub workflow required for that SHA is green.
+
+## Gate B — Netlify without production cutover
+
+- [ ] Confirm the Netlify build uses the committed lockfile and `npm ci`/production build path.
+- [ ] Confirm required environment-variable names are configured without exposing secret values.
+- [ ] Deploy/inspect the exact checkpoint on a Netlify-owned preview or site URL when current access permits.
+- [ ] Verify HTTPS, primary public routes, callback routing, protected-route behavior and production test-auth/staging fail-closed behavior.
+- [ ] Do not attach or change GoDaddy DNS yet.
+
+## Gate C — owner-only production configuration
+
+Explicit approval is required immediately before any of the following:
+
+- GoDaddy DNS changes for `ride.myraahi.co.in`;
+- production Supabase redirect allow-list or Site URL changes;
+- Google OAuth production origin/redirect changes;
+- production database migrations;
+- Fast2SMS secrets, Edge Function/Auth Hook activation or real OTP traffic;
+- irreversible Netlify production settings.
+
+After approval, perform the smallest reversible change, verify it, then proceed. Keep `myraahi.referralhub.co.in` available throughout the rollback window and preserve `prod-v14-frozen` → `38b7519d615e171c59d537b18a61c1ba303c132f`.
+
+## Gate D — hosted acceptance
+
+Run real-browser Passenger, Driver and Admin acceptance on the hosted candidate, including Outstation Areas v2, Driver Verification privacy, Contact Raahi, Local Offers, Shared Ride regression, GPS/start/completion, Share My Raahi, and final synthetic/operational cleanup. Freeze the final release ref only after this gate passes.

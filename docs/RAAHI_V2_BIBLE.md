@@ -919,3 +919,19 @@ Raahi Driver trust is backed by reviewed state, not self-asserted copy. A Driver
 Raw Driving Licence and RC documents never belong in Passenger UI. Passenger-facing trust data is limited to verified/not-verified flags plus normal vehicle identity. Approved car photos are also relationship-scoped rather than generally authenticated-readable. The fixed-route trust helper currently allows Admin, Driver self or a Passenger with a confirmed seat relationship; Outstation may deliberately extend the helper for real request/quote participants.
 
 Verification is independent of the ride engine. No verification action joins a queue, changes FIFO, reserves a seat, bypasses phone verification, fabricates GPS or changes a trip. Outstation may require a fully verified Driver before quoting, but that is an eligibility gate around the marketplace rather than a modification of fixed-route dispatch.
+# 2026-08-31 launch-candidate doctrine
+
+Raahi is the master product name. The launch thesis is a local mobility network for towns and corridors that formal transport platforms serve poorly—not a generic taxi aggregator and not an everything-app.
+
+The product loops are now explicit:
+
+- **Outstation attracts supply.** Verified Drivers opt into independent service areas and may quote for full-car work without joining a Shared Ride route or FIFO.
+- **Shared Ride creates local density.** Fixed directional corridors retain strict FIFO, seats, GPS and lifecycle invariants.
+- **Verification creates trust.** Driver documents remain private; passengers receive only relationship-scoped trust information and approved car photos.
+- **Local Offers supports sustainability.** Mobility remains free of platform fees; clearly labelled local promotion can fund operations without entering booking, quote, safety or Driver-operational surfaces.
+
+Raahi expands as cells of local liquidity. An Outstation service area is independent of a Shared Ride route: Bokaro can be an active Outstation area even when no Bokaro Shared Ride corridor exists. Shared Ride preferences and Outstation-area preferences must never be coupled implicitly.
+
+Launch scope is frozen at Shared Ride, Outstation Areas v2, Driver Verification, Contact Raahi and the existing Admin-managed Local Offers foundation. The self-service Raahi Ads marketplace, QR claims/redemptions, Events and Nearby remain post-launch work and must earn their way into the product without increasing core mobility startup weight.
+
+The accepted application identity is **Raahi**. Legacy product strings such as “Raahi Mini” and “Raahi Carpool” are not launch branding.

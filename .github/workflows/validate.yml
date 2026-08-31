@@ -1,4 +1,4 @@
-name: Validate Raahi Mini
+name: Validate Raahi
 
 on:
   pull_request:
@@ -19,9 +19,9 @@ jobs:
         with:
           node-version: 20
           cache: npm
-          cache-dependency-path: package.json
+          cache-dependency-path: package-lock.json
       - name: Install dependencies
-        run: npm install --no-audit --no-fund
+        run: npm ci --no-audit --no-fund
       - name: Sequential dispatch contract
         run: node tests/contracts/sequential-dispatch-contract.cjs
       - name: Visual seat selection contract

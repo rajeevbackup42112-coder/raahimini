@@ -11,7 +11,7 @@ const dmSans = DM_Sans({ subsets: ['latin'], weight: ['400', '500', '600', '700'
 export const viewport: Viewport = { width: 'device-width', initialScale: 1, themeColor: '#166534' };
 
 export const metadata: Metadata = {
-  title: 'Raahi Carpool — Shared rides, made clear',
+  title: 'Raahi — Shared rides and outstation travel',
   description: 'Find shared local rides or compare outstation quotes from verified local Drivers. Raahi stays free for passengers and drivers.',
   icons: { icon: [{ url: '/favicon.ico', type: 'image/x-icon' }] },
   manifest: '/manifest.json',
