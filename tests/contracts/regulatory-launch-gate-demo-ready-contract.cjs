@@ -14,7 +14,7 @@ must(sql.includes('public_transactions_enabled boolean not null default false'),
 must(sql.includes('raahi_transaction_pilot_users'),'pilot allow-list missing');
 must(sql.includes('RAAHI_TRANSACTION_PILOT_ONLY'),'DB launch gate must fail closed');
 for(const table of ['seat_requests','outstation_requests','driver_queue','outstation_quotes']) must(sql.includes(`regulatory_launch_${table}`),`${table} launch trigger missing`);
-must(gate.includes('Browsing and Driver registration remain open'),'browse-only explanation missing');
+must(gate.includes('onboarding verified local Drivers area by area')&&gate.includes('Ride requests will open'),'controlled-launch explanation missing');
 must(layout.includes('<RegulatoryLaunchBanner />'),'global launch banner missing');
 for(const [name,source] of [['seat',seat],['resume',resume],['outstation',outstation],['driver outstation',driverOutstation],['driver routes',driverRoutes]]) must(source.includes('guardLaunch'),`${name} launch guard missing`);
 must(outstation.split('guardLaunch').length>=4,'Outstation create and accept must both be gated');

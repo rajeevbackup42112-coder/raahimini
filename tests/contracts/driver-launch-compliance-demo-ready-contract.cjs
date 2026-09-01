@@ -16,5 +16,5 @@ must(driver.includes('private/non-transport vehicle can be recorded')&&driver.in
 must(admin.includes("createSignedUrl(doc.storage_path,120)"),'Admin compliance files must use short-lived signed URLs');
 must(admin.includes('Do not expose raw permit, fitness, insurance or PUC files'),'Admin privacy boundary missing');
 must(driverOutstation.includes('getMyDriverLaunchCompliance')&&driverRoutes.includes('getMyDriverLaunchCompliance'),'Driver operational entry must check compliance');
-must(outstation.includes('vehicle permit, fitness, insurance and PUC'),'Passenger trust copy must disclose launch-compliance checks');
+must(outstation.includes('required operating documents')&&outstation.includes('Sensitive document scans stay private'),'Passenger trust copy must disclose operating-document verification and privacy');
 console.log('Driver launch compliance Demo Ready contract: PASS');
