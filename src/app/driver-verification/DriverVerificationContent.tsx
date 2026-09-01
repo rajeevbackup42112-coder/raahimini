@@ -6,6 +6,7 @@ import { CheckCircle2, FileCheck2, FileText, ImageIcon, Loader2, RefreshCw, Shie
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import { createClient } from '@/lib/supabase/client';
+import DriverLaunchComplianceSection from './DriverLaunchComplianceSection';
 
 type DocType='DRIVING_LICENCE'|'VEHICLE_RC'|'CAR_PHOTO';
 type VerifyStatus='MISSING'|'PENDING'|'VERIFIED'|'REJECTED';
@@ -95,11 +96,11 @@ export default function DriverVerificationContent(){
 
   return <div className="mx-auto max-w-screen-lg space-y-5 px-4 py-5 sm:px-6 sm:py-8">
     <section className="hero-surface p-5 sm:p-7">
-      <div className="flex items-start justify-between gap-4"><div><p className="text-[11px] font-bold uppercase tracking-[0.14em] text-amber-200">Driver trust</p><h1 className="mt-2 text-2xl font-extrabold text-white sm:text-3xl">Verify your Driver profile</h1><p className="mt-2 max-w-xl text-sm leading-relaxed text-white/75">Upload your Driving Licence, vehicle RC and clear car photos. Raahi Admin reviews them before a verified badge appears.</p></div><ShieldCheck size={28} className="shrink-0 text-white/80"/></div>
+      <div className="flex items-start justify-between gap-4"><div><p className="text-[11px] font-bold uppercase tracking-[0.14em] text-amber-200">Driver trust</p><h1 className="mt-2 text-2xl font-extrabold text-white sm:text-3xl">Verify your Driver profile</h1><p className="mt-2 max-w-xl text-sm leading-relaxed text-white/75">Start with Driving Licence, vehicle RC and clear car photos, then complete the launch-compliance documents required before paid ride operations.</p></div><ShieldCheck size={28} className="shrink-0 text-white/80"/></div>
     </section>
 
     <section className={`rounded-2xl border p-4 ${fully?'border-green-200 bg-green-50':'border-border bg-card'}`}>
-      <div className="flex items-start gap-3">{fully?<CheckCircle2 size={20} className="mt-0.5 shrink-0 text-green-700"/>:<FileCheck2 size={20} className="mt-0.5 shrink-0 text-primary"/>}<div><p className="text-sm font-extrabold">{fully?'Raahi verification complete':'Complete all three verification groups'}</p><p className="mt-1 text-xs leading-relaxed text-muted-foreground">Raw Licence and RC files stay private to you and Raahi Admin. Passengers will see verification status, not your document scans.</p></div></div>
+      <div className="flex items-start gap-3">{fully?<CheckCircle2 size={20} className="mt-0.5 shrink-0 text-green-700"/>:<FileCheck2 size={20} className="mt-0.5 shrink-0 text-primary"/>}<div><p className="text-sm font-extrabold">{fully?'Core trust verification complete':'Complete all three core trust groups'}</p><p className="mt-1 text-xs leading-relaxed text-muted-foreground">Raw Licence and RC files stay private to you and Raahi Admin. Passengers will see verification status, not your document scans.</p></div></div>
     </section>
 
     <section className="feature-card p-4 sm:p-5">
@@ -111,6 +112,8 @@ export default function DriverVerificationContent(){
       <VerificationCard type="VEHICLE_RC" status={state.vehicle_rc_status} notes={state.vehicle_rc_notes} docs={rcDocs} busy={busy} onChoose={choose('VEHICLE_RC')} onRetire={retire}/>
     </div>
     <VerificationCard type="CAR_PHOTO" status={state.car_photos_status} notes={state.car_photos_notes} docs={carDocs} busy={busy} onChoose={choose('CAR_PHOTO')} onRetire={retire}/>
+
+    <DriverLaunchComplianceSection/>
 
     <button onClick={load} className="btn-outline w-full"><RefreshCw size={15}/>Refresh verification</button>
   </div>;

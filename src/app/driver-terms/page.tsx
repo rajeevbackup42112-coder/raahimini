@@ -16,11 +16,12 @@ export default function DriverTermsPage() {
     <section>
       <h2>2. Accurate onboarding and verification</h2>
       <ul>
-        <li>Provide genuine and current Driving Licence, vehicle RC, vehicle details and car photographs requested by Raahi.</li>
+        <li>Provide genuine and current Driving Licence, vehicle RC, vehicle details and car photographs requested by Raahi, plus any launch-compliance records Raahi requires such as vehicle permit, fitness certificate, insurance and PUC.</li>
         <li>Do not submit another person’s document or use another Driver’s verified account.</li>
         <li>Tell Raahi promptly if a licence, RC, permit, insurance or other material document expires, is suspended, cancelled, transferred or materially changes.</li>
         <li>Use only a vehicle that Raahi has associated with your current Driver account where the service requires vehicle linkage.</li>
-        <li>Raahi may pause Driver operations while verification is incomplete, expired, disputed or under review.</li>
+        <li>For paid ride operations, Raahi may require the vehicle to be declared and verified as commercial/permitted for passenger service together with current permit, fitness, insurance and PUC. A private/non-transport classification may be recorded but will remain transaction-disabled unless applicable law and Raahi’s regulatory clearance permit that model.</li>
+        <li>Raahi may pause Driver operations while verification or launch compliance is incomplete, expired, disputed or under review.</li>
       </ul>
     </section>
     <section>
@@ -117,7 +118,7 @@ export default function DriverTermsPage() {
 
     <section>
       <h2>16. Applicable law and your own compliance</h2>
-      <p>You are responsible for understanding the laws and permits applicable to the transport you personally provide. Raahi may provide operational rules or reminders, but does not give you legal or tax advice.</p>
+      <p>You are responsible for understanding the laws and permits applicable to the transport you personally provide and for keeping required permit, fitness, insurance and PUC records current. Raahi may provide operational rules or reminders, but does not give you legal or tax advice.</p>
       <p>Nothing here reduces any obligation imposed on Raahi itself by the Motor Vehicles Act, State transport rules, Motor Vehicle Aggregator Guidelines where applicable, consumer law, privacy law or other mandatory law.</p>
     </section>
     <section>

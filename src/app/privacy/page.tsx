@@ -9,7 +9,7 @@ export default function PrivacyPage() {
   >
     <section>
       <h2>1. Who is responsible for your data</h2>
-      <p>The operator of Raahi is responsible for deciding how personal data is used for the Raahi service. The final legal entity name, address and privacy/grievance contact must be inserted before public launch. Until then, privacy questions can be submitted through Contact Raahi.</p>
+      <p>The operator of the Raahi controlled pilot is responsible for deciding how personal data is used for the service. Public ride transactions are currently disabled except for authorized acceptance-testing accounts. Privacy questions and requests can be submitted through Contact Raahi. Before public ride transactions are enabled, Raahi will publish the operator’s formal legal identity, principal business address and designated privacy/grievance contact.</p>
       <p>Raahi intends to follow the Digital Personal Data Protection Act, 2023 and applicable rules as their provisions become applicable, together with other privacy, consumer and transport-related obligations that apply to the service.</p>
     </section>
 
@@ -117,8 +117,8 @@ export default function PrivacyPage() {
 
     <section>
       <h2>16. Privacy and grievance contact</h2>
-      <p><strong>Pre-launch details to complete:</strong> [LEGAL ENTITY / PROPRIETOR NAME], [PRIVACY OR GRIEVANCE OFFICER], [EMAIL], [PHONE] and [BUSINESS ADDRESS]. These details must be completed before public launch and aligned with the Terms of Service.</p>
-      <p>Until then, use <Link href="/contact" className="font-bold text-primary underline">Contact Raahi</Link> for privacy questions or requests.</p>
+      <p>During the controlled pilot, use <Link href="/contact" className="font-bold text-primary underline">Contact Raahi</Link> for privacy questions, correction or deletion requests, or complaints.</p>
+      <p>Before public ride transactions are enabled, Raahi will publish the operator’s formal legal identity, principal business address and designated privacy/grievance contact here and keep those details aligned with the Terms of Service.</p>
     </section>
   </LegalDocumentPage>;
 }

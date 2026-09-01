@@ -2,6 +2,7 @@ import React from 'react';
 import Link from 'next/link';
 import AppHeader from './AppHeader';
 import BottomNav from './BottomNav';
+import { RegulatoryLaunchBanner } from '@/components/launch/RegulatoryLaunchGate';
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -14,6 +15,7 @@ export default function AppLayout({ children, showBottomNav = true, headerTitle,
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <AppHeader title={headerTitle} showBack={headerBack} />
+      <RegulatoryLaunchBanner />
       <main className="flex-1 pb-20 sm:pb-0">{children}</main>
       <footer className="hidden border-t border-border bg-card/80 sm:block">
         <div className="mx-auto flex max-w-screen-xl items-center justify-between gap-4 px-6 py-4 text-xs text-muted-foreground">

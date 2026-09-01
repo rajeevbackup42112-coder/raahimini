@@ -23,11 +23,14 @@ import {
 } from '@/lib/raahiApi';
 import DriverRouteCard from './DriverRouteCard';
 import { useLegalAcceptanceGate } from '@/components/legal/LegalAcceptanceGate';
+import { useRegulatoryLaunchGate } from '@/components/launch/RegulatoryLaunchGate';
+import { getMyDriverLaunchCompliance } from '@/lib/driverComplianceApi';
 
 export default function DriverRouteSelectionContent() {
   const router = useRouter();
   const { user, profile, loading: authLoading } = useAuth();
   const { guard: guardLegal, dialog: legalDialog } = useLegalAcceptanceGate('driver');
+  const { guard: guardLaunch, dialog: launchDialog } = useRegulatoryLaunchGate();
   const [locations, setLocations] = useState<Location[]>([]);
   const [context, setContext] = useState<DriverHomeContext>({});
   const [locationId, setLocationId] = useState('');
@@ -92,7 +95,7 @@ export default function DriverRouteSelectionContent() {
   }, [locationId, context.queue_status, loadRoutes]);
 
   const join = async (route: DriverDepartingRoute) => {
-    try { await guardLegal(async () => {
+    try { const compliance=await getMyDriverLaunchCompliance(); if(!compliance.launch_compliant){toast.error('Complete Driver launch compliance before joining Shared Ride FIFO.');router.push('/driver-verification');return;} await guardLaunch(async () => { await guardLegal(async () => {
       setJoining(route.route_id);
       const result = await joinDriverQueue(route.route_id, locationId);
       setJoining(null);
@@ -103,7 +106,7 @@ export default function DriverRouteSelectionContent() {
         toast.success(`You are now collecting on ${route.direction_label}`);
         router.push('/driver-active-car-screen');
       } else { toast.success(`Joined queue for ${route.direction_label}`); }
-    }); } catch (e: any) { setJoining(null); toast.error(e?.message || 'Could not check the Driver agreement.'); }
+    }); }); } catch (e: any) { setJoining(null); toast.error(e?.message || 'Could not check launch or Driver access.'); }
   };
 
   const toggleRouteAlert = async (route: DriverDepartingRoute) => {
@@ -201,7 +204,7 @@ export default function DriverRouteSelectionContent() {
   const selected = locations.find(l => l.id === locationId);
 
   return (
-    <>{legalDialog}<div className="mx-auto max-w-screen-lg space-y-5 px-4 py-5 sm:px-6">
+    <>{launchDialog}{legalDialog}<div className="mx-auto max-w-screen-lg space-y-5 px-4 py-5 sm:px-6">
       <section className="hero-surface">
         <div className="flex items-start justify-between gap-4">
           <div><p className="text-[11px] font-bold uppercase tracking-[0.14em] text-amber-200">Driver home</p><h1 className="mt-2 text-2xl font-extrabold tracking-tight text-white sm:text-3xl">{profile?.display_name ? `Ready, ${profile.display_name}?` : 'Ready to drive?'}</h1><p className="mt-2 max-w-xl text-sm leading-relaxed text-white/75">Choose your current stand, choose which routes you want demand alerts for, then take the next route action. FIFO stays route-specific.</p></div>
@@ -211,7 +214,7 @@ export default function DriverRouteSelectionContent() {
 
       <Link href="/driver-verification" className="feature-card flex items-center gap-3 p-4 transition hover:border-primary/30 sm:p-5">
         <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-secondary text-primary"><ShieldCheck size={20}/></div>
-        <div className="min-w-0 flex-1"><p className="text-sm font-extrabold text-foreground">Driver verification</p><p className="mt-1 text-xs leading-relaxed text-muted-foreground">Upload Driving Licence, vehicle RC and car photos for Raahi Admin review.</p></div>
+        <div className="min-w-0 flex-1"><p className="text-sm font-extrabold text-foreground">Driver verification</p><p className="mt-1 text-xs leading-relaxed text-muted-foreground">Complete core trust plus vehicle permit, fitness, insurance and PUC review before paid ride operations.</p></div>
         <span className="text-xs font-bold text-primary">Open</span>
       </Link>
 

@@ -6,6 +6,7 @@ import { CheckCircle2, ExternalLink, FileText, ImageIcon, Loader2, RefreshCw, Sh
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import { createClient } from '@/lib/supabase/client';
+import DriverLaunchComplianceReview from './DriverLaunchComplianceReview';
 
 type VerifyStatus='MISSING'|'PENDING'|'VERIFIED'|'REJECTED';
 type DocType='DRIVING_LICENCE'|'VEHICLE_RC'|'CAR_PHOTO';
@@ -69,19 +70,19 @@ export default function AdminDriverVerificationReview(){
 
   return <main className="mx-auto max-w-screen-2xl space-y-5 px-4 py-5">
     <section className="flex flex-wrap items-start justify-between gap-3">
-      <div><p className="section-label">Users · Driver trust</p><h1 className="mt-1 text-2xl font-extrabold">Driver verification</h1><p className="mt-1 max-w-2xl text-xs leading-relaxed text-muted-foreground">Review Driving Licence, vehicle RC and car photos. Licence and RC scans remain private to the Driver and Raahi Admin.</p></div>
+      <div><p className="section-label">Users · Driver trust</p><h1 className="mt-1 text-2xl font-extrabold">Driver verification</h1><p className="mt-1 max-w-2xl text-xs leading-relaxed text-muted-foreground">Review core trust documents, then complete the separate launch-compliance checks required before paid ride operations. Raw documents remain private to the Driver and Raahi Admin.</p></div>
       <div className="flex gap-2"><Link href="/admin-panel/users" className="btn-outline">Registered Users</Link><button onClick={load} disabled={loading} className="btn-outline px-3">{loading?<Loader2 size={15} className="animate-spin"/>:<RefreshCw size={15}/>}Refresh</button></div>
     </section>
 
     <section className="grid grid-cols-3 gap-2">
-      <Metric label="Drivers" value={rows.length}/><Metric label="Fully verified" value={counts.verified}/><Metric label="Pending review" value={counts.pending} attention={counts.pending>0}/>
+      <Metric label="Drivers" value={rows.length}/><Metric label="Core trust verified" value={counts.verified}/><Metric label="Pending review" value={counts.pending} attention={counts.pending>0}/>
     </section>
 
     <div className="grid min-w-0 gap-4 lg:grid-cols-[minmax(0,1fr)_430px]">
       <section className="space-y-2">
         {loading&&<div className="flex justify-center py-16"><Loader2 className="animate-spin text-primary"/></div>}
         {!loading&&rows.map(row=><button key={row.driver_id} onClick={()=>setSelected(row)} className={`w-full rounded-2xl border bg-card p-4 text-left transition ${selected?.driver_id===row.driver_id?'border-primary brand-ring':'border-border hover:border-primary/30'}`}>
-          <div className="flex items-start gap-3"><div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-secondary text-primary"><ShieldCheck size={18}/></div><div className="min-w-0 flex-1"><div className="flex flex-wrap items-center gap-2"><p className="truncate text-sm font-extrabold">{row.display_name}</p>{row.fully_verified&&<span className="rounded-full bg-green-50 px-2 py-0.5 text-[10px] font-bold text-green-700">Fully verified</span>}</div><p className="mt-1 text-xs text-muted-foreground">{row.vehicle_number||'No vehicle'}{row.vehicle_model?` · ${row.vehicle_model}`:''}</p><div className="mt-2 flex flex-wrap gap-1.5"><Status name="DL" status={row.driving_licence_status}/><Status name="RC" status={row.vehicle_rc_status}/><Status name="Photos" status={row.car_photos_status}/></div></div><span className="text-[10px] font-bold text-muted-foreground">{row.current_document_count} files</span></div>
+          <div className="flex items-start gap-3"><div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-secondary text-primary"><ShieldCheck size={18}/></div><div className="min-w-0 flex-1"><div className="flex flex-wrap items-center gap-2"><p className="truncate text-sm font-extrabold">{row.display_name}</p>{row.fully_verified&&<span className="rounded-full bg-green-50 px-2 py-0.5 text-[10px] font-bold text-green-700">Core trust verified</span>}</div><p className="mt-1 text-xs text-muted-foreground">{row.vehicle_number||'No vehicle'}{row.vehicle_model?` · ${row.vehicle_model}`:''}</p><div className="mt-2 flex flex-wrap gap-1.5"><Status name="DL" status={row.driving_licence_status}/><Status name="RC" status={row.vehicle_rc_status}/><Status name="Photos" status={row.car_photos_status}/></div></div><span className="text-[10px] font-bold text-muted-foreground">{row.current_document_count} files</span></div>
         </button>)}
         {!loading&&rows.length===0&&<div className="feature-card p-8 text-center text-sm text-muted-foreground">No active Drivers to review.</div>}
       </section>
@@ -97,7 +98,8 @@ export default function AdminDriverVerificationReview(){
               <div className="mt-3 grid grid-cols-2 gap-2"><button disabled={!typeDocs.length||busy===`review-${type}`} onClick={()=>review(type,'VERIFIED')} className="btn-outline justify-center text-green-700"><CheckCircle2 size={14}/>Verify</button><button disabled={!typeDocs.length||busy===`review-${type}`} onClick={()=>review(type,'REJECTED')} className="btn-outline justify-center text-red-600"><XCircle size={14}/>Reject</button></div>
             </section>;
           })}</div>
-          <p className="mt-4 text-[10px] leading-relaxed text-muted-foreground">Document links expire after 2 minutes. Passenger trust cards receive only verified status, vehicle identity and approved car photos—not Licence or RC scans.</p>
+          <DriverLaunchComplianceReview driverId={selected.driver_id} displayName={selected.display_name}/>
+          <p className="mt-4 text-[10px] leading-relaxed text-muted-foreground">Document links expire after 2 minutes. Passenger trust cards receive only verified status, vehicle identity and approved car photos—not Licence, RC or launch-compliance scans.</p>
         </div>}
       </aside>
     </div>

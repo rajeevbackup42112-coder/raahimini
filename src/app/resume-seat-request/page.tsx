@@ -6,11 +6,13 @@ import { Loader2 } from 'lucide-react';
 import { requestSeats } from '@/lib/raahiApi';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLegalAcceptanceGate } from '@/components/legal/LegalAcceptanceGate';
+import { useRegulatoryLaunchGate } from '@/components/launch/RegulatoryLaunchGate';
 
 export default function ResumeSeatRequestPage() {
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
   const { guard: guardLegal, dialog: legalDialog } = useLegalAcceptanceGate('passenger');
+  const { guard: guardLaunch, dialog: launchDialog } = useRegulatoryLaunchGate();
   const started = useRef(false);
   const [error, setError] = useState('');
 
@@ -45,7 +47,7 @@ export default function ResumeSeatRequestPage() {
     }
 
     let result: any;
-    try { await guardLegal(async () => { result = await requestSeats(tripId, stopId, seatCount, seatNumbers); }); }
+    try { await guardLaunch(async () => { await guardLegal(async () => { result = await requestSeats(tripId, stopId, seatCount, seatNumbers); }); }); }
     catch (e: any) { setError(e?.message || 'Could not check the booking agreement.'); return; }
     if (!result) return;
     if (!result.success) {
@@ -72,7 +74,7 @@ export default function ResumeSeatRequestPage() {
   }, [authLoading, user, router]);
 
   if (error) {
-    return (<>{legalDialog}
+    return (<>{launchDialog}{legalDialog}
       <div className="max-w-md mx-auto px-4 py-12 text-center space-y-4">
         <h1 className="text-lg font-bold">Your seats need another look</h1>
         <p className="text-sm text-muted-foreground">{error}</p>
@@ -85,7 +87,7 @@ export default function ResumeSeatRequestPage() {
   }
 
   return (
-    <>{legalDialog}<div className="max-w-md mx-auto px-4 py-16 text-center space-y-4">
+    <>{launchDialog}{legalDialog}<div className="max-w-md mx-auto px-4 py-16 text-center space-y-4">
       <Loader2 size={34} className="mx-auto animate-spin text-primary" />
       <div>
         <h1 className="text-lg font-bold">Holding your selected seats</h1>

@@ -9,7 +9,7 @@ export default function TermsPage() {
   >
     <section>
       <h2>1. About these Terms</h2>
-      <p>These Terms form an electronic agreement between you and the operator of the Raahi service. “Raahi”, “we”, “us” and “our” refer to the legal person operating Raahi, whose final legal name, registered address and grievance details must be inserted in Section 25 before public launch.</p>
+      <p>These Terms govern use of the Raahi service during its controlled pilot. “Raahi”, “we”, “us” and “our” refer to the operator of the Raahi pilot. Public ride transactions are currently disabled except for authorized acceptance-testing accounts. Before public ride transactions are enabled, Raahi will publish the operator’s formal legal identity, principal business address and designated grievance contacts in these Terms.</p>
       <p>By accepting these Terms, creating or using an account, requesting a seat, creating or accepting an Outstation booking, or otherwise using a transactional feature, you agree to these Terms and the Privacy Policy. Drivers are also bound by the separate Driver Terms.</p>
     </section>
 
@@ -76,8 +76,8 @@ export default function TermsPage() {
 
     <section>
       <h2>8. Driver and vehicle verification</h2>
-      <p>Raahi uses verification controls to improve trust. Depending on the feature, these may include review of Driving Licence, vehicle Registration Certificate (RC), vehicle details and car photographs.</p>
-      <p>A “verified” status means that Raahi recorded the relevant material as verified under its then-current process. Verification does not guarantee future validity, driving skill, roadworthiness, legal compliance, personal conduct, identity beyond the checks performed, or a particular trip outcome. Raahi may re-review, suspend or revoke verification where documents expire, information changes, complaints arise or further checks are reasonably required.</p>
+      <p>Raahi uses verification controls to improve trust. Passenger-facing trust checks may include Driving Licence, vehicle Registration Certificate (RC), vehicle details and car photographs. Before paid ride operations are enabled, Raahi may separately require a verified commercial/permitted vehicle classification and current vehicle permit, fitness certificate, insurance and Pollution Under Control (PUC) records.</p>
+      <p>A “verified” status means that Raahi recorded the relevant material as verified under its then-current process. Raw Licence, RC, permit, fitness, insurance and PUC documents remain restricted rather than being exposed on Passenger trust cards. Verification does not guarantee future validity, driving skill, roadworthiness, legal compliance, personal conduct, identity beyond the checks performed, or a particular trip outcome. Raahi may re-review, suspend or revoke verification where documents expire, information changes, complaints arise or further checks are reasonably required.</p>
     </section>
 
     <section>
@@ -201,8 +201,8 @@ export default function TermsPage() {
 
     <section>
       <h2>27. Legal notices and grievance contact</h2>
-      <p><strong>Pre-launch legal details to complete:</strong> [LEGAL ENTITY / PROPRIETOR NAME], [REGISTERED OR PRINCIPAL BUSINESS ADDRESS], [GRIEVANCE OFFICER NAME/DESIGNATION], [GRIEVANCE EMAIL], [GRIEVANCE PHONE], and [FINAL JURISDICTION CITY/STATE].</p>
-      <p>Until those details are inserted, product/support messages can be sent through <Link href="/contact" className="font-bold text-primary underline">Contact Raahi</Link>. This placeholder must not remain in the public-launch legal document.</p>
+      <p>During the controlled pilot, support, privacy, safety and grievance messages can be submitted through <Link href="/contact" className="font-bold text-primary underline">Contact Raahi</Link>. Raahi will preserve relevant service records and respond through the contact details supplied with the request.</p>
+      <p>Before public ride transactions are enabled, this section will be updated with the operator’s formal legal identity, principal business address, designated grievance contact and any jurisdiction or regulatory disclosures required for the public service.</p>
     </section>
 
     <section>
