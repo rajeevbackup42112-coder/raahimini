@@ -19,6 +19,12 @@ expect(demo,'LIVE DATABASE WRITES · 0','demo must state the zero-write isolatio
 expect(demo,'PUBLIC TRANSACTIONS · OFF','demo must preserve the launch gate message');
 for(const persona of ['Rajeev1','Rajeev4','Naresh','Ajit'])expect(demo,persona,`demo persona missing: ${persona}`);
 for(const scenario of ['Driver verification','Shared Ride FIFO','Exact-seat race','Bokaro Outstation','Trip lifecycle','Local Offers','Regulatory launch gate'])expect(demo,scenario,`demo scenario missing: ${scenario}`);
+expect(demo,"if (step === 0) return",'Shared Ride Passenger state must not invent an active car before the Driver is available');
+expect(demo,'No car right now','Shared Ride pre-availability Passenger state missing');
+expect(demo,"persona.key === 'rajeev4' && accepted",'accepted Outstation quote must have a Driver-side confirmed state');
+expect(demo,'Contact details are available only after the Passenger accepts','Outstation privacy transition must be visible in the demo');
+expect(demo,'step<2?','activated Local Offers must become visible to a Passenger immediately');
+expect(demo,"persona.key === 'rajeev4' || persona.key === 'naresh'",'pilot badge must follow the selected pilot persona rather than a scenario step');
 expect(guard,"const isDemoPath = (path: string) => path === '/demo'",'role guard must explicitly exempt the synthetic demo route');
 expect(guard,'if (isDemoPath(pathname)) return;','authenticated roles must be able to view the demo without redirect');
 if(demo.includes('@supabase')||demo.includes('createClient(')||demo.includes('.rpc(')||demo.includes('.from('))throw new Error('demo experience must not directly call Supabase or production RPC/table APIs');
