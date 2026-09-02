@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - demo-ready-investor-polish
+      - demo-scenario-harness
   workflow_dispatch:
 
 jobs:
