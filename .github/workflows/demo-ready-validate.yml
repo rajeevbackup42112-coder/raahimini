@@ -11,6 +11,10 @@ jobs:
   validate:
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    env:
+      NEXT_PUBLIC_SUPABASE_URL: https://example.supabase.co
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ci-placeholder-key
+      RAAHI_DEMO_ENABLED: ${{ github.ref_name == 'demo-scenario-harness' && 'true' || 'false' }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -36,3 +40,22 @@ jobs:
 
       - name: Production build
         run: npm run build
+
+      - name: Demo route runtime smoke
+        if: github.ref_name == 'demo-scenario-harness'
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm run serve -- -p 4028 >/tmp/raahi-demo.log 2>&1 &
+          server_pid=$!
+          trap 'kill "$server_pid" 2>/dev/null || true' EXIT
+          for attempt in {1..30}; do
+            if curl -fsS http://127.0.0.1:4028/demo >/tmp/raahi-demo.html; then
+              break
+            fi
+            sleep 1
+          done
+          test -s /tmp/raahi-demo.html
+          grep -q 'RAAHI DEMO' /tmp/raahi-demo.html
+          grep -q 'LIVE DATABASE WRITES' /tmp/raahi-demo.html
+          grep -q 'Driver verification' /tmp/raahi-demo.html
