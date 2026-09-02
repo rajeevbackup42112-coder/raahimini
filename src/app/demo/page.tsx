@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { notFound } from 'next/navigation';
 import DemoExperience from './DemoExperience';
 
 export const metadata: Metadata = {
@@ -8,5 +9,6 @@ export const metadata: Metadata = {
 };
 
 export default function DemoPage() {
+  if (process.env.RAAHI_DEMO_ENABLED !== 'true') notFound();
   return <DemoExperience />;
 }

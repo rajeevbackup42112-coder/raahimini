@@ -12,7 +12,9 @@
 - Simulated verification approvals, quotes, seat races and GPS updates never create production records.
 - The public regulatory transaction switch remains untouched.
 - `/demo` is `noindex` and is not added to the public sitemap.
-- Normal Passenger/Driver/Admin role redirects are bypassed only for `/demo` so every synthetic persona can be displayed.
+- `/demo` fails closed unless the server environment explicitly sets `RAAHI_DEMO_ENABLED=true`.
+- `.env.example` keeps `RAAHI_DEMO_ENABLED=false` so an accidental production build does not expose the simulator.
+- Normal Passenger/Driver/Admin role redirects are bypassed only for `/demo` so every synthetic persona can be displayed when the demo is enabled.
 
 ## Initial personas
 
@@ -31,8 +33,12 @@
 6. Local Offers: empty state → Admin draft → activation → clearly marked Sponsored Passenger view.
 7. Regulatory launch gate: public OFF → non-pilot blocked → controlled pilot exercise → public remains OFF.
 
+## Validation
+
+The `demo-scenario-harness` branch is included in `Demo Ready Validate`, which runs dependency install, TypeScript, all contracts and a production build on every push.
+
 ## Deployment plan
 
-This branch must not replace `ride.myraahi.co.in`. After the branch passes CI, it should be reviewed on the Dipti machine using the normal production-build/headed-browser workflow. Only after visual acceptance should it be deployed to a dedicated demo hostname such as `ride-demo.myraahi.co.in`.
+This branch must not replace `ride.myraahi.co.in`. After CI passes, it should be reviewed on the Dipti machine using `RAAHI_DEMO_ENABLED=true` with the normal production-build/headed-browser workflow. Only after visual acceptance should it be deployed to a dedicated demo hostname such as `ride-demo.myraahi.co.in`, with the demo flag enabled only on that site.
 
 Raahi School Transport and its existing hostnames are out of scope and must not be changed.

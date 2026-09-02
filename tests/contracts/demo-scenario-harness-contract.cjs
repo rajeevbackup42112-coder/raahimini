@@ -4,7 +4,10 @@ function expect(s,f,m){if(!s.includes(f))throw new Error(m);}
 const page=read('src/app/demo/page.tsx');
 const demo=read('src/app/demo/DemoExperience.tsx');
 const guard=read('src/components/RoleRouteGuard.tsx');
+const env=read('.env.example');
 expect(page,"robots: { index: false, follow: false",'demo page must remain noindex');
+expect(page,"process.env.RAAHI_DEMO_ENABLED !== 'true'",'demo route must fail closed unless explicitly enabled');
+expect(env,'RAAHI_DEMO_ENABLED=false','demo must be disabled by default in environment guidance');
 expect(demo,'RAAHI DEMO · SIMULATED DATA','demo must carry a permanent simulated-data banner');
 expect(demo,'LIVE DATABASE WRITES · 0','demo must state the zero-write isolation contract');
 expect(demo,'PUBLIC TRANSACTIONS · OFF','demo must preserve the launch gate message');
