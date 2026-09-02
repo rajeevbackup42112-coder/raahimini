@@ -8,13 +8,15 @@
 
 - Demo scenario controls change browser React state only.
 - The demo experience must not import Supabase or call production table/RPC write APIs.
+- When demo mode is enabled, the root layout does not initialize the normal Raahi AuthProvider.
+- Demo-mode middleware returns `/demo` without refreshing a Supabase session and redirects other application routes back to `/demo`.
 - Demo personas do not use Google sign-in.
 - Simulated verification approvals, quotes, seat races and GPS updates never create production records.
 - The public regulatory transaction switch remains untouched.
 - `/demo` is `noindex` and is not added to the public sitemap.
 - `/demo` fails closed unless the server environment explicitly sets `RAAHI_DEMO_ENABLED=true`.
 - `.env.example` keeps `RAAHI_DEMO_ENABLED=false` so an accidental production build does not expose the simulator.
-- Normal Passenger/Driver/Admin role redirects are bypassed only for `/demo` so every synthetic persona can be displayed when the demo is enabled.
+- Normal Passenger/Driver/Admin role redirects remain unchanged when demo mode is disabled.
 
 ## Initial personas
 
@@ -35,7 +37,7 @@
 
 ## Validation
 
-The `demo-scenario-harness` branch is included in `Demo Ready Validate`, which runs dependency install, TypeScript, all contracts and a production build on every push.
+The `demo-scenario-harness` branch is included in `Demo Ready Validate`, which runs dependency install, TypeScript, all contracts, a production build with demo mode enabled on this branch, then boots the production server and verifies `/demo` renders the simulator.
 
 ## Deployment plan
 

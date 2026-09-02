@@ -4,10 +4,16 @@ function expect(s,f,m){if(!s.includes(f))throw new Error(m);}
 const page=read('src/app/demo/page.tsx');
 const demo=read('src/app/demo/DemoExperience.tsx');
 const guard=read('src/components/RoleRouteGuard.tsx');
+const layout=read('src/app/layout.tsx');
+const middleware=read('src/middleware.ts');
 const env=read('.env.example');
 expect(page,"robots: { index: false, follow: false",'demo page must remain noindex');
 expect(page,"process.env.RAAHI_DEMO_ENABLED !== 'true'",'demo route must fail closed unless explicitly enabled');
 expect(env,'RAAHI_DEMO_ENABLED=false','demo must be disabled by default in environment guidance');
+expect(layout,"const demoSite = process.env.RAAHI_DEMO_ENABLED === 'true'",'root layout must recognize dedicated demo mode');
+expect(layout,'demoSite ? children : <AuthProvider>','demo mode must not initialize the normal live auth provider');
+expect(middleware,"if (process.env.RAAHI_DEMO_ENABLED === 'true')",'middleware must recognize dedicated demo mode before Supabase auth refresh');
+expect(middleware,"demoUrl.pathname = '/demo'",'dedicated demo mode must redirect non-demo application routes back to /demo');
 expect(demo,'RAAHI DEMO · SIMULATED DATA','demo must carry a permanent simulated-data banner');
 expect(demo,'LIVE DATABASE WRITES · 0','demo must state the zero-write isolation contract');
 expect(demo,'PUBLIC TRANSACTIONS · OFF','demo must preserve the launch gate message');

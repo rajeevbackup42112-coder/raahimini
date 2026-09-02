@@ -2,6 +2,17 @@ import { createServerClient, type SetAllCookies } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 
 export async function middleware(request: NextRequest) {
+  if (process.env.RAAHI_DEMO_ENABLED === 'true') {
+    const pathname = request.nextUrl.pathname;
+    if (pathname === '/demo' || pathname.startsWith('/demo/') || pathname === '/robots.txt' || pathname === '/manifest.json') {
+      return NextResponse.next();
+    }
+    const demoUrl = request.nextUrl.clone();
+    demoUrl.pathname = '/demo';
+    demoUrl.search = '';
+    return NextResponse.redirect(demoUrl);
+  }
+
   const supabaseResponse = NextResponse.next({ request });
 
   const supabase = createServerClient(

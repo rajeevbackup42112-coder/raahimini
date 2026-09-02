@@ -9,6 +9,7 @@ import RoleRouteGuard from '@/components/RoleRouteGuard';
 const dmSans = DM_Sans({ subsets: ['latin'], weight: ['400', '500', '600', '700'], variable: '--font-dm-sans', display: 'swap' });
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://ride.myraahi.co.in';
 const publicDiscovery = process.env.NEXT_PUBLIC_PUBLIC_DISCOVERY_ENABLED === 'true';
+const demoSite = process.env.RAAHI_DEMO_ENABLED === 'true';
 const description = 'Explore shared local routes and outstation travel with verified local Drivers. Raahi is live and onboarding verified Driver supply area by area.';
 
 export const viewport: Viewport = { width: 'device-width', initialScale: 1, themeColor: '#166534' };
@@ -30,5 +31,5 @@ export const metadata: Metadata = {
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  return <html lang="en" className={dmSans.variable}><body className={dmSans.className}><AuthProvider><RoleRouteGuard />{children}</AuthProvider><Toaster position="bottom-center" toastOptions={{ style: { borderRadius: '12px', fontFamily: 'var(--font-dm-sans)', fontSize: '14px' } }} /></body></html>;
+  return <html lang="en" className={dmSans.variable}><body className={dmSans.className}>{demoSite ? children : <AuthProvider><RoleRouteGuard />{children}</AuthProvider>}<Toaster position="bottom-center" toastOptions={{ style: { borderRadius: '12px', fontFamily: 'var(--font-dm-sans)', fontSize: '14px' } }} /></body></html>;
 }
