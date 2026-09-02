@@ -6,6 +6,7 @@ const admin=read('src/app/admin-panel/verifications/DriverLaunchComplianceReview
 const outstation=read('src/app/outstation/OutstationContent.tsx');
 const driverOutstation=read('src/app/driver-outstation/DriverOutstationContent.tsx');
 const driverRoutes=read('src/app/driver-route-selection/components/DriverRouteSelectionContent.tsx');
+const routeCard=read('src/app/driver-route-selection/components/DriverRouteCard.tsx');
 const must=(ok,msg)=>{if(!ok)throw new Error(msg)};
 for(const t of ['VEHICLE_PERMIT','VEHICLE_FITNESS','VEHICLE_INSURANCE','VEHICLE_PUC'])must(sql.includes(`'${t}'`),`${t} missing`);
 must(sql.includes("vehicle_classification='COMMERCIAL_PERMITTED'")&&sql.includes("vehicle_classification_status='VERIFIED'"),'commercial/permitted classification must be verified');
@@ -13,8 +14,11 @@ for(const s of ['driving_licence_status','vehicle_rc_status','car_photos_status'
 for(const trigger of ['driver_compliance_queue','driver_compliance_outstation_quotes','driver_compliance_outstation_accept'])must(sql.includes(trigger),`${trigger} missing`);
 must(sql.includes('DRIVER_LAUNCH_COMPLIANCE_REQUIRED'),'DB compliance gate must fail closed');
 must(driver.includes('private/non-transport vehicle can be recorded')&&driver.includes('Passengers do not receive these raw scans'),'Driver compliance/privacy copy missing');
+must(driver.includes('Private vehicle recorded · paid ride operations stay locked'),'Private vehicles must not be invited through commercial compliance uploads');
 must(admin.includes("createSignedUrl(doc.storage_path,120)"),'Admin compliance files must use short-lived signed URLs');
 must(admin.includes('Do not expose raw permit, fitness, insurance or PUC files'),'Admin privacy boundary missing');
 must(driverOutstation.includes('getMyDriverLaunchCompliance')&&driverRoutes.includes('getMyDriverLaunchCompliance'),'Driver operational entry must check compliance');
+must(driverOutstation.includes('launchCompliant&&lead.verification_complete'),'Outstation quote CTA must reflect full launch compliance');
+must(routeCard.includes("!launchCompliant ? 'Complete verification'")&&driverRoutes.includes('launchCompliant={launchCompliant}'),'Shared Ride CTA must reflect full launch compliance');
 must(outstation.includes('required operating documents')&&outstation.includes('Sensitive document scans stay private'),'Passenger trust copy must disclose operating-document verification and privacy');
 console.log('Driver launch compliance Demo Ready contract: PASS');

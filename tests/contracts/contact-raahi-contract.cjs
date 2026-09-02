@@ -21,7 +21,7 @@ expect(migration,'if not public.is_admin()','Admin functions must be server-guar
 expect(contact,".rpc('submit_contact_message'",'Contact form must use canonical RPC');
 expect(contact,'Promote my business','promotion enquiry choice missing');
 expect(contact,'Driver / partner enquiry','driver/partner enquiry choice missing');
-expect(contact,'Raahi stays free for passengers and drivers.','free-service sustainability message missing');
+expect(contact,'no platform fee for passengers or Drivers at launch','launch pricing message missing');
 if(/\.from\(['\"]contact_messages['\"]\).*\.(insert|update|delete)/s.test(contact)) throw new Error('Contact UI must not mutate contact_messages directly');
 
 expect(login,'Contact Raahi · Suggest an idea · Promote your business','pre-login contact link missing');

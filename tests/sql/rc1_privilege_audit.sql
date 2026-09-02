@@ -2,14 +2,19 @@
 -- Expected: both result sets are empty.
 -- Read-only.
 
--- 1) Anonymous SECURITY DEFINER functions must be limited to deliberate public reads.
+-- 1) Anonymous SECURITY DEFINER functions must be limited to deliberate public surfaces.
 with allowed_anon(name, args) as (
   values
     ('get_active_locations'::text, ''::text),
     ('get_routes_for_location', 'p_location_id uuid'),
     ('get_public_active_car', 'p_route_id uuid'),
     ('get_route_demand_summary', 'p_route_id uuid'),
-    ('get_shared_trip', 'p_token text')
+    ('get_shared_trip', 'p_token text'),
+    ('get_active_local_promotions', 'p_limit integer'),
+    ('get_outstation_origins', ''),
+    ('get_outstation_service_areas', ''),
+    ('get_raahi_transaction_access', ''),
+    ('submit_contact_message', 'p_category text, p_sender_name text, p_contact text, p_message text')
 ), anon_executable as (
   select p.proname as name,
          pg_get_function_identity_arguments(p.oid) as args

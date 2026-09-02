@@ -102,7 +102,6 @@ export default function LocationContent() {
 
   const selectedLoc = locations.find((l) => l.id === selectedLocationId);
   const goingFrom = routes.filter((r) => selectedLoc && r.from_location_name === selectedLoc.name);
-  const comingTo = routes.filter((r) => selectedLoc && r.to_location_name === selectedLoc.name);
   const recentFrom = recentTrip?.stops?.[0]?.name;
   const recentTo = recentTrip?.stops?.[(recentTrip?.stops?.length ?? 1) - 1]?.name;
 
@@ -196,8 +195,7 @@ export default function LocationContent() {
           {loadingRoutes ? <div className="lg:col-span-2"><RouteListSkeleton /></div> : (
             <>
               {goingFrom.length > 0 && <RouteGroup title={`From ${selectedLoc.name}`} routes={goingFrom} />}
-              {comingTo.length > 0 && <RouteGroup title={`To ${selectedLoc.name}`} routes={comingTo} />}
-              {routes.length === 0 && <div className="text-center py-6 text-muted-foreground text-sm"><Car size={32} className="mx-auto mb-2 opacity-30" /><p>No routes available for this location yet</p></div>}
+              {goingFrom.length === 0 && <div className="text-center py-6 text-muted-foreground text-sm"><Car size={32} className="mx-auto mb-2 opacity-30" /><p>No Shared Ride routes depart from this location yet.</p></div>}
             </>
           )}
         </div>

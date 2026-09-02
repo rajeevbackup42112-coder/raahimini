@@ -10,16 +10,19 @@ interface Props {
   alertsAvailable: boolean;
   subscribed: boolean;
   preferenceBusy: boolean;
+  launchCompliant: boolean;
   onJoin: () => void;
   onToggleSubscription: () => void;
   demand?: RouteDemandSummary;
 }
 
-export default function DriverRouteCard({ route, joining, alertsAvailable, subscribed, preferenceBusy, onJoin, onToggleSubscription, demand }: Props) {
-  const nextAction = route.has_active_car ? 'Join queue' : 'Go available now';
-  const queueText = route.has_active_car
-    ? `${route.waiting_drivers} driver${route.waiting_drivers === 1 ? '' : 's'} waiting`
-    : 'No active car — you can become current';
+export default function DriverRouteCard({ route, joining, alertsAvailable, subscribed, preferenceBusy, launchCompliant, onJoin, onToggleSubscription, demand }: Props) {
+  const nextAction = !launchCompliant ? 'Complete verification' : route.has_active_car ? 'Join queue' : 'Go available now';
+  const queueText = !launchCompliant
+    ? 'Verification required before Shared Ride FIFO'
+    : route.has_active_car
+      ? `${route.waiting_drivers} driver${route.waiting_drivers === 1 ? '' : 's'} waiting`
+      : 'No active car — you can become current';
   const interested = demand?.now_count ?? 0;
   const planned = demand?.scheduled_count ?? 0;
   const urgency = demand?.min_wait_tolerance_minutes ?? null;
@@ -78,9 +81,9 @@ export default function DriverRouteCard({ route, joining, alertsAvailable, subsc
         </div>
       </div>
 
-      <button disabled={joining} onClick={onJoin} className={`flex w-full items-center justify-between gap-3 border-t px-4 py-3.5 text-left transition active:scale-[0.995] disabled:opacity-60 sm:px-5 ${route.has_active_car ? 'border-border bg-secondary/60 text-primary' : 'border-primary bg-primary text-white'}`}>
+      <button disabled={joining} onClick={onJoin} className={`flex w-full items-center justify-between gap-3 border-t px-4 py-3.5 text-left transition active:scale-[0.995] disabled:opacity-60 sm:px-5 ${!launchCompliant ? 'border-amber-200 bg-amber-50 text-amber-900' : route.has_active_car ? 'border-border bg-secondary/60 text-primary' : 'border-primary bg-primary text-white'}`}>
         <div>
-          <p className={`text-[10px] font-semibold uppercase tracking-wide ${route.has_active_car ? 'text-muted-foreground' : 'text-white/65'}`}>Next action</p>
+          <p className={`text-[10px] font-semibold uppercase tracking-wide ${!launchCompliant ? 'text-amber-700' : route.has_active_car ? 'text-muted-foreground' : 'text-white/65'}`}>Next action</p>
           <p className="mt-0.5 text-sm font-extrabold">{nextAction}</p>
         </div>
         {joining ? <Loader2 size={18} className="animate-spin" /> : <ArrowRight size={18} />}

@@ -60,8 +60,8 @@ export default function ContactRaahiContent() {
         <h1 className="mt-3 text-3xl font-extrabold tracking-tight text-white">Ideas and local businesses help build Raahi.</h1>
         <p className="mt-4 text-sm leading-relaxed text-white/75">Send a suggestion, ask a question, enquire about driving with Raahi, or tell us about a local business promotion.</p>
         <div className="mt-8 rounded-3xl border border-white/10 bg-white/10 p-5">
-          <p className="text-sm font-bold text-white">Raahi stays free for passengers and drivers.</p>
-          <p className="mt-2 text-xs leading-relaxed text-white/70">We do not charge a platform fee or driver commission. Clearly marked local promotions are one way we plan to support the service.</p>
+          <p className="text-sm font-bold text-white">Raahi has no platform fee for passengers or Drivers at launch.</p>
+          <p className="mt-2 text-xs leading-relaxed text-white/70">At launch, Raahi does not charge passengers a platform fee or take a Driver commission. Clearly marked local promotions are one way we plan to support the service.</p>
         </div>
       </section>
 

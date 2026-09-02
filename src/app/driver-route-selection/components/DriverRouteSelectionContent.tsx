@@ -41,6 +41,7 @@ export default function DriverRouteSelectionContent() {
   const [joining, setJoining] = useState<string | null>(null);
   const [preferenceBusy, setPreferenceBusy] = useState<string | null>(null);
   const [leaving, setLeaving] = useState(false);
+  const [launchCompliant, setLaunchCompliant] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -74,8 +75,11 @@ export default function DriverRouteSelectionContent() {
   }, []);
 
   useEffect(() => {
-    if (!authLoading && user && (profile?.role === 'driver' || profile?.role === 'admin')) load();
-    else if (!authLoading) setLoading(false);
+    if (!authLoading && user && (profile?.role === 'driver' || profile?.role === 'admin')) {
+      if (profile?.role === 'driver') void getMyDriverLaunchCompliance().then(c => setLaunchCompliant(Boolean(c.launch_compliant))).catch(() => setLaunchCompliant(false));
+      else setLaunchCompliant(true);
+      void load();
+    } else if (!authLoading) setLoading(false);
   }, [authLoading, user, profile?.role, load]);
 
   useEffect(() => {
@@ -250,6 +254,7 @@ export default function DriverRouteSelectionContent() {
                 alertsAvailable={profile?.role === 'driver'}
                 subscribed={preferences.some(pref => pref.route_id === route.route_id)}
                 preferenceBusy={preferenceBusy === route.route_id}
+                launchCompliant={launchCompliant}
                 onToggleSubscription={() => toggleRouteAlert(route)}
                 onJoin={() => join(route)}
               />

@@ -67,7 +67,7 @@ export default function AdminRouteHealthOverview() {
             <div>
               <p className="text-xs font-bold uppercase tracking-wide text-primary">Operations now</p>
               <h1 className="mt-1 text-xl font-extrabold text-foreground">
-                {loading ? 'Checking Raahi…' : operatingNormally ? 'Raahi is operating normally' : `${exceptions.length} route${exceptions.length === 1 ? '' : 's'} need attention`}
+                {loading ? 'Checking route health…' : operatingNormally ? 'Route operations are healthy' : `${exceptions.length} route${exceptions.length === 1 ? '' : 's'} need attention`}
               </h1>
               <p className="mt-1 text-xs text-muted-foreground">Live route state, supply, demand and the next driver — without changing FIFO.</p>
             </div>

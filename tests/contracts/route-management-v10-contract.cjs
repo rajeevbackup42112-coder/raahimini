@@ -33,5 +33,7 @@ expect(ui, 'Publish', 'Routes UI must expose explicit publish');
 expect(ui, 'Archive', 'Routes UI must expose archive');
 expect(api, "rpc('admin_publish_route_draft'", 'UI must publish through the guarded RPC');
 expect(passenger, 'recentTrip?.repeat_route_id', 'Ride again must use the current route version');
+if (passenger.includes('comingTo.length > 0')) throw new Error('Passenger Home must not surface routes arriving at the selected current location');
+expect(passenger, 'No Shared Ride routes depart from this location yet.', 'Passenger Home must explain a selected location with no departing route');
 expect(raahiApi, ".eq('is_current',true).eq('version_status','PUBLISHED')", 'legacy Admin route reads must hide drafts/history');
 console.log('Guarded Route Management Version 10 contract: PASS');

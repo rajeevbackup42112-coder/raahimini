@@ -1,6 +1,7 @@
 const fs=require('node:fs');
 const read=p=>fs.readFileSync(p,'utf8');
 const migration=read('supabase/migrations/20260831120442_demo_ready_legal_acceptance_v1.sql');
+const privilegeHardening=read('supabase/migrations/20260902193000_demo_ready_legal_rpc_privilege_hardening.sql');
 const gate=read('src/components/legal/LegalAcceptanceGate.tsx');
 const seat=read('src/app/request-seat-screen/components/RequestSeatContent.tsx');
 const resume=read('src/app/resume-seat-request/page.tsx');
@@ -13,6 +14,9 @@ must(migration.includes('create table if not exists public.user_legal_acceptance
 must(migration.includes("'2026-08-31-v1'"),'legal document version missing');
 must(migration.includes('get_my_legal_acceptance_state'),'legal acceptance state RPC missing');
 must(migration.includes('accept_my_legal_documents'),'legal acceptance mutation RPC missing');
+must(privilegeHardening.includes('revoke all on function public.get_my_legal_acceptance_state() from public, anon, service_role'),'legal state RPC must not be anonymously executable');
+must(privilegeHardening.includes('revoke all on function public.accept_my_legal_documents(boolean, boolean) from public, anon, service_role'),'legal acceptance mutation must not be anonymously executable');
+must(privilegeHardening.includes('grant execute on function public.accept_my_legal_documents(boolean, boolean) to authenticated'),'authenticated legal acceptance execute grant missing');
 must(migration.includes('LEGAL_ACCEPTANCE_REQUIRED:PASSENGER'),'Passenger database enforcement missing');
 must(migration.includes('LEGAL_ACCEPTANCE_REQUIRED:DRIVER'),'Driver database enforcement missing');
 for(const table of ['seat_requests','outstation_requests','driver_queue','outstation_quotes']) must(migration.includes(`on public.${table}`),`legal trigger missing for ${table}`);

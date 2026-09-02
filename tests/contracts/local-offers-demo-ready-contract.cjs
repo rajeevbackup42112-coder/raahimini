@@ -21,6 +21,8 @@ if(/\.from\(['\"]local_promotions['\"]\).*\.(insert|update|delete)/s.test(api+ad
 expect(card,'Sponsored · Local offer','home sponsorship label missing');
 expect(offers,'Sponsored · Local promotion','offers page sponsorship label missing');
 expect(offers,'does not build advertising profiles or track which offer you open','transparency copy missing');
+expect(offers,'no platform fee for passengers or Drivers at launch','Local Offers must describe launch pricing without a forever-free promise');
+if(offers.includes('help keep Raahi free'))throw new Error('Local Offers must not promise permanent free service');
 expect(admin,'Amount collected ₹','Admin amount-collected field missing');
 expect(dashboard,"href: '/admin-panel/promotions'",'Admin promotion route link missing');
 expect(home,'<SponsoredLocalOffer />','Passenger Home sponsored placement missing');

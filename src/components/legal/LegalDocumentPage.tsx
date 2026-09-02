@@ -17,7 +17,7 @@ export default function LegalDocumentPage({ title, version, intro, children }: {
         <div className="mt-7 space-y-7 text-sm leading-7 text-foreground [&_h2]:text-lg [&_h2]:font-extrabold [&_h2]:tracking-tight [&_p]:text-muted-foreground [&_ul]:list-disc [&_ul]:space-y-1 [&_ul]:pl-5 [&_li]:text-muted-foreground">
           {children}
         </div>
-        <div className="mt-8 border-t border-border pt-5 text-xs text-muted-foreground">Questions or legal notices can be sent through <Link href="/contact" className="font-bold text-primary underline">Contact Raahi</Link>. These launch documents should be reviewed by qualified Indian counsel as the service expands.</div>
+        <div className="mt-8 border-t border-border pt-5 text-xs text-muted-foreground">Questions or legal notices can be sent through <Link href="/contact" className="font-bold text-primary underline">Contact Raahi</Link>. Raahi may update these documents as the service, operating areas and applicable requirements evolve.</div>
       </div>
     </main>
   </div>;

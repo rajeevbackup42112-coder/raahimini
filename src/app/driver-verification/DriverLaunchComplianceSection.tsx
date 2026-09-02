@@ -45,7 +45,7 @@ export default function DriverLaunchComplianceSection(){
   const classification=state.vehicle_classification||'UNDECLARED';
   return <section className="space-y-4">
     <div className={`rounded-2xl border p-4 ${state.launch_compliant?'border-green-200 bg-green-50':'border-amber-200 bg-amber-50'}`}>
-      <div className="flex items-start gap-3">{state.launch_compliant?<CheckCircle2 size={20} className="mt-0.5 shrink-0 text-green-700"/>:<ShieldAlert size={20} className="mt-0.5 shrink-0 text-amber-700"/>}<div><p className="text-sm font-extrabold">{state.launch_compliant?'Launch compliance complete':'Launch compliance required before paid ride operations'}</p><p className="mt-1 text-xs leading-relaxed text-muted-foreground">Raahi is keeping public transactions in a controlled pilot while regulatory clearance is completed. Shared Ride FIFO and Outstation quoting require these records to be verified.</p></div></div>
+      <div className="flex items-start gap-3">{state.launch_compliant?<CheckCircle2 size={20} className="mt-0.5 shrink-0 text-green-700"/>:<ShieldAlert size={20} className="mt-0.5 shrink-0 text-amber-700"/>}<div><p className="text-sm font-extrabold">{state.launch_compliant?'Launch compliance complete':'Launch compliance required before paid ride operations'}</p><p className="mt-1 text-xs leading-relaxed text-muted-foreground">Shared Ride FIFO and Outstation quoting stay locked until the required operating records are verified.</p></div></div>
     </div>
     <div className="feature-card p-4 sm:p-5">
       <div className="flex items-start justify-between gap-3"><div><p className="section-label">Vehicle classification</p><h2 className="mt-1 text-base font-extrabold">How is this vehicle registered for passenger service?</h2><p className="mt-1 text-xs leading-relaxed text-muted-foreground">Choose truthfully. A private/non-transport vehicle can be recorded, but Raahi will not enable paid ride operations for it unless the applicable transport rules permit that model.</p></div><ShieldCheck size={19} className="shrink-0 text-primary"/></div>
@@ -57,10 +57,17 @@ export default function DriverLaunchComplianceSection(){
       <div className="mt-3 flex items-center gap-2"><span className={`rounded-full px-2.5 py-1 text-[10px] font-bold ${statusClass[state.vehicle_classification_status||'MISSING']}`}>Classification: {statusCopy[state.vehicle_classification_status||'MISSING']}</span>{state.vehicle_classification_notes&&<span className="text-xs text-muted-foreground">Admin note: {state.vehicle_classification_notes}</span>}</div>
     </div>
 
-    <div className="grid gap-4 lg:grid-cols-2">
-      {complianceTypes.map(type=><ComplianceCard key={type} type={type} status={statusFor(state,type)} notes={notesFor(state,type)} docs={state.documents.filter(d=>d.document_type===type)} busy={busy} onChoose={choose(type)} onRetire={retire}/>) }
-    </div>
-    <p className="rounded-2xl bg-muted px-4 py-3 text-[11px] leading-relaxed text-muted-foreground">Permit, fitness, insurance and PUC files stay private to you and Raahi Admin except where disclosure is required by law or a competent authority. Passengers do not receive these raw scans.</p>
+    {classification==='PRIVATE_NON_TRANSPORT' ? (
+      <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+        <p className="font-extrabold">Private vehicle recorded · paid ride operations stay locked</p>
+        <p className="mt-1 text-xs leading-relaxed">Raahi will keep this vehicle on your profile, but it is not eligible for Shared Ride FIFO or Outstation quoting under the current launch rules. You do not need to upload commercial permit or fitness documents unless the vehicle classification changes.</p>
+      </div>
+    ) : (<>
+      <div className="grid gap-4 lg:grid-cols-2">
+        {complianceTypes.map(type=><ComplianceCard key={type} type={type} status={statusFor(state,type)} notes={notesFor(state,type)} docs={state.documents.filter(d=>d.document_type===type)} busy={busy} onChoose={choose(type)} onRetire={retire}/>) }
+      </div>
+      <p className="rounded-2xl bg-muted px-4 py-3 text-[11px] leading-relaxed text-muted-foreground">Permit, fitness, insurance and PUC files stay private to you and Raahi Admin except where disclosure is required by law or a competent authority. Passengers do not receive these raw scans.</p>
+    </>)}
   </section>;
 }
 

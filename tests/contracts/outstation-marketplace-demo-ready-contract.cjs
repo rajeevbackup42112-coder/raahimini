@@ -52,6 +52,6 @@ expect(driver,'never change your fixed-route FIFO position','Driver FIFO separat
 expect(driver,'This does not add you to Shared Ride FIFO.','Driver area preference separation copy missing');
 expect(passenger,'Exact pickup','Passenger exact pickup field missing');
 expect(admin,'Service areas','Admin Outstation service-area controls missing');
-expect(driver,'Complete Driver verification before quoting.','Driver verification gate copy missing');
+expect(driver,'Complete Driver verification and operating compliance before quoting.','Driver verification + operating compliance gate copy missing');
 expect(admin,'Fixed-route FIFO remains a separate transport engine.','Admin separation boundary copy missing');
 console.log('Outstation marketplace Demo Ready contract: PASS');
