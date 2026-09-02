@@ -7,6 +7,7 @@ import { useAuth } from '@/contexts/AuthContext';
 const isAuthPath = (path: string) => path.startsWith('/auth/');
 const isProfilePath = (path: string) => path === '/profile';
 const isAdminPath = (path: string) => path.startsWith('/admin-panel') || path === '/admin-driver-onboarding';
+const isDemoPath = (path: string) => path === '/demo' || path.startsWith('/demo/');
 
 export default function RoleRouteGuard() {
   const pathname = usePathname();
@@ -14,6 +15,7 @@ export default function RoleRouteGuard() {
   const { user, profile, loading } = useAuth();
 
   useEffect(() => {
+    if (isDemoPath(pathname)) return;
     if (loading || !user || !profile) return;
     if (isAuthPath(pathname) || isProfilePath(pathname)) return;
 
