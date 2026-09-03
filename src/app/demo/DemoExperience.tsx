@@ -54,8 +54,8 @@ const SCENARIOS: Scenario[] = [
   {
     key: 'driver-verification',
     title: 'Driver verification',
-    subtitle: 'Missing → pending → rejected → approved → unlocked',
-    accent: 'Verification',
+    subtitle: 'Verified documents unlock marketplace participation',
+    accent: 'Trust',
     steps: [
       { title: 'Documents missing', detail: 'Driver cannot join Shared Ride FIFO or quote for Outstation.', persona: 'rajeev4' },
       { title: 'Synthetic upload submitted', detail: 'DL, RC, car photos and operating documents are pending Admin review.', persona: 'rajeev4' },
@@ -67,8 +67,8 @@ const SCENARIOS: Scenario[] = [
   {
     key: 'shared-fifo',
     title: 'Shared Ride FIFO',
-    subtitle: 'Two Drivers, route preference and queue promotion',
-    accent: 'Shared Ride',
+    subtitle: 'Fair Driver rotation builds dependable corridor supply',
+    accent: 'Densify',
     steps: [
       { title: 'Route selected', detail: 'Rajeev4 chooses Dhanbad → Gomoh without affecting Outstation preferences.', persona: 'rajeev4' },
       { title: 'Rajeev4 goes active', detail: 'Rajeev4 becomes ACTIVE_COLLECTING because the route has no active Driver.', persona: 'rajeev4' },
@@ -80,8 +80,8 @@ const SCENARIOS: Scenario[] = [
   {
     key: 'seat-race',
     title: 'Exact-seat race',
-    subtitle: 'Competing Passenger requests for the final seats',
-    accent: 'Concurrency',
+    subtitle: 'Concurrent bookings never exceed real seat capacity',
+    accent: 'Reliability',
     steps: [
       { title: 'Four seats available', detail: 'Rajeev4 is collecting with four available Passenger seats.', persona: 'passenger' },
       { title: 'Three seats held', detail: 'Passenger A requests 3 seats; only 1 seat remains available.', persona: 'passenger' },
@@ -93,8 +93,8 @@ const SCENARIOS: Scenario[] = [
   {
     key: 'outstation',
     title: 'Bokaro Outstation',
-    subtitle: 'Area routing, ignore, quote, compare and accept',
-    accent: 'Outstation',
+    subtitle: 'Area routing, Driver quotes and Passenger choice',
+    accent: 'Acquire',
     steps: [
       { title: 'Passenger requests Bokaro → Ranchi', detail: 'The request is routed by Bokaro Outstation Area, not Shared Ride route preference.', persona: 'passenger' },
       { title: 'Subscribed Drivers receive the lead', detail: 'Rajeev4 and Naresh see the lead because both are subscribed to Bokaro.', persona: 'rajeev4' },
@@ -106,8 +106,8 @@ const SCENARIOS: Scenario[] = [
   {
     key: 'trip-lifecycle',
     title: 'Trip lifecycle',
-    subtitle: 'Accepted booking → GPS → in progress → complete',
-    accent: 'Trip',
+    subtitle: 'Accepted booking → GPS → trip → completion',
+    accent: 'Operations',
     steps: [
       { title: 'Booking ready', detail: 'The confirmed Passenger and Driver see the accepted booking state.', persona: 'rajeev4' },
       { title: 'GPS becomes current', detail: 'A simulated fresh location update appears with accuracy and timestamp.', persona: 'rajeev4' },
@@ -119,8 +119,8 @@ const SCENARIOS: Scenario[] = [
   {
     key: 'local-offers',
     title: 'Local Offers',
-    subtitle: 'Empty state → draft → active sponsored offer',
-    accent: 'Economic engine',
+    subtitle: 'Local commerce supports the network without ride commission',
+    accent: 'Sustain',
     steps: [
       { title: 'No advertiser yet', detail: 'Passenger sees a clean empty state with no fake promotion.', persona: 'passenger' },
       { title: 'Ajit creates a draft', detail: 'The promotion is Admin-only and not visible to Passengers yet.', persona: 'ajit' },
@@ -131,8 +131,8 @@ const SCENARIOS: Scenario[] = [
   {
     key: 'regulatory-gate',
     title: 'Regulatory launch gate',
-    subtitle: 'Public OFF, controlled pilot still testable',
-    accent: 'Safety',
+    subtitle: 'Launch controls stay fail-closed outside the pilot',
+    accent: 'Governance',
     steps: [
       { title: 'Public transactions OFF', detail: 'Browsing and Driver onboarding remain available while paid public operations stay locked.', persona: 'passenger' },
       { title: 'Non-pilot transaction blocked', detail: 'A public user cannot create a protected paid operation.', persona: 'passenger' },
@@ -141,6 +141,9 @@ const SCENARIOS: Scenario[] = [
     ],
   },
 ];
+
+const SCENARIO_ORDER: ScenarioKey[] = ['outstation', 'shared-fifo', 'driver-verification', 'local-offers', 'seat-race', 'trip-lifecycle', 'regulatory-gate'];
+const ORDERED_SCENARIOS = SCENARIO_ORDER.map(key => SCENARIOS.find(item => item.key === key)!).filter(Boolean);
 
 function statusClasses(status: 'good' | 'warn' | 'bad' | 'quiet') {
   if (status === 'good') return 'bg-emerald-50 text-emerald-700 border-emerald-200';
@@ -249,7 +252,7 @@ function RegulatorySurface({ step, persona }: { step: number; persona: Persona }
 }
 
 function RestrictedSurface({ title }: { title: string }) {
-  return <div className="flex min-h-[420px] flex-col items-center justify-center p-8 text-center"><LockKeyhole size={30} className="text-muted-foreground"/><p className="mt-3 text-sm font-extrabold">{title}</p><p className="mt-2 max-w-sm text-xs leading-relaxed text-muted-foreground">Switch persona in the Scenario Console to see the relevant simulated surface.</p></div>;
+  return <div className="flex min-h-[420px] flex-col items-center justify-center p-8 text-center"><LockKeyhole size={30} className="text-muted-foreground"/><p className="mt-3 text-sm font-extrabold">{title}</p><p className="mt-2 max-w-sm text-xs leading-relaxed text-muted-foreground">Switch persona in the Demo controls to see the relevant simulated surface.</p></div>;
 }
 
 function DemoSurface({ scenario, step, persona }: { scenario: Scenario; step: number; persona: Persona }) {
@@ -265,9 +268,9 @@ function DemoSurface({ scenario, step, persona }: { scenario: Scenario; step: nu
 }
 
 export default function DemoExperience() {
-  const [scenarioKey, setScenarioKey] = useState<ScenarioKey>('driver-verification');
+  const [scenarioKey, setScenarioKey] = useState<ScenarioKey>('outstation');
   const [step, setStep] = useState(0);
-  const [personaKey, setPersonaKey] = useState<PersonaKey>('rajeev4');
+  const [personaKey, setPersonaKey] = useState<PersonaKey>('passenger');
   const scenario = useMemo(() => SCENARIOS.find(item => item.key === scenarioKey) ?? SCENARIOS[0], [scenarioKey]);
   const persona = useMemo(() => PERSONAS.find(item => item.key === personaKey) ?? PERSONAS[0], [personaKey]);
   const activeStep = scenario.steps[Math.min(step, scenario.steps.length - 1)];
@@ -288,17 +291,17 @@ export default function DemoExperience() {
   };
 
   return <main className="min-h-screen bg-[#F6F4EE] text-foreground">
-    <div className="border-b border-amber-200 bg-amber-50 px-4 py-2 text-center text-[11px] font-extrabold tracking-wide text-amber-900">RAAHI DEMO · SIMULATED DATA · NO REAL RIDES, VERIFICATION APPROVALS OR GPS WRITES</div>
-    <header className="border-b border-border bg-white/95 px-4 py-4 backdrop-blur sm:px-6"><div className="mx-auto flex max-w-[1500px] flex-wrap items-center justify-between gap-3"><div><BrandLockup size={36}/><p className="mt-1 text-xs text-muted-foreground">Scenario simulator · launch-readiness harness</p></div><div className="flex flex-wrap gap-2"><StatusPill status="good">LIVE DATABASE WRITES · 0</StatusPill><StatusPill status="warn">PUBLIC TRANSACTIONS · OFF</StatusPill></div></div></header>
+    <div className="border-b border-amber-200 bg-amber-50 px-4 py-2 text-center text-[11px] font-extrabold tracking-wide text-amber-900">RAAHI DEMO · SIMULATED MARKETPLACE · NO REAL RIDES OR LIVE DATA CHANGES</div>
+    <header className="border-b border-border bg-white/95 px-4 py-4 backdrop-blur sm:px-6"><div className="mx-auto flex max-w-[1500px] flex-wrap items-center justify-between gap-3"><div><BrandLockup size={36}/><p className="mt-1 text-xs text-muted-foreground">Local mobility for towns and corridors underserved by formal platforms.</p></div><div className="flex flex-wrap gap-2"><StatusPill status="good">PASSENGER · DRIVER · ADMIN</StatusPill><StatusPill status="warn">SAFE DEMO · NO LIVE CHANGES</StatusPill></div></div></header>
 
     <div className="mx-auto grid max-w-[1500px] gap-5 px-4 py-5 sm:px-6 xl:grid-cols-[280px_minmax(0,1fr)_330px]">
-      <aside className="rounded-3xl border border-border bg-white p-3 card-shadow xl:sticky xl:top-5 xl:h-fit"><div className="px-2 pb-3"><p className="section-label">Scenario library</p><h1 className="mt-1 text-lg font-extrabold">Walk the marketplace</h1><p className="mt-1 text-xs leading-relaxed text-muted-foreground">Every state below is synthetic and stays inside this browser session.</p></div><div className="space-y-1">{SCENARIOS.map(item=><button key={item.key} onClick={()=>chooseScenario(item)} className={`w-full rounded-2xl px-3 py-3 text-left transition ${item.key===scenario.key?'bg-primary text-white':'hover:bg-muted'}`}><p className={`text-[10px] font-bold uppercase tracking-wider ${item.key===scenario.key?'text-white/70':'text-muted-foreground'}`}>{item.accent}</p><p className="mt-1 text-sm font-extrabold">{item.title}</p><p className={`mt-1 text-[10px] leading-relaxed ${item.key===scenario.key?'text-white/75':'text-muted-foreground'}`}>{item.subtitle}</p></button>)}</div></aside>
+      <aside className="min-w-0 rounded-3xl border border-border bg-white p-3 card-shadow xl:sticky xl:top-5 xl:h-fit"><div className="px-2 pb-3"><p className="section-label">Scenario library</p><h1 className="mt-1 text-lg font-extrabold">Walk the marketplace</h1><p className="mt-1 text-xs leading-relaxed text-muted-foreground">Acquire supply → densify corridors → build trust → sustain with local commerce.</p></div><div className="flex max-w-full gap-2 overflow-x-auto pb-1 xl:block xl:space-y-1">{ORDERED_SCENARIOS.map(item=><button key={item.key} onClick={()=>chooseScenario(item)} className={`min-w-[220px] rounded-2xl px-3 py-3 text-left transition xl:w-full xl:min-w-0 ${item.key===scenario.key?'bg-primary text-white':'hover:bg-muted'}`}><p className={`text-[10px] font-bold uppercase tracking-wider ${item.key===scenario.key?'text-white/70':'text-muted-foreground'}`}>{item.accent}</p><p className="mt-1 text-sm font-extrabold">{item.title}</p><p className={`mt-1 text-[10px] leading-relaxed ${item.key===scenario.key?'text-white/75':'text-muted-foreground'}`}>{item.subtitle}</p></button>)}</div></aside>
 
       <section className="min-w-0"><div className="mb-4 rounded-3xl border border-border bg-white p-5 card-shadow"><div className="flex flex-wrap items-start justify-between gap-3"><div><p className="section-label">Current scenario</p><h2 className="mt-1 text-2xl font-extrabold tracking-tight">{scenario.title}</h2><p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted-foreground">{activeStep.detail}</p></div><StatusPill status="good">Step {step+1} / {scenario.steps.length}</StatusPill></div></div><div className="mx-auto max-w-[700px]"><DemoSurface scenario={scenario} step={step} persona={persona}/></div></section>
 
-      <aside className="space-y-4 xl:sticky xl:top-5 xl:h-fit"><div className="rounded-3xl border border-border bg-white p-4 card-shadow"><div className="flex items-center gap-2"><Gauge size={17} className="text-primary"/><div><p className="section-label">Scenario Console</p><p className="mt-1 text-sm font-extrabold">Switch role. Advance state.</p></div></div><div className="mt-4 grid grid-cols-2 gap-2">{PERSONAS.map(item=><button key={item.key} onClick={()=>setPersonaKey(item.key)} aria-pressed={item.key===persona.key} className={`rounded-xl border p-3 text-left ${item.key===persona.key?'border-primary bg-secondary':'border-border bg-white hover:bg-muted'}`}><div className="flex items-center gap-2"><UserRound size={14}/><p className="text-xs font-extrabold">{item.shortLabel}</p></div><p className="mt-1 text-[9px] leading-relaxed text-muted-foreground">{item.detail}</p></button>)}</div><div className="mt-4 rounded-2xl bg-muted p-3"><p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{activeStep.title}</p><p className="mt-2 text-xs leading-relaxed">{activeStep.detail}</p></div><div className="mt-4 grid grid-cols-[1fr_auto_1fr] gap-2"><button onClick={()=>move(-1)} disabled={step===0} className="btn-outline !px-3 !py-2 text-xs"><ChevronLeft size={14}/>Back</button><button onClick={reset} className="btn-outline !px-3 !py-2" aria-label="Reset scenario"><RotateCcw size={14}/></button><button onClick={()=>move(1)} disabled={step===scenario.steps.length-1} className="btn-primary !px-3 !py-2 text-xs">Next<ChevronRight size={14}/></button></div></div>
+      <aside className="space-y-4 xl:sticky xl:top-5 xl:h-fit"><div className="rounded-3xl border border-border bg-white p-4 card-shadow"><div className="flex items-center gap-2"><Gauge size={17} className="text-primary"/><div><p className="section-label">Demo controls</p><p className="mt-1 text-sm font-extrabold">Switch role. Advance state.</p></div></div><div className="mt-4 grid grid-cols-2 gap-2">{PERSONAS.map(item=><button key={item.key} onClick={()=>setPersonaKey(item.key)} aria-pressed={item.key===persona.key} className={`rounded-xl border p-3 text-left ${item.key===persona.key?'border-primary bg-secondary':'border-border bg-white hover:bg-muted'}`}><div className="flex items-center gap-2"><UserRound size={14}/><p className="text-xs font-extrabold">{item.shortLabel}</p></div><p className="mt-1 text-[9px] leading-relaxed text-muted-foreground">{item.detail}</p></button>)}</div><div className="mt-4 rounded-2xl bg-muted p-3"><p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{activeStep.title}</p><p className="mt-2 text-xs leading-relaxed">{activeStep.detail}</p></div><div className="mt-4 grid grid-cols-[1fr_auto_1fr] gap-2"><button onClick={()=>move(-1)} disabled={step===0} className="btn-outline !px-3 !py-2 text-xs"><ChevronLeft size={14}/>Back</button><button onClick={reset} className="btn-outline !px-3 !py-2" aria-label="Reset scenario"><RotateCcw size={14}/></button><button onClick={()=>move(1)} disabled={step===scenario.steps.length-1} className="btn-primary !px-3 !py-2 text-xs">Next<ChevronRight size={14}/></button></div></div>
 
-        <div className="rounded-3xl border border-border bg-white p-4 card-shadow"><p className="section-label">Isolation contract</p><div className="mt-3 space-y-3"><Invariant icon={<LockKeyhole size={15}/>} title="No production mutations" detail="Scenario controls change React state only."/><Invariant icon={<Users size={15}/>} title="Synthetic personas" detail="No Google login is required to switch roles."/><Invariant icon={<Navigation size={15}/>} title="Simulated GPS" detail="Coordinates never enter live trip tables."/><Invariant icon={<ShieldCheck size={15}/>} title="Regulatory switch untouched" detail="The public transaction gate remains OFF."/></div></div>
+        <div className="rounded-3xl border border-border bg-white p-4 card-shadow"><p className="section-label">Safe demo</p><div className="mt-3 space-y-3"><Invariant icon={<LockKeyhole size={15}/>} title="No live marketplace changes" detail="Scenario controls stay inside this browser."/><Invariant icon={<Users size={15}/>} title="Synthetic personas" detail="Switch roles instantly without Google login."/><Invariant icon={<Navigation size={15}/>} title="Simulated GPS" detail="Demo coordinates never enter live trip tracking."/><Invariant icon={<ShieldCheck size={15}/>} title="Launch controls untouched" detail="The demo never changes live launch controls."/></div></div>
       </aside>
     </div>
   </main>;
