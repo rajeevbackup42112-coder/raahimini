@@ -65,6 +65,12 @@ expect(demo,'clearly marked Sponsored','future paid promotions must remain trans
 expect(demo,'Corridor opportunity','Admin must be able to see demand-derived corridor opportunities');
 expect(demo,'Add origin area → onboard Drivers → serve Outstation → observe demand → promote proven corridors → densify.','expansion loop must be explicit');
 
+expect(demo,'function ObserverSurface','demo must render genuine observer surfaces for non-acting roles');
+expect(demo,'What this role sees now','role switching must show the current marketplace reaction');
+expect(demo,"role !== STORY[stage].actor",'non-acting roles must see observer state without changing story state');
+expect(demo,'overflow-x-auto pb-1 xl:block','mobile story navigation must scroll horizontally inside its own rail');
+expect(demo,'min-w-[230px]','mobile story cards must remain compact swipe targets');
+
 expect(guard,"const isDemoPath = (path: string) => path === '/demo'",'role guard must explicitly exempt the synthetic demo route');
 expect(guard,'if (isDemoPath(pathname)) return;','authenticated roles must be able to view the demo without redirect');
 if(demo.includes('@supabase')||demo.includes('createClient(')||demo.includes('.rpc(')||demo.includes('.from('))throw new Error('UI prototype must not directly call Supabase or production RPC/table APIs');
