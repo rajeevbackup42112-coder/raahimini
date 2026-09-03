@@ -2,10 +2,11 @@
 
 import { FormEvent, useCallback, useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowRight, CarFront, CheckCircle2, Loader2, RefreshCw, ShieldCheck } from 'lucide-react';
+import { ArrowRight, CarFront, CheckCircle2, Loader2, RefreshCw, ShieldCheck, UserRound } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import { acceptOutstationQuote, cancelOutstationRequest, createOutstationRequest, getDriverCarPhotoUrls, getMyOutstationQuotes, getMyOutstationRequests, getOutstationServiceAreas, type OutstationArea, type OutstationQuote, type OutstationRequest } from '@/lib/outstationApi';
+import { getDriverProfilePhotoUrl, getDriverTrustBadge } from '@/lib/driverTrustApi';
 import { useLegalAcceptanceGate } from '@/components/legal/LegalAcceptanceGate';
 import { useRegulatoryLaunchGate } from '@/components/launch/RegulatoryLaunchGate';
 
@@ -52,7 +53,7 @@ export default function OutstationContent(){
 
   return <><div className="page-shell space-y-5">
     <section className="hero-surface"><p className="text-[11px] font-bold uppercase tracking-[0.14em] text-amber-200">Raahi Outstation</p><h1 className="mt-2 text-2xl font-extrabold text-white sm:text-3xl">Request a round-trip car. Compare verified local Drivers.</h1><p className="mt-2 max-w-2xl text-sm leading-relaxed text-white/75">Start from an active Raahi area, enter any destination and your return time. Eligible local Drivers can quote the complete round trip; you choose only when you are comfortable.</p></section>
-    <section className="rounded-2xl border border-green-200 bg-green-50 p-4"><div className="flex gap-3"><ShieldCheck className="mt-0.5 shrink-0 text-green-700" size={19}/><div><p className="text-sm font-extrabold text-green-900">Only launch-cleared Drivers can receive and quote these requests</p><p className="mt-1 text-xs leading-relaxed text-green-800">Raahi verifies Driver identity, vehicle details and required operating documents. Sensitive scans stay private; you see verification status, vehicle details and approved car photos before choosing.</p></div></div></section>
+    <section className="rounded-2xl border border-green-200 bg-green-50 p-4"><div className="flex gap-3"><ShieldCheck className="mt-0.5 shrink-0 text-green-700" size={19}/><div><p className="text-sm font-extrabold text-green-900">Only launch-cleared Drivers can receive and quote these requests</p><p className="mt-1 text-xs leading-relaxed text-green-800">Raahi verifies Driver identity, vehicle details and required operating documents. Sensitive scans stay private; before choosing, you see the verified Driver photo, trust status, vehicle details and approved car photos.</p></div></div></section>
 
     <form onSubmit={submit} className="feature-card space-y-4 p-4 sm:p-5">
       <div><p className="section-label">Plan your journey</p><h2 className="mt-1 text-lg font-extrabold">Where are you going and when will you return?</h2></div>
@@ -80,12 +81,24 @@ function RequestCard({request,quotes,onShowQuotes,onAccept,onCancel,busy}:{reque
 }
 
 function QuoteCard({quote,onAccept,disabled}:{quote:OutstationQuote;onAccept:()=>void;disabled:boolean}){
-  const [photos,setPhotos]=useState<string[]>([]); useEffect(()=>{if(quote.car_photos_verified)void getDriverCarPhotoUrls(quote.driver_id).then(setPhotos).catch(()=>setPhotos([]));},[quote.driver_id,quote.car_photos_verified]);
-  return <div className="rounded-2xl border border-border p-4"><div className="flex items-start justify-between gap-3"><div><p className="text-lg font-extrabold">₹{quote.total_price.toLocaleString('en-IN')}</p><p className="text-sm font-bold">{quote.driver_name} · {quote.vehicle_model||quote.vehicle_type||'Car'}</p><p className="mt-1 text-xs text-muted-foreground">{quote.vehicle_number} · up to {quote.vehicle_capacity} passengers</p></div><ShieldCheck size={20} className="text-green-700"/></div>
-    <div className="mt-3 flex flex-wrap gap-1.5"><Badge text="Driving Licence verified" ok={quote.driving_licence_verified}/><Badge text="Vehicle RC verified" ok={quote.vehicle_rc_verified}/><Badge text="Car photos verified" ok={quote.car_photos_verified}/></div>
+  const [photos,setPhotos]=useState<string[]>([]);
+  const [driverPhoto,setDriverPhoto]=useState<string|null>(null);
+  const [driverPhotoVerified,setDriverPhotoVerified]=useState(false);
+  useEffect(()=>{
+    let alive=true;
+    if(quote.car_photos_verified)void getDriverCarPhotoUrls(quote.driver_id).then(rows=>{if(alive)setPhotos(rows);}).catch(()=>{if(alive)setPhotos([]);});
+    void Promise.all([getDriverTrustBadge(quote.driver_id),getDriverProfilePhotoUrl(quote.driver_id)]).then(([badge,url])=>{if(!alive)return;setDriverPhotoVerified(Boolean(badge.success&&badge.driver_photo_verified));setDriverPhoto(url);}).catch(()=>{if(alive){setDriverPhotoVerified(false);setDriverPhoto(null);}});
+    return()=>{alive=false;};
+  },[quote.driver_id,quote.car_photos_verified]);
+  const trustReady=quote.fully_verified&&driverPhotoVerified&&Boolean(driverPhoto);
+
+  return <div className="rounded-2xl border border-border p-4">
+    <div className="flex items-start justify-between gap-3"><div className="flex min-w-0 items-center gap-3">{driverPhoto?<img src={driverPhoto} alt={`Verified Driver ${quote.driver_name}`} className="h-14 w-14 shrink-0 rounded-full object-cover ring-2 ring-green-100"/>:<div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground"><UserRound size={24}/></div>}<div className="min-w-0"><p className="text-lg font-extrabold">₹{quote.total_price.toLocaleString('en-IN')}</p><p className="truncate text-sm font-bold">{quote.driver_name} · {quote.vehicle_model||quote.vehicle_type||'Car'}</p><p className="mt-1 text-xs text-muted-foreground">{quote.vehicle_number} · up to {quote.vehicle_capacity} passengers</p></div></div><ShieldCheck size={20} className="shrink-0 text-green-700"/></div>
+    <div className="mt-3 flex flex-wrap gap-1.5"><Badge text="Driver photo verified" ok={driverPhotoVerified&&Boolean(driverPhoto)}/><Badge text="Driving Licence verified" ok={quote.driving_licence_verified}/><Badge text="Vehicle RC verified" ok={quote.vehicle_rc_verified}/><Badge text="Car photos verified" ok={quote.car_photos_verified}/></div>
     {photos.length>0&&<div className="mt-3 flex gap-2 overflow-x-auto">{photos.map((src,i)=><img key={src} src={src} alt={`Verified car photo ${i+1}`} className="h-24 w-32 shrink-0 rounded-xl object-cover"/>)}</div>}
     <div className="mt-3 text-xs text-muted-foreground"><p>{quote.includes_tolls?'Tolls included':'Tolls not included'} · {quote.includes_parking?'Parking included':'Parking not included'}</p>{quote.driver_note&&<p className="mt-1 text-foreground">{quote.driver_note}</p>}</div>
-    {quote.quote_status==='ACCEPTED'?<div className="mt-3 rounded-xl bg-green-50 px-3 py-2 text-xs font-bold text-green-800"><CheckCircle2 size={14} className="mr-1 inline"/>Selected Driver{quote.driver_phone?` · ${quote.driver_phone}`:''}</div>:<button disabled={disabled||!quote.fully_verified} onClick={onAccept} className="btn-primary mt-3 w-full">Choose this car</button>}
+    {!trustReady&&quote.quote_status!=='ACCEPTED'&&<p className="mt-3 rounded-xl bg-amber-50 px-3 py-2 text-[10px] leading-relaxed text-amber-800">Raahi is still loading or validating this Driver’s complete trust card. Selection stays locked until the verified Driver photo and trust checks are available.</p>}
+    {quote.quote_status==='ACCEPTED'?<div className="mt-3 rounded-xl bg-green-50 px-3 py-2 text-xs font-bold text-green-800"><CheckCircle2 size={14} className="mr-1 inline"/>Selected Driver{quote.driver_phone?` · ${quote.driver_phone}`:''}</div>:<button disabled={disabled||!trustReady} onClick={onAccept} className="btn-primary mt-3 w-full">Choose this car</button>}
   </div>;
 }
 function Badge({text,ok}:{text:string;ok:boolean}){return <span className={`rounded-full px-2 py-1 text-[10px] font-bold ${ok?'bg-green-50 text-green-700':'bg-muted text-muted-foreground'}`}>{ok?'✓':'•'} {text}</span>}
