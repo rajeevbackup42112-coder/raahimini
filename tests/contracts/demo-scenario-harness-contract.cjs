@@ -7,31 +7,65 @@ const guard=read('src/components/RoleRouteGuard.tsx');
 const layout=read('src/app/layout.tsx');
 const middleware=read('src/middleware.ts');
 const env=read('.env.example');
+
 expect(page,"robots: { index: false, follow: false",'demo page must remain noindex');
 expect(page,"process.env.RAAHI_DEMO_ENABLED !== 'true'",'demo route must fail closed unless explicitly enabled');
 expect(env,'RAAHI_DEMO_ENABLED=false','demo must be disabled by default in environment guidance');
 expect(layout,"const demoSite = process.env.RAAHI_DEMO_ENABLED === 'true'",'root layout must recognize dedicated demo mode');
-expect(layout,'demoSite ? children : <AuthProvider>','demo mode must not initialize the normal live auth provider');
-expect(middleware,"if (process.env.RAAHI_DEMO_ENABLED === 'true')",'middleware must recognize dedicated demo mode before Supabase auth refresh');
-expect(middleware,"demoUrl.pathname = '/demo'",'dedicated demo mode must redirect non-demo application routes back to /demo');
+expect(layout,'demoSite ? children : <AuthProvider>','demo mode must not initialize normal live auth');
+expect(middleware,"if (process.env.RAAHI_DEMO_ENABLED === 'true')",'middleware must recognize demo mode before Supabase auth refresh');
+expect(middleware,"demoUrl.pathname = '/demo'",'dedicated demo mode must redirect non-demo application routes to /demo');
+
 expect(demo,'RAAHI DEMO · SIMULATED MARKETPLACE','demo must carry a permanent simulated-marketplace banner');
-expect(demo,'SAFE DEMO · NO LIVE CHANGES','demo must state that the investor walkthrough cannot change live data');
-expect(demo,'Public transactions are OFF','regulatory scenario must preserve the fail-closed launch gate message');
-for(const persona of ['Rajeev1','Rajeev4','Naresh','Ajit'])expect(demo,persona,`demo persona missing: ${persona}`);
-expect(demo,'Local mobility for towns and corridors underserved by formal platforms.','investor demo must open with the Raahi market thesis');
-expect(demo,"const SCENARIO_ORDER: ScenarioKey[] = ['outstation', 'shared-fifo', 'driver-verification', 'local-offers'",'investor walkthrough must lead Acquire → Densify → Trust → Sustain');
-expect(demo,"useState<ScenarioKey>('outstation')",'investor walkthrough must open on Outstation rather than an internal verification state');
-expect(demo,"useState<PersonaKey>('passenger')",'Outstation investor walkthrough must open from the Passenger perspective');
-expect(demo,'min-w-0 rounded-3xl','mobile scenario rail must not expand the document width');
-expect(demo,'overflow-x-auto','mobile scenario choices should scroll inside their own rail');
-for(const scenario of ['Driver verification','Shared Ride FIFO','Exact-seat race','Bokaro Outstation','Trip lifecycle','Local Offers','Regulatory launch gate'])expect(demo,scenario,`demo scenario missing: ${scenario}`);
-expect(demo,"if (step === 0) return",'Shared Ride Passenger state must not invent an active car before the Driver is available');
-expect(demo,'No car right now','Shared Ride pre-availability Passenger state missing');
-expect(demo,"persona.key === 'rajeev4' && accepted",'accepted Outstation quote must have a Driver-side confirmed state');
-expect(demo,'Contact details are available only after the Passenger accepts','Outstation privacy transition must be visible in the demo');
-expect(demo,'step<2?','activated Local Offers must become visible to a Passenger immediately');
-expect(demo,"persona.key === 'rajeev4' || persona.key === 'naresh'",'pilot badge must follow the selected pilot persona rather than a scenario step');
+expect(demo,'UI PROTOTYPE · BROWSER ONLY','UI-first phase must be explicit');
+expect(demo,'SAFE DEMO · NO LIVE CHANGES','demo must state that it cannot change live data');
+expect(demo,'Build a Raahi Area','demo must be one continuous marketplace-building experience');
+expect(demo,'One continuous marketplace story','demo must not frame the experience as disconnected scenarios');
+expect(demo,'See what changed for everyone','Admin, Driver and Passenger views must share one story state');
+
+for(const phrase of [
+  'Start with an empty Raahi Area',
+  'Publish the first mobility network',
+  'A Driver joins Raahi himself',
+  'One-time plain-language acceptance',
+  'Driver submits identity, car and origin area',
+  'Admin verifies; Admin does not create',
+  'Passenger simply enters From and To',
+  'A flexible trip becomes Outstation automatically',
+  'Passenger chooses with trust, not just price',
+  'Useful local information before paid ads',
+  'Demand tells Raahi what to launch next',
+]) expect(demo,phrase,`continuous demo step missing: ${phrase}`);
+
+expect(demo,'Dhanbad ⇄ Gomoh','fixed Shared Ride corridor must be present');
+expect(demo,'Parasnath → Madhuban','second launch Shared Ride corridor must be present');
+expect(demo,'Fixed origin + destination. Repeated seat pooling. FIFO Driver rotation.','Shared Ride must stay density-oriented');
+expect(demo,'Flexible destination. Round trip only for this launch model. Drivers subscribe by origin area.','Outstation launch model must be origin-area + round-trip only');
+expect(demo,'No fixed corridor matches this journey','Passenger search must automatically fall back to Outstation');
+expect(demo,'Round trip','Outstation must not expose one-way in this prototype');
+expect(demo,'Why you received this','Driver lead screen must explain origin-area eligibility');
+expect(demo,'Your Shared Ride preferences do not affect this lead.','Outstation and Shared Ride preferences must remain independent');
+
+expect(demo,'Continue with Google','Driver self-onboarding must start from the public Driver journey');
+expect(demo,'Verify mobile by OTP','Driver phone verification must remain part of onboarding');
+expect(demo,'I accept & continue','one-time plain-language acceptance must be visible');
+for(const doc of ['Driving licence','Vehicle RC','Driver photo','Car · front','Car · rear','Car · interior']) expect(demo,doc,`Driver trust artifact missing: ${doc}`);
+expect(demo,'Submit for verification','Driver must submit his own verification package');
+expect(demo,'Approve Driver','Admin must review/approve rather than create the Driver');
+
+expect(demo,'DL VERIFIED','Passenger trust card must show DL verification result');
+expect(demo,'RC VERIFIED','Passenger trust card must show RC verification result');
+expect(demo,'Phone/contact details stay private until you accept.','Outstation privacy boundary must be visible before acceptance');
+expect(demo,'Passenger contact unlocked','contact must unlock only after acceptance');
+
+expect(demo,'Around your trip','local information surface must support the travel context');
+expect(demo,'Festival traffic note','early local surface should support community information');
+expect(demo,'Have a suggestion?','early local surface should support feedback/support');
+expect(demo,'clearly marked Sponsored','future paid promotions must remain transparently labeled');
+expect(demo,'Corridor opportunity','Admin must be able to see demand-derived corridor opportunities');
+expect(demo,'Add origin area → onboard Drivers → serve Outstation → observe demand → promote proven corridors → densify.','expansion loop must be explicit');
+
 expect(guard,"const isDemoPath = (path: string) => path === '/demo'",'role guard must explicitly exempt the synthetic demo route');
 expect(guard,'if (isDemoPath(pathname)) return;','authenticated roles must be able to view the demo without redirect');
-if(demo.includes('@supabase')||demo.includes('createClient(')||demo.includes('.rpc(')||demo.includes('.from('))throw new Error('demo experience must not directly call Supabase or production RPC/table APIs');
-console.log('Raahi scenario demo harness contract: PASS');
+if(demo.includes('@supabase')||demo.includes('createClient(')||demo.includes('.rpc(')||demo.includes('.from('))throw new Error('UI prototype must not directly call Supabase or production RPC/table APIs');
+console.log('Raahi living-area UI demo contract: PASS');
