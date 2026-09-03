@@ -1,0 +1,36 @@
+name: Marketplace Implementation Validate
+
+on:
+  push:
+    branches:
+      - raahi-marketplace-implementation
+  workflow_dispatch:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Use Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+      - name: TypeScript
+        run: npm run type-check
+      - name: Contracts
+        shell: bash
+        run: |
+          set -euo pipefail
+          for file in tests/contracts/*.cjs; do
+            node "$file"
+          done
+      - name: Production build
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: https://example.supabase.co
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ci-placeholder-key
+          NEXT_PUBLIC_SITE_URL: http://localhost:3000
+        run: npm run build
