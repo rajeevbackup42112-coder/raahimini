@@ -1,312 +1,261 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import {
+  ArrowRight,
   BellRing,
+  Building2,
+  BusFront,
   Car,
+  Check,
   CheckCircle2,
   ChevronLeft,
   ChevronRight,
-  Circle,
+  CircleDot,
   Clock3,
   FileCheck2,
-  FileWarning,
   Gauge,
+  HeartHandshake,
+  Home,
+  Image as ImageIcon,
   LockKeyhole,
-  Megaphone,
+  MapPin,
+  MessageSquareText,
   Navigation,
+  Phone,
   RotateCcw,
+  Route,
+  Search,
   ShieldCheck,
   Sparkles,
+  Store,
   UserRound,
   Users,
-  XCircle,
 } from 'lucide-react';
 import BrandLockup from '@/components/ui/BrandLockup';
 
-type PersonaKey = 'passenger' | 'rajeev4' | 'naresh' | 'ajit';
-type ScenarioKey = 'driver-verification' | 'shared-fifo' | 'seat-race' | 'outstation' | 'trip-lifecycle' | 'local-offers' | 'regulatory-gate';
+type Role = 'admin' | 'driver' | 'passenger';
+type Tone = 'good' | 'warn' | 'quiet';
 
-type Persona = {
-  key: PersonaKey;
+type StoryStep = {
+  actor: Role;
   label: string;
-  shortLabel: string;
-  role: 'Passenger' | 'Driver' | 'Admin';
-  detail: string;
-};
-
-type Scenario = {
-  key: ScenarioKey;
   title: string;
-  subtitle: string;
-  accent: string;
-  steps: Array<{ title: string; detail: string; persona: PersonaKey }>;
+  detail: string;
+  action: string;
 };
 
-const PERSONAS: Persona[] = [
-  { key: 'passenger', label: 'Rajeev1', shortLabel: 'Passenger', role: 'Passenger', detail: 'Passenger · pilot account' },
-  { key: 'rajeev4', label: 'Rajeev4', shortLabel: 'Rajeev4', role: 'Driver', detail: 'Driver · Tata Tiago · 4 seats' },
-  { key: 'naresh', label: 'Naresh', shortLabel: 'Naresh', role: 'Driver', detail: 'Driver · Maruti Ertiga · 6 seats' },
-  { key: 'ajit', label: 'Ajit', shortLabel: 'Admin', role: 'Admin', detail: 'Admin · verification and operations' },
+const STORY: StoryStep[] = [
+  { actor: 'admin', label: 'Start', title: 'Start with an empty Raahi Area', detail: 'No public marketplace has to be fabricated. The operator decides where Raahi is ready to serve.', action: 'Create Raahi Area' },
+  { actor: 'admin', label: 'Network', title: 'Publish the first mobility network', detail: 'Shared Ride launches only on known fixed corridors. Outstation launches by origin area, not by destination pair.', action: 'Publish pilot network' },
+  { actor: 'driver', label: 'Join', title: 'A Driver joins Raahi himself', detail: 'Admin is no longer the data-entry bottleneck. The Driver starts from the public “Drive with Raahi” entry point.', action: 'Continue with Google' },
+  { actor: 'driver', label: 'Trust', title: 'One-time plain-language acceptance', detail: 'After sign-in and phone OTP, Raahi explains the relationship in short readable language before onboarding continues.', action: 'I accept & continue' },
+  { actor: 'driver', label: 'Profile', title: 'Driver submits identity, car and origin area', detail: 'Rajeev4 uploads his photo, DL, RC and vehicle photos, then chooses Bokaro as his Outstation origin area.', action: 'Submit for verification' },
+  { actor: 'admin', label: 'Verify', title: 'Admin verifies; Admin does not create', detail: 'Ajit reviews the submission, can reject individual items, and approves only after the profile is complete.', action: 'Approve Driver' },
+  { actor: 'driver', label: 'Services', title: 'Driver chooses where he wants work', detail: 'Outstation origin areas and Shared Ride corridor preferences stay independent. Raahi only sends relevant work.', action: 'Save service preferences' },
+  { actor: 'passenger', label: 'Shared Ride', title: 'Passenger simply enters From and To', detail: 'Dhanbad → Gomoh matches a published fixed corridor, so Raahi offers a Shared Ride seat automatically.', action: 'Request 2 seats' },
+  { actor: 'driver', label: 'FIFO', title: 'Shared Ride stays dense and fair', detail: 'Naresh is the active Driver; the next eligible Driver waits behind him. Passenger demand goes to the active car.', action: 'Confirm Shared Ride' },
+  { actor: 'passenger', label: 'Outstation', title: 'A flexible trip becomes Outstation automatically', detail: 'Bokaro → Ranchi is not a Shared Ride corridor. Because Bokaro is an onboarded origin area, Raahi opens a round-trip quote request.', action: 'Request round-trip quotes' },
+  { actor: 'driver', label: 'Quotes', title: 'Only Bokaro Drivers receive the lead', detail: 'Rajeev4 quotes ₹3,800. Another eligible Bokaro Driver can quote or ignore. Destination can be anywhere; origin eligibility drives routing.', action: 'Send ₹3,800 quote' },
+  { actor: 'passenger', label: 'Choose', title: 'Passenger chooses with trust, not just price', detail: 'Before acceptance, Raahi shows Driver photo, actual car photos and verification badges. Contact details remain private.', action: 'Accept Rajeev4' },
+  { actor: 'driver', label: 'Trip', title: 'Acceptance unlocks the operating relationship', detail: 'Contact becomes available at the intended stage. The trip can move through pickup, fresh GPS and completion.', action: 'Complete simulated trip' },
+  { actor: 'passenger', label: 'Community', title: 'Useful local information before paid ads', detail: 'Raahi can show community updates, destination tips and a feedback/support prompt without interrupting booking.', action: 'See marketplace learning' },
+  { actor: 'admin', label: 'Learn', title: 'Demand tells Raahi what to launch next', detail: 'Repeated Outstation demand becomes a corridor signal. Admin can promote a proven pair into Shared Ride when density justifies it.', action: 'Finish walkthrough' },
 ];
 
-const SCENARIOS: Scenario[] = [
-  {
-    key: 'driver-verification',
-    title: 'Driver verification',
-    subtitle: 'Verified documents unlock marketplace participation',
-    accent: 'Trust',
-    steps: [
-      { title: 'Documents missing', detail: 'Driver cannot join Shared Ride FIFO or quote for Outstation.', persona: 'rajeev4' },
-      { title: 'Synthetic upload submitted', detail: 'DL, RC, car photos and operating documents are pending Admin review.', persona: 'rajeev4' },
-      { title: 'Admin rejects one item', detail: 'Insurance is rejected with a review note; launch compliance remains false.', persona: 'ajit' },
-      { title: 'Re-upload and approve', detail: 'Ajit approves the complete synthetic verification set.', persona: 'ajit' },
-      { title: 'Driver unlocked', detail: 'Launch compliance is true and operational actions become available.', persona: 'rajeev4' },
-    ],
-  },
-  {
-    key: 'shared-fifo',
-    title: 'Shared Ride FIFO',
-    subtitle: 'Fair Driver rotation builds dependable corridor supply',
-    accent: 'Densify',
-    steps: [
-      { title: 'Route selected', detail: 'Rajeev4 chooses Dhanbad → Gomoh without affecting Outstation preferences.', persona: 'rajeev4' },
-      { title: 'Rajeev4 goes active', detail: 'Rajeev4 becomes ACTIVE_COLLECTING because the route has no active Driver.', persona: 'rajeev4' },
-      { title: 'Naresh joins behind', detail: 'Naresh enters the same route as WAITING at position 2.', persona: 'naresh' },
-      { title: 'Passenger sees the active car', detail: 'Rajeev1 sees only Rajeev4 as the collecting Driver.', persona: 'passenger' },
-      { title: 'FIFO promotes next Driver', detail: 'Rajeev4 completes; Naresh is promoted without queue jumping.', persona: 'naresh' },
-    ],
-  },
-  {
-    key: 'seat-race',
-    title: 'Exact-seat race',
-    subtitle: 'Concurrent bookings never exceed real seat capacity',
-    accent: 'Reliability',
-    steps: [
-      { title: 'Four seats available', detail: 'Rajeev4 is collecting with four available Passenger seats.', persona: 'passenger' },
-      { title: 'Three seats held', detail: 'Passenger A requests 3 seats; only 1 seat remains available.', persona: 'passenger' },
-      { title: 'Oversized second request blocked', detail: 'Passenger B requests 2 seats but the ledger has only 1 remaining.', persona: 'passenger' },
-      { title: 'Last seat succeeds', detail: 'Passenger B requests exactly 1 seat and the car becomes full.', persona: 'passenger' },
-      { title: 'Confirmed totals reconcile', detail: 'Trip counters and seat ledger agree at 4/4 seats.', persona: 'rajeev4' },
-    ],
-  },
-  {
-    key: 'outstation',
-    title: 'Bokaro Outstation',
-    subtitle: 'Area routing, Driver quotes and Passenger choice',
-    accent: 'Acquire',
-    steps: [
-      { title: 'Passenger requests Bokaro → Ranchi', detail: 'The request is routed by Bokaro Outstation Area, not Shared Ride route preference.', persona: 'passenger' },
-      { title: 'Subscribed Drivers receive the lead', detail: 'Rajeev4 and Naresh see the lead because both are subscribed to Bokaro.', persona: 'rajeev4' },
-      { title: 'Naresh ignores', detail: 'The request disappears for Naresh while remaining open for other eligible Drivers.', persona: 'naresh' },
-      { title: 'Rajeev4 quotes ₹3,800', detail: 'The Passenger sees the Tiago, verification trust state and quote inclusions.', persona: 'rajeev4' },
-      { title: 'Passenger accepts', detail: 'Rajeev4 wins the booking; contact information becomes available at the intended stage.', persona: 'passenger' },
-    ],
-  },
-  {
-    key: 'trip-lifecycle',
-    title: 'Trip lifecycle',
-    subtitle: 'Accepted booking → GPS → trip → completion',
-    accent: 'Operations',
-    steps: [
-      { title: 'Booking ready', detail: 'The confirmed Passenger and Driver see the accepted booking state.', persona: 'rajeev4' },
-      { title: 'GPS becomes current', detail: 'A simulated fresh location update appears with accuracy and timestamp.', persona: 'rajeev4' },
-      { title: 'Collecting Passenger', detail: 'Driver remains in the collecting stage until lifecycle conditions are met.', persona: 'passenger' },
-      { title: 'Trip in progress', detail: 'The route timeline advances without manual database state editing.', persona: 'passenger' },
-      { title: 'Trip completed', detail: 'Completion closes the trip once and prepares FIFO promotion.', persona: 'rajeev4' },
-    ],
-  },
-  {
-    key: 'local-offers',
-    title: 'Local Offers',
-    subtitle: 'Local commerce supports the network without ride commission',
-    accent: 'Sustain',
-    steps: [
-      { title: 'No advertiser yet', detail: 'Passenger sees a clean empty state with no fake promotion.', persona: 'passenger' },
-      { title: 'Ajit creates a draft', detail: 'The promotion is Admin-only and not visible to Passengers yet.', persona: 'ajit' },
-      { title: 'Ajit activates the offer', detail: 'The offer becomes eligible for the public Local Offers surface.', persona: 'ajit' },
-      { title: 'Passenger sees Sponsored', detail: 'The placement is clearly marked Sponsored and not personalized.', persona: 'passenger' },
-    ],
-  },
-  {
-    key: 'regulatory-gate',
-    title: 'Regulatory launch gate',
-    subtitle: 'Launch controls stay fail-closed outside the pilot',
-    accent: 'Governance',
-    steps: [
-      { title: 'Public transactions OFF', detail: 'Browsing and Driver onboarding remain available while paid public operations stay locked.', persona: 'passenger' },
-      { title: 'Non-pilot transaction blocked', detail: 'A public user cannot create a protected paid operation.', persona: 'passenger' },
-      { title: 'Pilot account exercises the flow', detail: 'Allow-listed acceptance accounts can exercise controlled scenarios.', persona: 'rajeev4' },
-      { title: 'Gate remains OFF afterward', detail: 'The test does not silently open transactions to the public.', persona: 'ajit' },
-    ],
-  },
-];
-
-const SCENARIO_ORDER: ScenarioKey[] = ['outstation', 'shared-fifo', 'driver-verification', 'local-offers', 'seat-race', 'trip-lifecycle', 'regulatory-gate'];
-const ORDERED_SCENARIOS = SCENARIO_ORDER.map(key => SCENARIOS.find(item => item.key === key)!).filter(Boolean);
-
-function statusClasses(status: 'good' | 'warn' | 'bad' | 'quiet') {
-  if (status === 'good') return 'bg-emerald-50 text-emerald-700 border-emerald-200';
-  if (status === 'warn') return 'bg-amber-50 text-amber-800 border-amber-200';
-  if (status === 'bad') return 'bg-red-50 text-red-700 border-red-200';
-  return 'bg-stone-50 text-stone-600 border-stone-200';
+function toneClasses(tone: Tone) {
+  if (tone === 'good') return 'border-emerald-200 bg-emerald-50 text-emerald-700';
+  if (tone === 'warn') return 'border-amber-200 bg-amber-50 text-amber-800';
+  return 'border-stone-200 bg-stone-50 text-stone-600';
 }
 
-function StatusPill({ children, status = 'quiet' }: { children: React.ReactNode; status?: 'good' | 'warn' | 'bad' | 'quiet' }) {
-  return <span className={`inline-flex items-center rounded-full border px-2.5 py-1 text-[11px] font-bold ${statusClasses(status)}`}>{children}</span>;
+function Pill({ children, tone = 'quiet' }: { children: ReactNode; tone?: Tone }) {
+  return <span className={`inline-flex items-center rounded-full border px-2.5 py-1 text-[10px] font-extrabold ${toneClasses(tone)}`}>{children}</span>;
 }
 
-function MiniHeader({ persona }: { persona: Persona }) {
-  return <div className="flex items-center justify-between border-b border-border bg-white px-4 py-3">
-    <BrandLockup size={28} />
-    <div className="text-right">
-      <p className="text-xs font-extrabold text-foreground">{persona.label}</p>
-      <p className="text-[10px] text-muted-foreground">{persona.role} demo</p>
+function PhoneFrame({ role, title, children }: { role: Role; title: string; children: ReactNode }) {
+  const label = role === 'admin' ? 'Ajit · Admin' : role === 'driver' ? 'Driver view' : 'Passenger view';
+  return <div className="overflow-hidden rounded-[30px] border border-border bg-[#FAF9F6] shadow-xl">
+    <div className="flex items-center justify-between border-b border-border bg-white px-4 py-3">
+      <BrandLockup size={28}/>
+      <div className="text-right"><p className="text-xs font-extrabold">{label}</p><p className="text-[10px] text-muted-foreground">{title}</p></div>
     </div>
+    <div className="min-h-[540px] p-4">{children}</div>
   </div>;
 }
 
-function DocumentRow({ label, status, note }: { label: string; status: 'MISSING' | 'PENDING' | 'VERIFIED' | 'REJECTED'; note?: string }) {
-  const tone = status === 'VERIFIED' ? 'good' : status === 'REJECTED' ? 'bad' : status === 'PENDING' ? 'warn' : 'quiet';
-  const Icon = status === 'VERIFIED' ? FileCheck2 : status === 'REJECTED' ? XCircle : FileWarning;
-  return <div className="flex items-start justify-between gap-3 rounded-xl border border-border bg-white p-3">
-    <div className="flex min-w-0 items-start gap-2.5"><Icon size={16} className="mt-0.5 shrink-0 text-muted-foreground"/><div><p className="text-xs font-extrabold">{label}</p>{note&&<p className="mt-1 text-[10px] leading-relaxed text-muted-foreground">{note}</p>}</div></div>
-    <StatusPill status={tone}>{status}</StatusPill>
-  </div>;
+function EmptyNetwork({ advance }: { advance: () => void }) {
+  return <PhoneFrame role="admin" title="Marketplace setup">
+    <p className="section-label">Raahi Area</p><h2 className="mt-1 text-xl font-extrabold">Build your first local mobility network</h2>
+    <p className="mt-2 text-xs leading-relaxed text-muted-foreground">Start with places where Raahi can actually recruit and verify Driver supply.</p>
+    <div className="mt-5 rounded-2xl border border-dashed border-border bg-white p-5 text-center"><MapPin className="mx-auto text-muted-foreground"/><p className="mt-2 text-sm font-extrabold">No operating areas yet</p><p className="mt-1 text-xs text-muted-foreground">Add cities and corridors only when you are ready to operate them.</p></div>
+    <button onClick={advance} className="btn-primary mt-5 w-full">Create Raahi Area <ArrowRight size={15}/></button>
+  </PhoneFrame>;
 }
 
-function DriverVerificationSurface({ step, persona }: { step: number; persona: Persona }) {
-  if (persona.role === 'Passenger') return <RestrictedSurface title="Driver verification is not a Passenger surface" />;
-  if (persona.key === 'naresh') return <RestrictedSurface title="This verification scenario follows Rajeev4" />;
-  if (persona.role === 'Admin') {
-    const rejected = step === 2;
-    const approved = step >= 3;
-    return <div className="space-y-3 p-4">
-      <div><p className="section-label">Admin · Verification</p><h2 className="mt-1 text-lg font-extrabold">Rajeev4 · TATA TIAGO</h2><p className="mt-1 text-xs text-muted-foreground">Synthetic acceptance fixture · JH10RS1234</p></div>
-      <DocumentRow label="Driving licence" status={approved ? 'VERIFIED' : step >= 1 ? 'PENDING' : 'MISSING'} />
-      <DocumentRow label="Vehicle RC" status={approved ? 'VERIFIED' : step >= 1 ? 'PENDING' : 'MISSING'} />
-      <DocumentRow label="Car photos" status={approved ? 'VERIFIED' : step >= 1 ? 'PENDING' : 'MISSING'} />
-      <DocumentRow label="Insurance" status={approved ? 'VERIFIED' : rejected ? 'REJECTED' : step >= 1 ? 'PENDING' : 'MISSING'} note={rejected ? 'Admin note: document does not match the Driver record.' : undefined} />
-      <div className="grid grid-cols-2 gap-2 pt-1"><button className="btn-outline !px-3 !py-2 text-xs">Reject</button><button className="btn-primary !px-3 !py-2 text-xs">Approve</button></div>
-    </div>;
-  }
-  const missing = step === 0;
-  const pending = step === 1;
-  const rejected = step === 2;
-  const verified = step >= 3;
-  return <div className="space-y-3 p-4">
-    <div className="rounded-2xl bg-secondary p-4"><div className="flex items-start gap-3"><ShieldCheck size={20} className="mt-0.5 text-primary"/><div><p className="text-sm font-extrabold">Driver verification</p><p className="mt-1 text-xs leading-relaxed text-muted-foreground">Verification and operating compliance protect Shared Ride and Outstation access.</p></div></div></div>
-    <DocumentRow label="Driving licence" status={verified ? 'VERIFIED' : pending || rejected ? 'PENDING' : 'MISSING'} />
-    <DocumentRow label="Vehicle RC" status={verified ? 'VERIFIED' : pending || rejected ? 'PENDING' : 'MISSING'} />
-    <DocumentRow label="Car photos" status={verified ? 'VERIFIED' : pending || rejected ? 'PENDING' : 'MISSING'} />
-    <DocumentRow label="Insurance" status={verified ? 'VERIFIED' : rejected ? 'REJECTED' : pending ? 'PENDING' : 'MISSING'} note={rejected ? 'Please replace this document before operations can unlock.' : undefined} />
-    <div className={`rounded-xl border p-3 ${verified ? 'border-emerald-200 bg-emerald-50' : 'border-amber-200 bg-amber-50'}`}><p className="text-xs font-extrabold">{verified ? 'Launch compliant' : missing ? 'Complete verification' : rejected ? 'Action required' : 'Review pending'}</p><p className="mt-1 text-[10px] leading-relaxed text-muted-foreground">{verified ? 'Shared Ride FIFO and Outstation quoting are available in this simulated state.' : 'Paid Driver operations remain locked.'}</p></div>
-  </div>;
+function NetworkSetup({ advance }: { advance: () => void }) {
+  return <PhoneFrame role="admin" title="Pilot network">
+    <p className="section-label">Admin · Network</p><h2 className="mt-1 text-lg font-extrabold">Jharkhand pilot</h2>
+    <div className="mt-4 space-y-3">
+      <div className="rounded-2xl border border-border bg-white p-4"><div className="flex items-center gap-2"><Route size={17} className="text-primary"/><p className="text-sm font-extrabold">Shared Ride corridors</p></div><div className="mt-3 space-y-2 text-xs"><p className="rounded-xl bg-muted px-3 py-2">Dhanbad ⇄ Gomoh · ₹150 / seat</p><p className="rounded-xl bg-muted px-3 py-2">Parasnath → Madhuban · ₹150 / seat</p></div><p className="mt-3 text-[10px] leading-relaxed text-muted-foreground">Fixed origin + destination. Repeated seat pooling. FIFO Driver rotation.</p></div>
+      <div className="rounded-2xl border border-border bg-white p-4"><div className="flex items-center gap-2"><Car size={17} className="text-primary"/><p className="text-sm font-extrabold">Outstation origin areas</p></div><div className="mt-3 flex flex-wrap gap-2"><Pill tone="good">Bokaro</Pill><Pill>Dhanbad</Pill><Pill>Ranchi</Pill></div><p className="mt-3 text-[10px] leading-relaxed text-muted-foreground">Flexible destination. Round trip only for this launch model. Drivers subscribe by origin area.</p></div>
+    </div>
+    <button onClick={advance} className="btn-primary mt-5 w-full">Publish pilot network <ArrowRight size={15}/></button>
+  </PhoneFrame>;
 }
 
-function SharedFifoSurface({ step, persona }: { step: number; persona: Persona }) {
-  const r4Status = step === 0 ? 'Not queued' : step >= 4 ? 'Done' : 'ACTIVE_COLLECTING';
-  const nareshStatus = step < 2 ? 'Not queued' : step >= 4 ? 'ACTIVE_COLLECTING' : 'WAITING · #2';
-  if (persona.role === 'Passenger') {
-    if (step === 0) return <div className="space-y-3 p-4"><div><p className="section-label">From Dhanbad</p><h2 className="mt-1 text-lg font-extrabold">Dhanbad → Gomoh</h2></div><div className="rounded-2xl border border-border bg-white p-5 text-center"><Car size={24} className="mx-auto text-muted-foreground"/><p className="mt-2 text-sm font-extrabold">No car right now</p><p className="mt-1 text-xs text-muted-foreground">Rajeev4 has selected this route but has not gone available yet.</p></div></div>;
-    return <div className="space-y-3 p-4"><div><p className="section-label">From Dhanbad</p><h2 className="mt-1 text-lg font-extrabold">Dhanbad → Gomoh</h2></div><div className="rounded-2xl border border-border bg-white p-4"><div className="flex items-center justify-between"><div><p className="text-sm font-extrabold">{step >= 4 ? 'Naresh · Ertiga' : 'Rajeev4 · Tiago'}</p><p className="mt-1 text-xs text-muted-foreground">Verified Driver · live route status</p></div><StatusPill status="good">Collecting</StatusPill></div><div className="mt-4 flex items-center justify-between rounded-xl bg-muted p-3"><span className="text-xs font-bold">Fare per seat</span><span className="text-sm font-extrabold">₹150</span></div></div></div>;
-  }
-  return <div className="space-y-3 p-4"><div><p className="section-label">Shared Ride FIFO</p><h2 className="mt-1 text-lg font-extrabold">DG-01 · Dhanbad → Gomoh</h2><p className="mt-1 text-xs text-muted-foreground">Route preference does not subscribe Outstation areas.</p></div><QueueRow name="Rajeev4" car="TATA TIAGO · 4 seats" status={r4Status} active={r4Status === 'ACTIVE_COLLECTING'} /><QueueRow name="Naresh" car="Maruti Ertiga · 6 seats" status={nareshStatus} active={nareshStatus === 'ACTIVE_COLLECTING'} /><div className="rounded-xl border border-border bg-stone-50 p-3 text-[10px] leading-relaxed text-muted-foreground">FIFO rule: one active collecting Driver per route. Waiting Drivers cannot jump the queue.</div></div>;
+function DriverJoin({ stage, advance }: { stage: number; advance: () => void }) {
+  if (stage === 2) return <PhoneFrame role="driver" title="Self-onboarding">
+    <div className="rounded-2xl bg-secondary p-4"><p className="section-label">Drive with Raahi</p><h2 className="mt-1 text-xl font-extrabold">Earn from trips you choose</h2><p className="mt-2 text-xs leading-relaxed text-muted-foreground">Join Outstation origin areas, Shared Ride corridors, or both after verification.</p></div>
+    <div className="mt-4 space-y-3"><div className="rounded-xl border border-border bg-white p-3"><p className="text-xs font-extrabold">1 · Continue with Google</p><p className="mt-1 text-[10px] text-muted-foreground">Use your normal Raahi identity.</p></div><div className="rounded-xl border border-border bg-white p-3"><p className="text-xs font-extrabold">2 · Verify mobile by OTP</p><p className="mt-1 text-[10px] text-muted-foreground">Raahi confirms a reachable mobile number.</p></div><div className="rounded-xl border border-border bg-white p-3"><p className="text-xs font-extrabold">3 · Add Driver + car details</p><p className="mt-1 text-[10px] text-muted-foreground">Admin reviews; Admin does not type the application for you.</p></div></div>
+    <button onClick={advance} className="btn-primary mt-5 w-full">Continue with Google <ArrowRight size={15}/></button>
+  </PhoneFrame>;
+
+  return <PhoneFrame role="driver" title="Welcome to Raahi">
+    <div className="flex items-center gap-2"><ShieldCheck className="text-primary" size={20}/><div><p className="section-label">One-time acceptance</p><h2 className="mt-1 text-lg font-extrabold">Simple rules before you continue</h2></div></div>
+    <div className="mt-4 space-y-2">{[
+      'Raahi connects Passengers and independent Drivers; it is not the Driver or vehicle owner.',
+      'Travel only when the trip, vehicle and people feel right to you.',
+      'Raahi verifies submitted Driver/vehicle details, but everyone must still use reasonable care.',
+      'Fares are agreed for the trip and paid directly as shown in the booking flow.',
+      'Follow traffic, permit and safety laws at all times.',
+      'Report misuse or anything that makes the marketplace unsafe.',
+    ].map(line=><div key={line} className="flex gap-2 rounded-xl bg-white p-3 text-xs leading-relaxed"><Check size={14} className="mt-0.5 shrink-0 text-primary"/><span>{line}</span></div>)}</div>
+    <p className="mt-3 text-[10px] leading-relaxed text-muted-foreground">Full Terms, Privacy and Driver Terms remain available for the complete legal text.</p>
+    <button onClick={advance} className="btn-primary mt-5 w-full">I accept & continue <ArrowRight size={15}/></button>
+  </PhoneFrame>;
 }
 
-function QueueRow({ name, car, status, active }: { name: string; car: string; status: string; active: boolean }) {
-  return <div className={`rounded-2xl border p-4 ${active ? 'border-primary/30 bg-secondary' : 'border-border bg-white'}`}><div className="flex items-start justify-between gap-3"><div><p className="text-sm font-extrabold">{name}</p><p className="mt-1 text-xs text-muted-foreground">{car}</p></div><StatusPill status={active ? 'good' : status.startsWith('WAITING') ? 'warn' : 'quiet'}>{status}</StatusPill></div></div>;
+function DriverApplication({ approved, advance }: { approved: boolean; advance: () => void }) {
+  return <PhoneFrame role={approved ? 'admin' : 'driver'} title={approved ? 'Verification queue' : 'Driver application'}>
+    <div className="flex items-center justify-between"><div><p className="section-label">{approved ? 'Admin review' : 'Your Driver profile'}</p><h2 className="mt-1 text-lg font-extrabold">Rajeev4 · Tata Tiago</h2></div><Pill tone={approved ? 'good' : 'warn'}>{approved ? 'READY TO APPROVE' : 'DRAFT'}</Pill></div>
+    <div className="mt-4 grid grid-cols-2 gap-2"><MediaTile label="Driver photo"/><MediaTile label="Car · front"/><MediaTile label="Car · rear"/><MediaTile label="Car · interior"/></div>
+    <div className="mt-3 space-y-2"><DocRow label="Driving licence"/><DocRow label="Vehicle RC"/><DocRow label="Insurance / operating docs"/></div>
+    <div className="mt-3 rounded-xl border border-border bg-white p-3"><p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Outstation origin area</p><div className="mt-2 flex items-center justify-between"><span className="text-sm font-extrabold">Bokaro</span><Pill tone="good">SELECTED</Pill></div></div>
+    <button onClick={advance} className="btn-primary mt-5 w-full">{approved ? 'Approve Driver' : 'Submit for verification'} <ArrowRight size={15}/></button>
+  </PhoneFrame>;
 }
 
-function SeatRaceSurface({ step, persona }: { step: number; persona: Persona }) {
-  const held = step === 0 ? 0 : step < 3 ? 3 : 4;
-  const available = 4 - held;
-  const blocked = step === 2;
-  return <div className="space-y-4 p-4"><div><p className="section-label">Exact-seat ledger</p><h2 className="mt-1 text-lg font-extrabold">Rajeev4 · DG-01</h2><p className="mt-1 text-xs text-muted-foreground">4 Passenger seats · simulated concurrency test</p></div><div className="grid grid-cols-4 gap-2">{[1,2,3,4].map(n=><div key={n} className={`rounded-xl border p-3 text-center ${n <= held ? 'border-amber-200 bg-amber-50' : 'border-emerald-200 bg-emerald-50'}`}><Car size={15} className="mx-auto"/><p className="mt-1 text-[10px] font-bold">Seat {n}</p><p className="mt-1 text-[9px] text-muted-foreground">{n <= held ? 'HELD' : 'AVAILABLE'}</p></div>)}</div><div className="grid grid-cols-2 gap-2"><div className="rounded-xl bg-muted p-3"><p className="text-[10px] text-muted-foreground">Held/confirmed</p><p className="mt-1 text-xl font-extrabold">{held}/4</p></div><div className="rounded-xl bg-muted p-3"><p className="text-[10px] text-muted-foreground">Available</p><p className="mt-1 text-xl font-extrabold">{available}</p></div></div>{blocked&&<div className="rounded-xl border border-red-200 bg-red-50 p-3"><p className="text-xs font-extrabold text-red-700">2-seat request blocked</p><p className="mt-1 text-[10px] leading-relaxed text-red-700">Only one seat remains. No partial or over-capacity booking is created.</p></div>}{step >= 3&&<div className="rounded-xl border border-emerald-200 bg-emerald-50 p-3"><p className="text-xs font-extrabold text-emerald-800">Ledger reconciled</p><p className="mt-1 text-[10px] text-emerald-700">The final one-seat request succeeds and counters agree at 4/4.</p></div>}<p className="text-[10px] text-muted-foreground">Viewing as {persona.label} · this simulation performs no database writes.</p></div>;
+function MediaTile({ label }: { label: string }) {
+  return <div className="flex min-h-[86px] flex-col items-center justify-center rounded-xl border border-border bg-muted text-center"><ImageIcon size={18} className="text-muted-foreground"/><p className="mt-2 text-[10px] font-extrabold">{label}</p><p className="text-[9px] text-muted-foreground">synthetic photo</p></div>;
 }
 
-function OutstationSurface({ step, persona }: { step: number; persona: Persona }) {
-  const accepted = step >= 4;
-  const quoted = step >= 3;
-  if (persona.role === 'Admin') return <RestrictedSurface title="Admin can observe Outstation operations but does not quote for Drivers" />;
-  if (persona.role === 'Passenger') return <div className="space-y-3 p-4"><div><p className="section-label">Raahi Outstation</p><h2 className="mt-1 text-lg font-extrabold">Bokaro → Ranchi</h2><p className="mt-1 text-xs text-muted-foreground">Round trip · 3 passengers · tomorrow 7:00 AM</p></div>{!quoted&&<div className="rounded-2xl border border-border bg-white p-5 text-center"><Clock3 size={22} className="mx-auto text-muted-foreground"/><p className="mt-2 text-sm font-extrabold">Waiting for Driver prices</p><p className="mt-1 text-xs text-muted-foreground">Only eligible Drivers subscribed to Bokaro receive this lead.</p></div>}{quoted&&<div className={`rounded-2xl border p-4 ${accepted ? 'border-emerald-200 bg-emerald-50' : 'border-primary/20 bg-white'}`}><div className="flex items-start justify-between"><div><p className="text-sm font-extrabold">Rajeev4 · TATA TIAGO</p><p className="mt-1 text-xs text-muted-foreground">JH10RS1234 · 4 seats · verified</p></div><StatusPill status="good">{accepted ? 'Accepted' : 'Quote'}</StatusPill></div><div className="mt-4 flex items-end justify-between"><div><p className="text-[10px] text-muted-foreground">Total price</p><p className="text-2xl font-extrabold">₹3,800</p></div>{!accepted&&<button className="btn-primary !px-3 !py-2 text-xs">Choose quote</button>}</div><p className="mt-3 text-[10px] text-muted-foreground">Tolls included · Parking extra</p>{accepted&&<div className="mt-3 rounded-xl bg-white/70 p-3"><p className="text-xs font-extrabold">Contact unlocked after acceptance</p><p className="mt-1 text-[10px] text-muted-foreground">Passenger and Driver contact details are now available to the matched parties.</p></div>}</div>}</div>;
-  const ignored = persona.key === 'naresh' && step >= 2;
-  if (persona.key === 'rajeev4' && accepted) return <div className="space-y-3 p-4"><div><p className="section-label">Accepted Outstation work</p><h2 className="mt-1 text-lg font-extrabold">Bokaro → Ranchi</h2></div><div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4"><div className="flex items-start justify-between"><div><p className="text-sm font-extrabold">₹3,800 · Rajeev1</p><p className="mt-1 text-xs text-emerald-800">TATA TIAGO · JH10RS1234</p></div><StatusPill status="good">Accepted</StatusPill></div><div className="mt-3 rounded-xl bg-white/70 p-3"><p className="text-xs font-extrabold">Passenger contact unlocked</p><p className="mt-1 text-[10px] text-muted-foreground">Contact details are available only after the Passenger accepts this Driver's quote.</p></div></div></div>;
-  return <div className="space-y-3 p-4"><div><p className="section-label">Outstation lead</p><h2 className="mt-1 text-lg font-extrabold">Bokaro → Ranchi</h2><p className="mt-1 text-xs text-muted-foreground">3 passengers · Bokaro service area</p></div>{ignored?<div className="rounded-2xl border border-border bg-stone-50 p-5 text-center"><BellRing size={22} className="mx-auto text-muted-foreground"/><p className="mt-2 text-sm font-extrabold">Lead ignored</p><p className="mt-1 text-xs text-muted-foreground">It is hidden for Naresh but remains open for other eligible Drivers.</p></div>:<div className="rounded-2xl border border-border bg-white p-4"><div className="flex items-start justify-between"><div><p className="text-sm font-extrabold">Passenger needs a car</p><p className="mt-1 text-xs text-muted-foreground">Bokaro pickup · Ranchi destination</p></div><StatusPill status="good">Eligible</StatusPill></div>{persona.key === 'rajeev4'&&step >= 3?<div className="mt-4 rounded-xl bg-secondary p-3"><p className="text-xs font-extrabold">Your quote · ₹3,800</p><p className="mt-1 text-[10px] text-muted-foreground">Tolls included · Parking extra</p></div>:<div className="mt-4 grid grid-cols-2 gap-2"><button className="btn-outline !px-3 !py-2 text-xs">Ignore</button><button className="btn-primary !px-3 !py-2 text-xs">Send price</button></div>}</div>}</div>;
+function DocRow({ label }: { label: string }) {
+  return <div className="flex items-center justify-between rounded-xl border border-border bg-white p-3"><div className="flex items-center gap-2"><FileCheck2 size={15} className="text-primary"/><span className="text-xs font-extrabold">{label}</span></div><Pill tone="good">UPLOADED</Pill></div>;
 }
 
-function TripLifecycleSurface({ step, persona }: { step: number; persona: Persona }) {
-  const stages = ['Accepted', 'GPS current', 'Collecting', 'In progress', 'Completed'];
-  const current = Math.min(step, stages.length - 1);
-  return <div className="space-y-4 p-4"><div><p className="section-label">Shared trip</p><h2 className="mt-1 text-lg font-extrabold">Dhanbad → Gomoh</h2><p className="mt-1 text-xs text-muted-foreground">Rajeev4 · Rajeev1 · DG-01</p></div><div className="space-y-0">{stages.map((label,index)=><div key={label} className="flex gap-3"><div className="flex flex-col items-center"><span className={`mt-0.5 flex h-6 w-6 items-center justify-center rounded-full ${index <= current ? 'bg-primary text-white' : 'bg-stone-200 text-stone-500'}`}>{index < current ? <CheckCircle2 size={14}/> : <Circle size={9}/>}</span>{index<stages.length-1&&<span className={`h-8 w-0.5 ${index < current ? 'bg-primary' : 'bg-stone-200'}`}/>}</div><div className="pb-4"><p className={`text-xs font-extrabold ${index <= current ? 'text-foreground' : 'text-muted-foreground'}`}>{label}</p>{index===1&&step>=1&&<p className="mt-1 text-[10px] text-muted-foreground">23.6693, 86.1511 · ±18 m · fresh</p>}</div></div>)}</div><div className="rounded-xl border border-border bg-stone-50 p-3"><div className="flex items-center gap-2"><Navigation size={15} className="text-primary"/><p className="text-xs font-extrabold">Simulated GPS only</p></div><p className="mt-1 text-[10px] leading-relaxed text-muted-foreground">No device location is sent to the production trip_live_locations table.</p></div><p className="text-[10px] text-muted-foreground">Current persona: {persona.label}</p></div>;
+function ServicePreferences({ advance }: { advance: () => void }) {
+  return <PhoneFrame role="driver" title="Where do you want work?">
+    <div className="flex items-center justify-between"><div><p className="section-label">Services</p><h2 className="mt-1 text-lg font-extrabold">Choose your Raahi work</h2></div><Pill tone="good">VERIFIED</Pill></div>
+    <div className="mt-4 space-y-3"><div className="rounded-2xl border-2 border-primary bg-secondary p-4"><div className="flex items-center justify-between"><div className="flex items-center gap-2"><Car size={17}/><p className="text-sm font-extrabold">Outstation</p></div><CheckCircle2 size={18} className="text-primary"/></div><p className="mt-2 text-xs">Origin area · <strong>Bokaro</strong></p><p className="mt-1 text-[10px] text-muted-foreground">Receive round-trip quote leads originating in Bokaro.</p></div><div className="rounded-2xl border border-border bg-white p-4"><div className="flex items-center gap-2"><Route size={17}/><p className="text-sm font-extrabold">Shared Ride</p></div><p className="mt-2 text-xs text-muted-foreground">Optional fixed-corridor subscriptions are independent of Outstation areas.</p></div></div>
+    <button onClick={advance} className="btn-primary mt-5 w-full">Save service preferences <ArrowRight size={15}/></button>
+  </PhoneFrame>;
 }
 
-function LocalOffersSurface({ step, persona }: { step: number; persona: Persona }) {
-  if (persona.role === 'Admin') return <div className="space-y-3 p-4"><div><p className="section-label">Operations · Promotions</p><h2 className="mt-1 text-lg font-extrabold">Local Offers</h2></div>{step===0?<div className="rounded-2xl border border-border bg-white p-5 text-center text-xs text-muted-foreground">No promotion records in the scenario.</div>:<div className="rounded-2xl border border-border bg-white p-4"><div className="flex items-start justify-between"><div><p className="text-sm font-extrabold">City Sweets · Bokaro</p><p className="mt-1 text-xs text-muted-foreground">10% off evening snack boxes</p></div><StatusPill status={step>=2?'good':'warn'}>{step>=2?'ACTIVE':'DRAFT'}</StatusPill></div><p className="mt-3 text-[10px] text-muted-foreground">Amount collected · ₹1,200 · Admin-only field</p></div>}</div>;
-  return <div className="space-y-3 p-4"><div><p className="section-label">Local Offers</p><h2 className="mt-1 text-lg font-extrabold">Local businesses help support Raahi.</h2><p className="mt-1 text-xs text-muted-foreground">No Passenger platform fee or Driver commission at launch.</p></div>{step<2?<div className="rounded-2xl border border-border bg-white p-6 text-center"><Megaphone size={23} className="mx-auto text-muted-foreground"/><p className="mt-2 text-sm font-extrabold">No local offers right now</p><p className="mt-1 text-xs text-muted-foreground">Draft promotions stay invisible until Admin activates them.</p></div>:<div className="rounded-2xl border border-amber-200 bg-amber-50 p-4"><div className="flex items-start justify-between"><div><p className="text-[10px] font-bold uppercase tracking-widest text-amber-800">Sponsored</p><p className="mt-1 text-sm font-extrabold">City Sweets · Bokaro</p></div><Sparkles size={18} className="text-amber-700"/></div><p className="mt-2 text-xs text-amber-900">10% off evening snack boxes</p><p className="mt-3 text-[10px] text-amber-800">Sponsored, not personalized.</p></div>}</div>;
+function PassengerSearch({ outstation, advance }: { outstation: boolean; advance: () => void }) {
+  return <PhoneFrame role="passenger" title="One travel search">
+    <p className="section-label">Plan travel</p><h2 className="mt-1 text-xl font-extrabold">Where are you going?</h2>
+    <div className="mt-4 space-y-2"><Field label="From" value={outstation ? 'Bokaro' : 'Dhanbad'}/><Field label="To" value={outstation ? 'Ranchi' : 'Gomoh'}/></div>
+    <div className="mt-4 rounded-2xl border border-border bg-white p-4"><div className="flex items-start gap-3">{outstation?<Car size={20} className="mt-0.5 text-primary"/>:<BusFront size={20} className="mt-0.5 text-primary"/>}<div><p className="text-sm font-extrabold">{outstation ? 'Raahi Outstation' : 'Shared Ride available'}</p><p className="mt-1 text-xs leading-relaxed text-muted-foreground">{outstation ? 'No fixed corridor matches this journey. Bokaro is an active Outstation origin area, so Raahi will ask verified local Drivers for a round-trip quote.' : 'This journey matches the Dhanbad → Gomoh fixed corridor. Book seats in the active car instead of hiring the whole vehicle.'}</p></div></div></div>
+    {outstation ? <div className="mt-3 rounded-xl bg-amber-50 p-3"><p className="text-xs font-extrabold text-amber-900">Round trip</p><p className="mt-1 text-[10px] leading-relaxed text-amber-800">Outstation is round-trip only in this launch model because a return journey for the Driver is not guaranteed.</p></div> : <div className="mt-3 flex items-center justify-between rounded-xl bg-secondary p-3"><span className="text-xs font-extrabold">2 seats · ₹300 total</span><Pill tone="good">₹150 / seat</Pill></div>}
+    <button onClick={advance} className="btn-primary mt-5 w-full">{outstation ? 'Request round-trip quotes' : 'Request 2 seats'} <ArrowRight size={15}/></button>
+  </PhoneFrame>;
 }
 
-function RegulatorySurface({ step, persona }: { step: number; persona: Persona }) {
-  const pilot = persona.key === 'rajeev4' || persona.key === 'naresh';
-  return <div className="space-y-4 p-4"><div className="rounded-2xl border border-amber-200 bg-amber-50 p-4"><div className="flex items-start gap-3"><LockKeyhole size={20} className="mt-0.5 text-amber-800"/><div><p className="text-sm font-extrabold text-amber-900">Public transactions are OFF</p><p className="mt-1 text-xs leading-relaxed text-amber-800">Browsing, recruitment and verification remain available while public paid ride operations stay fail-closed.</p></div></div></div><div className="grid grid-cols-2 gap-2"><div className="rounded-xl border border-border bg-white p-3"><p className="text-[10px] text-muted-foreground">Public switch</p><p className="mt-1 text-sm font-extrabold">OFF</p></div><div className="rounded-xl border border-border bg-white p-3"><p className="text-[10px] text-muted-foreground">Current account</p><p className="mt-1 text-sm font-extrabold">{pilot ? 'Pilot' : persona.role}</p></div></div>{step===1&&!pilot&&<div className="rounded-xl border border-red-200 bg-red-50 p-3"><p className="text-xs font-extrabold text-red-700">Protected operation blocked</p><p className="mt-1 text-[10px] text-red-700">A non-pilot public user cannot bypass the regulatory launch gate.</p></div>}{step>=2&&pilot&&<div className="rounded-xl border border-emerald-200 bg-emerald-50 p-3"><p className="text-xs font-extrabold text-emerald-800">Controlled pilot scenario allowed</p><p className="mt-1 text-[10px] text-emerald-700">The simulator demonstrates the acceptance path without changing the live switch.</p></div>}{step>=3&&<div className="rounded-xl border border-primary/20 bg-secondary p-3"><p className="text-xs font-extrabold">Post-test invariant</p><p className="mt-1 text-[10px] text-muted-foreground">Public transactions remain OFF after the scenario completes.</p></div>}</div>;
+function Field({ label, value }: { label: string; value: string }) {
+  return <div className="rounded-xl border border-border bg-white px-3 py-2"><p className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground">{label}</p><p className="mt-1 text-sm font-extrabold">{value}</p></div>;
 }
 
-function RestrictedSurface({ title }: { title: string }) {
-  return <div className="flex min-h-[420px] flex-col items-center justify-center p-8 text-center"><LockKeyhole size={30} className="text-muted-foreground"/><p className="mt-3 text-sm font-extrabold">{title}</p><p className="mt-2 max-w-sm text-xs leading-relaxed text-muted-foreground">Switch persona in the Demo controls to see the relevant simulated surface.</p></div>;
+function SharedRideLive({ role, advance }: { role: Role; advance: () => void }) {
+  if (role === 'driver') return <PhoneFrame role="driver" title="Shared Ride FIFO"><p className="section-label">Dhanbad → Gomoh</p><h2 className="mt-1 text-lg font-extrabold">Naresh is collecting</h2><div className="mt-4 rounded-2xl border-2 border-primary bg-secondary p-4"><div className="flex items-center justify-between"><p className="text-sm font-extrabold">ACTIVE_COLLECTING</p><Pill tone="good">#1</Pill></div><p className="mt-2 text-xs text-muted-foreground">2 Passenger seats requested · 2 seats remain.</p></div><div className="mt-3 rounded-xl border border-border bg-white p-3"><p className="text-xs font-extrabold">Next Driver</p><p className="mt-1 text-xs text-muted-foreground">Waiting behind active car · no queue jumping</p></div><button onClick={advance} className="btn-primary mt-5 w-full">Confirm Shared Ride <ArrowRight size={15}/></button></PhoneFrame>;
+  return <PhoneFrame role="passenger" title="Shared Ride booking"><div className="flex items-center justify-between"><div><p className="section-label">Dhanbad → Gomoh</p><h2 className="mt-1 text-lg font-extrabold">Your seats are held</h2></div><Pill tone="good">2 SEATS</Pill></div><div className="mt-4 rounded-2xl border border-border bg-white p-4"><div className="flex items-center gap-3"><div className="flex h-10 w-10 items-center justify-center rounded-full bg-secondary"><UserRound size={20}/></div><div><p className="text-sm font-extrabold">Naresh · active Driver</p><p className="mt-1 text-[10px] text-muted-foreground">Current collecting car · FIFO #1</p></div></div><div className="mt-3 flex gap-2"><Pill tone="good">DL VERIFIED</Pill><Pill tone="good">RC VERIFIED</Pill></div></div><p className="mt-3 text-xs leading-relaxed text-muted-foreground">Exact-seat controls prevent the car from being overbooked even when requests arrive together.</p></PhoneFrame>;
 }
 
-function DemoSurface({ scenario, step, persona }: { scenario: Scenario; step: number; persona: Persona }) {
-  let content: React.ReactNode;
-  if (scenario.key === 'driver-verification') content = <DriverVerificationSurface step={step} persona={persona}/>;
-  else if (scenario.key === 'shared-fifo') content = <SharedFifoSurface step={step} persona={persona}/>;
-  else if (scenario.key === 'seat-race') content = <SeatRaceSurface step={step} persona={persona}/>;
-  else if (scenario.key === 'outstation') content = <OutstationSurface step={step} persona={persona}/>;
-  else if (scenario.key === 'trip-lifecycle') content = <TripLifecycleSurface step={step} persona={persona}/>;
-  else if (scenario.key === 'local-offers') content = <LocalOffersSurface step={step} persona={persona}/>;
-  else content = <RegulatorySurface step={step} persona={persona}/>;
-  return <div className="overflow-hidden rounded-[28px] border border-border bg-[#FAF9F6] shadow-xl"><MiniHeader persona={persona}/><div className="min-h-[520px]">{content}</div></div>;
+function OutstationLead({ advance }: { advance: () => void }) {
+  return <PhoneFrame role="driver" title="Bokaro Outstation lead"><div className="flex items-center justify-between"><div><p className="section-label">New request</p><h2 className="mt-1 text-lg font-extrabold">Bokaro → Ranchi → Bokaro</h2></div><BellRing size={19} className="text-primary"/></div><div className="mt-4 grid grid-cols-2 gap-2"><Field label="Departure" value="Tomorrow · 7:00 AM"/><Field label="Passengers" value="4"/></div><div className="mt-3 rounded-xl border border-border bg-white p-3"><p className="text-xs font-extrabold">Why you received this</p><p className="mt-1 text-[10px] leading-relaxed text-muted-foreground">You are verified and subscribed to the Bokaro Outstation origin area. Your Shared Ride preferences do not affect this lead.</p></div><div className="mt-4 grid grid-cols-2 gap-2"><button className="btn-outline !py-2 text-xs">Ignore</button><button onClick={advance} className="btn-primary !py-2 text-xs">Quote ₹3,800</button></div></PhoneFrame>;
+}
+
+function TrustChoice({ advance }: { advance: () => void }) {
+  return <PhoneFrame role="passenger" title="Compare verified local Drivers"><p className="section-label">2 quotes received</p><h2 className="mt-1 text-lg font-extrabold">Choose who you travel with</h2><div className="mt-4 rounded-2xl border-2 border-primary bg-white p-4"><div className="flex items-start justify-between gap-3"><div className="flex items-center gap-3"><div className="flex h-12 w-12 items-center justify-center rounded-full bg-secondary"><UserRound size={24}/></div><div><p className="text-sm font-extrabold">Rajeev4</p><p className="text-[10px] text-muted-foreground">Tata Tiago · 4 seats</p></div></div><p className="text-lg font-extrabold">₹3,800</p></div><div className="mt-3 grid grid-cols-3 gap-2"><MediaTile label="Front"/><MediaTile label="Rear"/><MediaTile label="Inside"/></div><div className="mt-3 flex flex-wrap gap-2"><Pill tone="good">DL VERIFIED</Pill><Pill tone="good">RC VERIFIED</Pill><Pill tone="good">CAR PHOTOS</Pill></div><div className="mt-3 flex items-center gap-2 rounded-xl bg-muted p-3"><LockKeyhole size={14}/><p className="text-[10px] leading-relaxed">Phone/contact details stay private until you accept.</p></div><button onClick={advance} className="btn-primary mt-4 w-full">Accept Rajeev4</button></div><div className="mt-3 rounded-xl border border-border bg-white p-3"><div className="flex items-center justify-between"><div><p className="text-xs font-extrabold">Another verified Bokaro Driver</p><p className="mt-1 text-[10px] text-muted-foreground">Sedan · 4 seats</p></div><p className="text-sm font-extrabold">₹4,200</p></div></div></PhoneFrame>;
+}
+
+function TripLive({ advance }: { advance: () => void }) {
+  return <PhoneFrame role="driver" title="Confirmed Outstation"><div className="flex items-center justify-between"><div><p className="section-label">Booking confirmed</p><h2 className="mt-1 text-lg font-extrabold">Bokaro → Ranchi → Bokaro</h2></div><Pill tone="good">ACCEPTED</Pill></div><div className="mt-4 space-y-2"><div className="rounded-xl border border-border bg-white p-3"><div className="flex items-center gap-2"><Phone size={15} className="text-primary"/><p className="text-xs font-extrabold">Passenger contact unlocked</p></div><p className="mt-1 text-[10px] text-muted-foreground">Only after quote acceptance.</p></div><div className="rounded-xl border border-border bg-white p-3"><div className="flex items-center gap-2"><Navigation size={15} className="text-primary"/><p className="text-xs font-extrabold">Fresh GPS · 18 m accuracy</p></div><p className="mt-1 text-[10px] text-muted-foreground">Simulated location for demo only.</p></div></div><div className="mt-4 flex items-center justify-between text-[10px] font-bold text-muted-foreground"><span>BOOKED</span><span>→</span><span>PICKUP</span><span>→</span><span>TRIP</span><span>→</span><span>COMPLETE</span></div><button onClick={advance} className="btn-primary mt-5 w-full">Complete simulated trip <ArrowRight size={15}/></button></PhoneFrame>;
+}
+
+function CommunitySurface({ advance }: { advance: () => void }) {
+  return <PhoneFrame role="passenger" title="Around your trip"><div className="flex items-center gap-2"><Sparkles size={19} className="text-primary"/><div><p className="section-label">Useful, not intrusive</p><h2 className="mt-1 text-lg font-extrabold">Around your trip</h2></div></div><div className="mt-4 space-y-3"><InfoCard icon={<HeartHandshake size={16}/>} tag="COMMUNITY" title="Festival traffic note" detail="A local festival may make central Ranchi busier this evening. Plan a little extra time."/><InfoCard icon={<Store size={16}/>} tag="TRIP IDEA" title="Need sweets or gifts?" detail="Explore useful places near your origin or destination when you actually need them."/><InfoCard icon={<MessageSquareText size={16}/>} tag="RAAHI" title="Have a suggestion?" detail="Tell Raahi what would make local travel better. Feedback and support stay one tap away."/></div><p className="mt-4 text-[10px] leading-relaxed text-muted-foreground">When paid local promotions arrive later, they should be limited, relevant to the journey and clearly marked Sponsored.</p><button onClick={advance} className="btn-primary mt-5 w-full">See marketplace learning <ArrowRight size={15}/></button></PhoneFrame>;
+}
+
+function InfoCard({ icon, tag, title, detail }: { icon: ReactNode; tag: string; title: string; detail: string }) {
+  return <div className="rounded-2xl border border-border bg-white p-4"><div className="flex items-center gap-2 text-primary">{icon}<p className="text-[9px] font-extrabold tracking-wider">{tag}</p></div><p className="mt-2 text-sm font-extrabold">{title}</p><p className="mt-1 text-[10px] leading-relaxed text-muted-foreground">{detail}</p></div>;
+}
+
+function LearningDashboard() {
+  return <PhoneFrame role="admin" title="Marketplace health"><div className="flex items-center justify-between"><div><p className="section-label">Learn from demand</p><h2 className="mt-1 text-lg font-extrabold">What should Raahi launch next?</h2></div><Gauge size={20} className="text-primary"/></div><div className="mt-4 grid grid-cols-2 gap-2"><Metric value="3" label="Outstation origins"/><Metric value="2" label="Shared corridors"/><Metric value="2" label="Verified Bokaro Drivers"/><Metric value="18" label="Bokaro→Ranchi asks"/></div><div className="mt-4 rounded-2xl border-2 border-primary bg-secondary p-4"><div className="flex items-center gap-2"><Route size={17}/><p className="text-sm font-extrabold">Corridor opportunity</p></div><p className="mt-2 text-xs font-extrabold">Bokaro ⇄ Ranchi</p><p className="mt-1 text-[10px] leading-relaxed text-muted-foreground">Repeated Outstation demand is becoming dense enough to investigate a fixed Shared Ride corridor. Data proposes; Admin decides.</p></div><div className="mt-4 rounded-xl border border-border bg-white p-3"><p className="text-xs font-extrabold">Expansion loop</p><p className="mt-2 text-[10px] leading-relaxed text-muted-foreground">Add origin area → onboard Drivers → serve Outstation → observe demand → promote proven corridors → densify.</p></div></PhoneFrame>;
+}
+
+function Metric({ value, label }: { value: string; label: string }) {
+  return <div className="rounded-xl border border-border bg-white p-3"><p className="text-lg font-extrabold">{value}</p><p className="mt-1 text-[9px] font-bold uppercase tracking-wider text-muted-foreground">{label}</p></div>;
+}
+
+function RoleSummary({ role, stage, onClick }: { role: Role; stage: number; onClick: () => void }) {
+  const active = STORY[stage].actor === role;
+  const label = role === 'admin' ? 'Ajit · Admin' : role === 'driver' ? 'Drivers' : 'Passenger';
+  const icon = role === 'admin' ? <Building2 size={15}/> : role === 'driver' ? <Car size={15}/> : <UserRound size={15}/>;
+  let state = 'Waiting';
+  if (role === 'admin') state = stage < 1 ? 'Empty network' : stage < 5 ? 'Network published' : stage < 14 ? 'Operating marketplace' : 'Learning from demand';
+  if (role === 'driver') state = stage < 2 ? 'Join available' : stage < 4 ? 'Onboarding' : stage < 5 ? 'Pending review' : stage < 9 ? 'Verified' : stage < 11 ? 'Bokaro lead' : 'Booking won';
+  if (role === 'passenger') state = stage < 7 ? 'Travel search ready' : stage < 9 ? 'Shared Ride' : stage < 11 ? 'Waiting for quotes' : stage < 13 ? 'Outstation booked' : 'Community + feedback';
+  return <button onClick={onClick} className={`w-full rounded-xl border p-3 text-left transition ${active ? 'border-primary bg-secondary' : 'border-border bg-white hover:bg-muted'}`}><div className="flex items-center justify-between gap-2"><div className="flex items-center gap-2">{icon}<p className="text-xs font-extrabold">{label}</p></div>{active&&<CircleDot size={13} className="text-primary"/>}</div><p className="mt-1 text-[9px] leading-relaxed text-muted-foreground">{state}</p></button>;
+}
+
+function renderSurface(stage: number, role: Role, advance: () => void) {
+  if (stage === 0) return <EmptyNetwork advance={advance}/>;
+  if (stage === 1) return <NetworkSetup advance={advance}/>;
+  if (stage === 2 || stage === 3) return <DriverJoin stage={stage} advance={advance}/>;
+  if (stage === 4) return <DriverApplication approved={false} advance={advance}/>;
+  if (stage === 5) return <DriverApplication approved advance={advance}/>;
+  if (stage === 6) return <ServicePreferences advance={advance}/>;
+  if (stage === 7) return <PassengerSearch outstation={false} advance={advance}/>;
+  if (stage === 8) return <SharedRideLive role={role} advance={advance}/>;
+  if (stage === 9) return <PassengerSearch outstation advance={advance}/>;
+  if (stage === 10) return <OutstationLead advance={advance}/>;
+  if (stage === 11) return <TrustChoice advance={advance}/>;
+  if (stage === 12) return <TripLive advance={advance}/>;
+  if (stage === 13) return <CommunitySurface advance={advance}/>;
+  return <LearningDashboard/>;
 }
 
 export default function DemoExperience() {
-  const [scenarioKey, setScenarioKey] = useState<ScenarioKey>('outstation');
-  const [step, setStep] = useState(0);
-  const [personaKey, setPersonaKey] = useState<PersonaKey>('passenger');
-  const scenario = useMemo(() => SCENARIOS.find(item => item.key === scenarioKey) ?? SCENARIOS[0], [scenarioKey]);
-  const persona = useMemo(() => PERSONAS.find(item => item.key === personaKey) ?? PERSONAS[0], [personaKey]);
-  const activeStep = scenario.steps[Math.min(step, scenario.steps.length - 1)];
+  const [stage, setStage] = useState(0);
+  const [role, setRole] = useState<Role>('admin');
+  const current = STORY[stage];
 
-  const chooseScenario = (next: Scenario) => {
-    setScenarioKey(next.key);
-    setStep(0);
-    setPersonaKey(next.steps[0].persona);
+  const go = (next: number) => {
+    const bounded = Math.max(0, Math.min(STORY.length - 1, next));
+    setStage(bounded);
+    setRole(STORY[bounded].actor);
   };
-  const move = (delta: number) => {
-    const next = Math.max(0, Math.min(scenario.steps.length - 1, step + delta));
-    setStep(next);
-    setPersonaKey(scenario.steps[next].persona);
-  };
-  const reset = () => {
-    setStep(0);
-    setPersonaKey(scenario.steps[0].persona);
-  };
+  const advance = () => go(stage + 1);
 
   return <main className="min-h-screen bg-[#F6F4EE] text-foreground">
     <div className="border-b border-amber-200 bg-amber-50 px-4 py-2 text-center text-[11px] font-extrabold tracking-wide text-amber-900">RAAHI DEMO · SIMULATED MARKETPLACE · NO REAL RIDES OR LIVE DATA CHANGES</div>
-    <header className="border-b border-border bg-white/95 px-4 py-4 backdrop-blur sm:px-6"><div className="mx-auto flex max-w-[1500px] flex-wrap items-center justify-between gap-3"><div><BrandLockup size={36}/><p className="mt-1 text-xs text-muted-foreground">Local mobility for towns and corridors underserved by formal platforms.</p></div><div className="flex flex-wrap gap-2"><StatusPill status="good">PASSENGER · DRIVER · ADMIN</StatusPill><StatusPill status="warn">SAFE DEMO · NO LIVE CHANGES</StatusPill></div></div></header>
+    <header className="border-b border-border bg-white/95 px-4 py-4 backdrop-blur sm:px-6"><div className="mx-auto flex max-w-[1500px] flex-wrap items-center justify-between gap-3"><div><BrandLockup size={36}/><p className="mt-1 text-xs text-muted-foreground">Build a local mobility network. Watch Passenger, Driver and Admin experiences change together.</p></div><div className="flex flex-wrap gap-2"><Pill tone="good">UI PROTOTYPE · BROWSER ONLY</Pill><Pill tone="warn">SAFE DEMO · NO LIVE CHANGES</Pill></div></div></header>
 
-    <div className="mx-auto grid max-w-[1500px] gap-5 px-4 py-5 sm:px-6 xl:grid-cols-[280px_minmax(0,1fr)_330px]">
-      <aside className="min-w-0 rounded-3xl border border-border bg-white p-3 card-shadow xl:sticky xl:top-5 xl:h-fit"><div className="px-2 pb-3"><p className="section-label">Scenario library</p><h1 className="mt-1 text-lg font-extrabold">Walk the marketplace</h1><p className="mt-1 text-xs leading-relaxed text-muted-foreground">Acquire supply → densify corridors → build trust → sustain with local commerce.</p></div><div className="flex max-w-full gap-2 overflow-x-auto pb-1 xl:block xl:space-y-1">{ORDERED_SCENARIOS.map(item=><button key={item.key} onClick={()=>chooseScenario(item)} className={`min-w-[220px] rounded-2xl px-3 py-3 text-left transition xl:w-full xl:min-w-0 ${item.key===scenario.key?'bg-primary text-white':'hover:bg-muted'}`}><p className={`text-[10px] font-bold uppercase tracking-wider ${item.key===scenario.key?'text-white/70':'text-muted-foreground'}`}>{item.accent}</p><p className="mt-1 text-sm font-extrabold">{item.title}</p><p className={`mt-1 text-[10px] leading-relaxed ${item.key===scenario.key?'text-white/75':'text-muted-foreground'}`}>{item.subtitle}</p></button>)}</div></aside>
+    <div className="mx-auto grid max-w-[1500px] gap-5 px-4 py-5 sm:px-6 xl:grid-cols-[300px_minmax(0,1fr)_330px]">
+      <aside className="min-w-0 rounded-3xl border border-border bg-white p-4 card-shadow xl:sticky xl:top-5 xl:h-fit"><p className="section-label">Build a Raahi Area</p><h1 className="mt-1 text-xl font-extrabold">One continuous marketplace story</h1><p className="mt-2 text-xs leading-relaxed text-muted-foreground">Create supply, let Drivers join, serve Passenger demand, then learn which corridors deserve density.</p><div className="mt-4 max-h-[62vh] space-y-1 overflow-y-auto pr-1">{STORY.map((item,index)=><button key={item.label} onClick={()=>go(index)} className={`flex w-full items-start gap-3 rounded-xl p-2.5 text-left ${index===stage?'bg-secondary':'hover:bg-muted'}`}><span className={`mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[10px] font-extrabold ${index<stage?'bg-primary text-white':index===stage?'border-2 border-primary text-primary':'border border-border text-muted-foreground'}`}>{index<stage?<Check size={12}/>:index+1}</span><div><p className="text-xs font-extrabold">{item.title}</p><p className="mt-1 text-[9px] text-muted-foreground">{item.label} · {item.actor}</p></div></button>)}</div></aside>
 
-      <section className="min-w-0"><div className="mb-4 rounded-3xl border border-border bg-white p-5 card-shadow"><div className="flex flex-wrap items-start justify-between gap-3"><div><p className="section-label">Current scenario</p><h2 className="mt-1 text-2xl font-extrabold tracking-tight">{scenario.title}</h2><p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted-foreground">{activeStep.detail}</p></div><StatusPill status="good">Step {step+1} / {scenario.steps.length}</StatusPill></div></div><div className="mx-auto max-w-[700px]"><DemoSurface scenario={scenario} step={step} persona={persona}/></div></section>
+      <section className="min-w-0"><div className="mb-4 rounded-3xl border border-border bg-white p-5 card-shadow"><div className="flex flex-wrap items-start justify-between gap-3"><div><p className="section-label">Step {stage+1} of {STORY.length}</p><h2 className="mt-1 text-2xl font-extrabold tracking-tight">{current.title}</h2><p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted-foreground">{current.detail}</p></div><Pill tone="good">{current.actor.toUpperCase()} ACTION</Pill></div></div><div className="mx-auto max-w-[700px]">{renderSurface(stage, role, advance)}</div></section>
 
-      <aside className="space-y-4 xl:sticky xl:top-5 xl:h-fit"><div className="rounded-3xl border border-border bg-white p-4 card-shadow"><div className="flex items-center gap-2"><Gauge size={17} className="text-primary"/><div><p className="section-label">Demo controls</p><p className="mt-1 text-sm font-extrabold">Switch role. Advance state.</p></div></div><div className="mt-4 grid grid-cols-2 gap-2">{PERSONAS.map(item=><button key={item.key} onClick={()=>setPersonaKey(item.key)} aria-pressed={item.key===persona.key} className={`rounded-xl border p-3 text-left ${item.key===persona.key?'border-primary bg-secondary':'border-border bg-white hover:bg-muted'}`}><div className="flex items-center gap-2"><UserRound size={14}/><p className="text-xs font-extrabold">{item.shortLabel}</p></div><p className="mt-1 text-[9px] leading-relaxed text-muted-foreground">{item.detail}</p></button>)}</div><div className="mt-4 rounded-2xl bg-muted p-3"><p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{activeStep.title}</p><p className="mt-2 text-xs leading-relaxed">{activeStep.detail}</p></div><div className="mt-4 grid grid-cols-[1fr_auto_1fr] gap-2"><button onClick={()=>move(-1)} disabled={step===0} className="btn-outline !px-3 !py-2 text-xs"><ChevronLeft size={14}/>Back</button><button onClick={reset} className="btn-outline !px-3 !py-2" aria-label="Reset scenario"><RotateCcw size={14}/></button><button onClick={()=>move(1)} disabled={step===scenario.steps.length-1} className="btn-primary !px-3 !py-2 text-xs">Next<ChevronRight size={14}/></button></div></div>
+      <aside className="space-y-4 xl:sticky xl:top-5 xl:h-fit"><div className="rounded-3xl border border-border bg-white p-4 card-shadow"><p className="section-label">Live screens</p><h3 className="mt-1 text-sm font-extrabold">See what changed for everyone</h3><p className="mt-1 text-[10px] leading-relaxed text-muted-foreground">The same marketplace state drives all three views. Switch role without changing the story.</p><div className="mt-4 space-y-2"><RoleSummary role="admin" stage={stage} onClick={()=>setRole('admin')}/><RoleSummary role="driver" stage={stage} onClick={()=>setRole('driver')}/><RoleSummary role="passenger" stage={stage} onClick={()=>setRole('passenger')}/></div><div className="mt-4 grid grid-cols-[1fr_auto_1fr] gap-2"><button onClick={()=>go(stage-1)} disabled={stage===0} className="btn-outline !px-3 !py-2 text-xs"><ChevronLeft size={14}/>Back</button><button onClick={()=>go(0)} className="btn-outline !px-3 !py-2" aria-label="Reset demo"><RotateCcw size={14}/></button><button onClick={advance} disabled={stage===STORY.length-1} className="btn-primary !px-3 !py-2 text-xs">Next<ChevronRight size={14}/></button></div></div>
 
-        <div className="rounded-3xl border border-border bg-white p-4 card-shadow"><p className="section-label">Safe demo</p><div className="mt-3 space-y-3"><Invariant icon={<LockKeyhole size={15}/>} title="No live marketplace changes" detail="Scenario controls stay inside this browser."/><Invariant icon={<Users size={15}/>} title="Synthetic personas" detail="Switch roles instantly without Google login."/><Invariant icon={<Navigation size={15}/>} title="Simulated GPS" detail="Demo coordinates never enter live trip tracking."/><Invariant icon={<ShieldCheck size={15}/>} title="Launch controls untouched" detail="The demo never changes live launch controls."/></div></div>
+        <div className="rounded-3xl border border-border bg-white p-4 card-shadow"><p className="section-label">Product rules being tested</p><div className="mt-3 space-y-3"><Rule icon={<Search size={15}/>} title="One Passenger search" detail="From + To decides the right travel product automatically."/><Rule icon={<Route size={15}/>} title="Density before flexibility" detail="Shared Ride stays on published fixed corridors."/><Rule icon={<Car size={15}/>} title="Outstation by origin area" detail="Flexible destination, round trip only for this launch model."/><Rule icon={<ShieldCheck size={15}/>} title="Admin verifies, Driver joins" detail="Self-onboarding scales supply without weakening trust."/><Rule icon={<Store size={15}/>} title="Useful local surface first" detail="Community information and feedback precede paid promotion."/></div></div>
       </aside>
     </div>
   </main>;
 }
 
-function Invariant({ icon, title, detail }: { icon: React.ReactNode; title: string; detail: string }) {
+function Rule({ icon, title, detail }: { icon: ReactNode; title: string; detail: string }) {
   return <div className="flex items-start gap-2.5"><span className="mt-0.5 text-primary">{icon}</span><div><p className="text-xs font-extrabold">{title}</p><p className="mt-1 text-[10px] leading-relaxed text-muted-foreground">{detail}</p></div></div>;
 }
