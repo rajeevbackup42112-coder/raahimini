@@ -57,5 +57,5 @@ jobs:
           done
           test -s /tmp/raahi-demo.html
           grep -q 'RAAHI DEMO' /tmp/raahi-demo.html
-          grep -q 'LIVE DATABASE WRITES' /tmp/raahi-demo.html
-          grep -q 'Driver verification' /tmp/raahi-demo.html
+          grep -q 'SAFE DEMO' /tmp/raahi-demo.html
+          grep -q 'Bokaro Outstation' /tmp/raahi-demo.html
