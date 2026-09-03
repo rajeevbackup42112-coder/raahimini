@@ -18,7 +18,8 @@ export type DriverOutstationLead={
   request_id:string;origin_area_id:string|null;origin_name:string;pickup_text:string|null;destination_text:string;travel_type:string;departure_at:string;return_at:string|null;
   passenger_count:number;notes:string|null;created_at:string;my_quote_id:string|null;my_quote_price:number|null;my_quote_status:string|null;
   verification_complete:boolean;vehicle_capacity:number;
-};export type DriverOutstationBooking={
+};
+export type DriverOutstationBooking={
   request_id:string;quote_id:string;origin_name:string;pickup_text:string|null;destination_text:string;travel_type:string;departure_at:string;return_at:string|null;
   passenger_count:number;passenger_name:string;passenger_phone:string;total_price:number;includes_tolls:boolean;includes_parking:boolean;vehicle_number:string;
 };
@@ -33,12 +34,13 @@ export type AdminOutstationArea={area_id:string;area_code:string;area_name:strin
 function fail(error:any,fallback:string):never{throw new Error(error?.message||fallback)}
 
 export async function getOutstationServiceAreas(){const {data,error}=await createClient().rpc('get_outstation_service_areas');if(error)fail(error,'Could not load outstation areas');return (data||[]) as OutstationArea[];}
-export async function createOutstationRequest(input:{originAreaId:string;pickupText:string;destination:string;travelType:'ONE_WAY'|'ROUND_TRIP';departureAt:string;returnAt?:string|null;passengerCount:number;notes?:string}){
-  const {data,error}=await createClient().rpc('create_outstation_request_v2',{p_origin_area_id:input.originAreaId,p_pickup_text:input.pickupText,p_destination_text:input.destination,p_travel_type:input.travelType,p_departure_at:input.departureAt,p_return_at:input.returnAt||null,p_passenger_count:input.passengerCount,p_notes:input.notes||null});
+export async function createOutstationRequest(input:{originAreaId:string;pickupText:string;destination:string;departureAt:string;returnAt:string;passengerCount:number;notes?:string}){
+  const {data,error}=await createClient().rpc('create_outstation_request_v2',{p_origin_area_id:input.originAreaId,p_pickup_text:input.pickupText,p_destination_text:input.destination,p_travel_type:'ROUND_TRIP',p_departure_at:input.departureAt,p_return_at:input.returnAt,p_passenger_count:input.passengerCount,p_notes:input.notes||null});
   if(error||!data?.success) fail(error||{message:data?.error},'Could not create outstation request'); return data;
 }
 export async function getMyOutstationRequests(){const {data,error}=await createClient().rpc('get_my_outstation_requests_v2');if(error)fail(error,'Could not load outstation requests');return (data||[]) as OutstationRequest[];}
-export async function getMyOutstationQuotes(requestId:string){const {data,error}=await createClient().rpc('get_my_outstation_quotes',{p_request_id:requestId});if(error)fail(error,'Could not load quotes');return (data||[]) as OutstationQuote[];}export async function cancelOutstationRequest(requestId:string){const {data,error}=await createClient().rpc('cancel_my_outstation_request',{p_request_id:requestId});if(error||!data?.success)fail(error||{message:data?.error},'Could not cancel request');return data;}
+export async function getMyOutstationQuotes(requestId:string){const {data,error}=await createClient().rpc('get_my_outstation_quotes',{p_request_id:requestId});if(error)fail(error,'Could not load quotes');return (data||[]) as OutstationQuote[];}
+export async function cancelOutstationRequest(requestId:string){const {data,error}=await createClient().rpc('cancel_my_outstation_request',{p_request_id:requestId});if(error||!data?.success)fail(error||{message:data?.error},'Could not cancel request');return data;}
 export async function acceptOutstationQuote(quoteId:string){const {data,error}=await createClient().rpc('accept_outstation_quote',{p_quote_id:quoteId});if(error||!data?.success)fail(error||{message:data?.error},'Could not accept quote');return data;}
 export async function getDriverOutstationAreaPreferences(){const {data,error}=await createClient().rpc('get_my_driver_outstation_area_preferences');if(error)fail(error,'Could not load Outstation areas');return (data||[]) as DriverOutstationAreaPreference[];}
 export async function setDriverOutstationAreaPreference(areaId:string,enabled:boolean){const {data,error}=await createClient().rpc('set_my_driver_outstation_area_preference',{p_area_id:areaId,p_enabled:enabled});if(error||!data?.success)fail(error||{message:data?.error},'Could not update Outstation area');return data;}
