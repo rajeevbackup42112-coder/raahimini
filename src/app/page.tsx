@@ -1,14 +1,14 @@
 import React from 'react';
 import AppLayout from '@/components/AppLayout';
 import LocationContent from './components/LocationContent';
+import UnifiedTravelPlanner from './components/UnifiedTravelPlanner';
 import RealtimeRefreshBoundary from '@/components/RealtimeRefreshBoundary';
-import RideModeTabs from '@/components/RideModeTabs';
 import SponsoredLocalOffer from '@/components/SponsoredLocalOffer';
 
 export default function LocationPage() {
   return (
     <AppLayout>
-      <RideModeTabs active="shared" />
+      <UnifiedTravelPlanner />
       <RealtimeRefreshBoundary>
         <LocationContent />
       </RealtimeRefreshBoundary>
