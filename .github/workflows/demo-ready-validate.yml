@@ -5,6 +5,7 @@ on:
     branches:
       - demo-ready-investor-polish
       - demo-scenario-harness
+      - demo-build-raahi-area-ui
   workflow_dispatch:
 
 jobs:
@@ -14,7 +15,7 @@ jobs:
     env:
       NEXT_PUBLIC_SUPABASE_URL: https://example.supabase.co
       NEXT_PUBLIC_SUPABASE_ANON_KEY: ci-placeholder-key
-      RAAHI_DEMO_ENABLED: ${{ github.ref_name == 'demo-scenario-harness' && 'true' || 'false' }}
+      RAAHI_DEMO_ENABLED: ${{ (github.ref_name == 'demo-scenario-harness' || github.ref_name == 'demo-build-raahi-area-ui') && 'true' || 'false' }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -42,7 +43,7 @@ jobs:
         run: npm run build
 
       - name: Demo route runtime smoke
-        if: github.ref_name == 'demo-scenario-harness'
+        if: github.ref_name == 'demo-scenario-harness' || github.ref_name == 'demo-build-raahi-area-ui'
         shell: bash
         run: |
           set -euo pipefail
@@ -58,4 +59,9 @@ jobs:
           test -s /tmp/raahi-demo.html
           grep -q 'RAAHI DEMO' /tmp/raahi-demo.html
           grep -q 'SAFE DEMO' /tmp/raahi-demo.html
-          grep -q 'Bokaro Outstation' /tmp/raahi-demo.html
+          if [ "${GITHUB_REF_NAME}" = "demo-build-raahi-area-ui" ]; then
+            grep -q 'Build a Raahi Area' /tmp/raahi-demo.html
+            grep -q 'One continuous marketplace story' /tmp/raahi-demo.html
+          else
+            grep -q 'Bokaro Outstation' /tmp/raahi-demo.html
+          fi
