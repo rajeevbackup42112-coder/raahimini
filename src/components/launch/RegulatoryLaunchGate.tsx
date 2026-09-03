@@ -35,7 +35,7 @@ function RegulatoryLaunchDialog({access,onClose}:{access:RaahiTransactionAccess;
       <p className="mt-4 text-sm leading-relaxed text-muted-foreground">{access.message||'Raahi is live and onboarding verified local Drivers area by area. Ride requests will open as verified supply and required operating clearance are ready.'}</p>
       <div className="mt-4 rounded-2xl bg-secondary/60 p-4 text-xs leading-relaxed text-muted-foreground">
         <p className="font-bold text-foreground">Raahi is already open for discovery and Driver onboarding.</p>
-        <p className="mt-1">Browse Shared Ride routes, Outstation areas and Local Offers, or register as a Driver. Ride requests open area by area as verified supply is ready.</p>
+        <p className="mt-1">Browse Shared Ride routes, Outstation areas and Around Raahi, or register as a Driver. Ride requests open area by area as verified supply is ready.</p>
       </div>
       <div className="mt-5 grid grid-cols-2 gap-2"><button onClick={onClose} className="btn-outline">Not now</button><Link href="/contact" className="btn-primary justify-center">Contact Raahi</Link></div>
     </div>
