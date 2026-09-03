@@ -12,10 +12,12 @@ expect(db,"u.phone_confirmed_at is not null",'Driver self-onboarding must requir
 expect(db,"v_profile.role='admin'",'Admin account conversion must be rejected');
 expect(db,"v_profile.is_restricted",'restricted account conversion must be rejected');
 expect(db,"sr.status in ('HELD','CONFIRMED')",'active Shared Ride Passenger requests must block role conversion');
+expect(db,"join public.trips t on t.id=sr.trip_id",'historical completed Passenger requests must not block Driver onboarding');
+expect(db,"t.status in ('ACTIVE_COLLECTING','IN_PROGRESS')",'Shared Ride role-change guard must scope only live trips');
 expect(db,"r.status in ('OPEN','ACCEPTED')",'active Outstation Passenger journeys must block role conversion');
 expect(db,"q.status in ('WAITING','ACTIVE_COLLECTING')",'queued Driver vehicle changes must fail closed');
 expect(db,"t.status in ('ACTIVE_COLLECTING','IN_PROGRESS')",'live Driver trip vehicle changes must fail closed');
-expect(db,"d.vehicle_id=v_vehicle_id and d.is_active=true and d.profile_id<>v_uid",'active vehicle ownership conflict guard missing');
+expect(db,"d.vehicle_id=v_vehicle_id and d.profile_id<>v_uid",'vehicle registration must not be claimable from any other Driver record');
 expect(db,"insert into public.driver_verifications(driver_id)",'self-onboarding must create verification state without approving it');
 expect(db,"insert into public.driver_outstation_area_preferences",'selected origin area must be saved independently');
 expect(db,"'operations_unlocked',false",'self-onboarding must not claim operations are unlocked');

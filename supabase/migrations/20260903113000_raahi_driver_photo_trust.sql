@@ -253,3 +253,27 @@ revoke all on function public.admin_list_driver_verifications_v2() from public,a
 revoke all on function public.get_driver_verified_profile_photo(uuid) from public,anon,service_role;
 grant execute on function public.admin_list_driver_verifications_v2() to authenticated;
 grant execute on function public.get_driver_verified_profile_photo(uuid) to authenticated;
+
+-- Keep the Passenger quote projection aligned with the same full launch-compliance
+-- definition enforced at Driver lead/quote/accept boundaries.
+create or replace function public.get_my_outstation_quotes(p_request_id uuid)
+returns table(
+  quote_id uuid,driver_id uuid,driver_name text,total_price integer,includes_tolls boolean,includes_parking boolean,driver_note text,
+  vehicle_number text,vehicle_type text,vehicle_model text,vehicle_capacity integer,quote_status text,expires_at timestamptz,
+  driving_licence_verified boolean,vehicle_rc_verified boolean,car_photos_verified boolean,fully_verified boolean,driver_phone text
+)
+language plpgsql stable security definer set search_path='public'
+as $$
+begin
+  if not exists(select 1 from public.outstation_requests r where r.id=p_request_id and (r.passenger_id=auth.uid() or public.is_admin())) then return; end if;
+  return query select q.id,q.driver_id,d.display_name,q.total_price,q.includes_tolls,q.includes_parking,q.driver_note,
+    q.vehicle_number,q.vehicle_type,q.vehicle_model,q.vehicle_capacity,q.status,q.expires_at,
+    coalesce(v.driving_licence_status='VERIFIED',false),coalesce(v.vehicle_rc_status='VERIFIED',false),coalesce(v.car_photos_status='VERIFIED',false),
+    public.is_driver_launch_compliant(q.driver_id),case when q.status='ACCEPTED' then d.phone else null end
+  from public.outstation_quotes q join public.drivers d on d.id=q.driver_id left join public.driver_verifications v on v.driver_id=q.driver_id
+  where q.request_id=p_request_id and q.status in ('OFFERED','ACCEPTED') and (q.status='ACCEPTED' or q.expires_at>now())
+  order by case when q.status='ACCEPTED' then 0 else 1 end,q.total_price,q.created_at;
+end;
+$$;
+revoke all on function public.get_my_outstation_quotes(uuid) from public,anon,service_role;
+grant execute on function public.get_my_outstation_quotes(uuid) to authenticated;

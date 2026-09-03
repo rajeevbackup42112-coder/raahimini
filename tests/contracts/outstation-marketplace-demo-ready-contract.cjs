@@ -8,13 +8,14 @@ const trustDb=read('supabase/migrations/20260830133300_demo_ready_outstation_tru
 const hardenDb=read('supabase/migrations/20260830133400_demo_ready_outstation_accept_hardening.sql');
 const areasDb=read('supabase/migrations/20260831082254_demo_ready_outstation_service_areas_v2.sql');
 const marketplaceDb=read('supabase/migrations/20260903110000_raahi_marketplace_self_onboarding_round_trip.sql');
+const photoTrustDb=read('supabase/migrations/20260903113000_raahi_driver_photo_trust.sql');
 const api=read('src/lib/outstationApi.ts');
 const passenger=read('src/app/outstation/OutstationContent.tsx');
 const driver=read('src/app/driver-outstation/DriverOutstationContent.tsx');
 const admin=read('src/app/admin-panel/outstation/AdminOutstationMarketplace.tsx');
 const home=read('src/app/page.tsx');
 const planner=read('src/app/components/UnifiedTravelPlanner.tsx');
-const allDb=[core,passengerDb,driverDb,trustDb,hardenDb,areasDb,marketplaceDb].join('\n');
+const allDb=[core,passengerDb,driverDb,trustDb,hardenDb,areasDb,marketplaceDb,photoTrustDb].join('\n');
 expect(core,'create table if not exists public.outstation_requests','Outstation request table missing');
 expect(core,'create table if not exists public.outstation_quotes','Outstation quote table missing');
 expect(core,"status in ('OPEN','ACCEPTED','CANCELLED','EXPIRED')",'request lifecycle missing');
@@ -30,8 +31,11 @@ expect(passengerDb,"case when q.status='ACCEPTED' then d.phone else null end",'D
 expect(areasDb,'create table if not exists public.outstation_service_areas','Outstation service-area table missing');
 expect(areasDb,'create table if not exists public.driver_outstation_area_preferences','Driver Outstation area preferences missing');
 expect(areasDb,"('BOKARO','Bokaro','Jharkhand',null,true,50)",'Bokaro standalone service area missing');
-expect(marketplaceDb,'create trigger outstation_round_trip_only','Outstation round-trip rule must be enforced at table boundary');
+expect(marketplaceDb,'create trigger outstation_round_trip_only_insert','Outstation insert round-trip rule must be enforced at table boundary');
+expect(marketplaceDb,'create trigger outstation_round_trip_only_update','Outstation journey edits must remain round-trip at table boundary');
 expect(marketplaceDb,"new.travel_type<>'ROUND_TRIP'",'new one-way Outstation rows must fail closed');
+expect(marketplaceDb,'before update of travel_type,departure_at,return_at','legacy status updates may remain possible while journey-field edits fail closed');
+expect(photoTrustDb,'public.is_driver_launch_compliant(q.driver_id)','Passenger quote fully_verified must use the full launch-compliance definition');
 expect(marketplaceDb,"'Raahi Outstation is round trip only at launch'",'canonical request RPC must explain launch round-trip rule');
 expect(marketplaceDb,"if not public.is_driver_launch_compliant(v_driver.id) then return; end if;",'unverified Drivers must not receive Outstation leads');
 expect(marketplaceDb,"if not public.is_driver_launch_compliant(v_driver.id) then return jsonb_build_object",'quote RPC must fail closed on launch compliance');

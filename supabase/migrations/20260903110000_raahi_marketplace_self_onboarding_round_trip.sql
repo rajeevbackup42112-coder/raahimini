@@ -35,7 +35,12 @@ begin
   where u.id=v_uid and u.phone is not null and length(btrim(u.phone))>0 and u.phone_confirmed_at is not null;
   if v_phone is null then return jsonb_build_object('success',false,'error','Verify your mobile number before joining as a Driver'); end if;
 
-  if exists(select 1 from public.seat_requests sr where sr.passenger_id=v_uid and sr.status in ('HELD','CONFIRMED')) then
+  if exists(
+    select 1 from public.seat_requests sr
+    join public.trips t on t.id=sr.trip_id
+    where sr.passenger_id=v_uid and sr.status in ('HELD','CONFIRMED')
+      and t.status in ('ACTIVE_COLLECTING','IN_PROGRESS')
+  ) then
     return jsonb_build_object('success',false,'error','Finish or cancel your active Passenger seat request before joining as a Driver');
   end if;
   if exists(
@@ -76,9 +81,9 @@ begin
 
   select id into v_vehicle_id from public.vehicles where registration_number=v_registration for update;
   if v_vehicle_id is not null and exists(
-    select 1 from public.drivers d where d.vehicle_id=v_vehicle_id and d.is_active=true and d.profile_id<>v_uid
+    select 1 from public.drivers d where d.vehicle_id=v_vehicle_id and d.profile_id<>v_uid
   ) then
-    return jsonb_build_object('success',false,'error','This vehicle is already attached to another active Driver');
+    return jsonb_build_object('success',false,'error','This vehicle registration is already associated with another Raahi Driver');
   end if;
   if v_vehicle_id is not null and exists(
     select 1 from public.trips t join public.drivers d on d.id=t.driver_id
@@ -135,8 +140,9 @@ $$;
 revoke all on function public.self_onboard_as_driver(text,text,text,text,integer,uuid) from public,anon,service_role;
 grant execute on function public.self_onboard_as_driver(text,text,text,text,integer,uuid) to authenticated;
 
--- Preserve historical one-way rows, but no new Outstation row may be one-way.
-create or replace function public.enforce_round_trip_outstation_insert()
+-- Preserve historical one-way rows for ordinary status/history updates, but no new
+-- Outstation row or journey-field edit may remain one-way.
+create or replace function public.enforce_round_trip_outstation_journey()
 returns trigger
 language plpgsql
 set search_path=public
@@ -151,12 +157,17 @@ begin
   return new;
 end;
 $$;
-revoke all on function public.enforce_round_trip_outstation_insert() from public,anon,authenticated,service_role;
+revoke all on function public.enforce_round_trip_outstation_journey() from public,anon,authenticated,service_role;
 
 drop trigger if exists outstation_round_trip_only on public.outstation_requests;
-create trigger outstation_round_trip_only
+drop trigger if exists outstation_round_trip_only_insert on public.outstation_requests;
+drop trigger if exists outstation_round_trip_only_update on public.outstation_requests;
+create trigger outstation_round_trip_only_insert
 before insert on public.outstation_requests
-for each row execute function public.enforce_round_trip_outstation_insert();
+for each row execute function public.enforce_round_trip_outstation_journey();
+create trigger outstation_round_trip_only_update
+before update of travel_type,departure_at,return_at on public.outstation_requests
+for each row execute function public.enforce_round_trip_outstation_journey();
 
 create or replace function public.create_outstation_request_v2(
   p_origin_area_id uuid,p_pickup_text text,p_destination_text text,p_travel_type text,
