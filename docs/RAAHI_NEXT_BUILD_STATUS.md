@@ -1,7 +1,7 @@
 # Raahi Next — Build Status
 
 **Checkpoint date:** 2026-09-05
-**Stage:** Gate 0 complete; Slice 1 implemented; hosted-auth acceptance pending
+**Stage:** Gate 0 complete; Slice 1 implemented; Dev Test Mode server key pending
 
 ## Gate 0 — GREEN
 
@@ -45,15 +45,15 @@ Raahi Next now has a dedicated clean application, Git branch and Supabase databa
 - Next.js 16.3.3 / React 19.2.x / strict TypeScript.
 - Supabase SSR browser/server clients added with Next.js 16 `proxy.ts` session refresh.
 - App is connected locally to `Raahi Next Dev` via publishable client credentials only.
-- No service-role/server secret is stored in the app environment.
+- No service-role/server secret is committed. Local Dev Test Mode still needs `SUPABASE_SECRET_KEY` in ignored `.env.local`.
 - TypeScript: PASS.
 - ESLint: PASS.
-- Vitest: 18/18 PASS.
+- Vitest: 35/35 PASS.
 - Production build: PASS.
 
 ### Non-blocking housekeeping
 - Local Supabase CLI has no authenticated access token, so generated database types have not yet been written to the repository. The connected Supabase service can generate them; this will be completed once CLI/project auth is configured, and does not alter product behavior.
-- Google OAuth will reuse the existing Google ecosystem where appropriate, but provider secrets/redirect configuration will be handled during the authentication integration slice rather than copied manually.
+- Google OAuth is configured on `Raahi Next Dev` and live initiation reaches the Google sign-in screen. It remains available as a fallback while Dev Test Mode is used for rapid persona testing.
 
 ## Next executable stage
 **Slice 1 — Driver chooses and verifies Current Operating Market.**
@@ -83,24 +83,29 @@ The command must prove: physical presence, Driver capability/standing, one Opera
 - Supabase security advisor after RPC hardening: **0 findings**.
 
 ### Application/browser proof
-- Slice 1 contract suite added; current Vitest total: **27/27 PASS**.
+- Slice 1 + Dev Test Mode contracts: current Vitest total **35/35 PASS**.
 - TypeScript: PASS.
 - ESLint: PASS.
 - Production Next.js build: PASS.
 - Browser `/drive` unauthenticated guard: PASS.
 - Browser sign-in page: PASS.
 - Starter `Create Next App` metadata removed; page title is `Raahi`.
-- Google OAuth initiation reaches `Raahi Next Dev`, but Supabase currently returns `Unsupported provider: provider is not enabled`.
+- Google OAuth initiation now reaches the Google sign-in screen: PASS.
+- Localhost Test Mode form renders Passenger, Driver, Passenger+Driver, Market Admin and Platform Admin personas: PASS.
+- Market-specific fields switch correctly between Home Market and Admin Market: PASS.
+- Browser/anon provisioning privilege: DENIED; `service_role` only: PASS.
+- Supabase security advisor after Test Mode migrations: **0 findings**.
 
 ### Acceptance status
-Slice 1 implementation is complete enough to checkpoint. Full real-user browser acceptance is **BLOCKED only on Google provider configuration in the new Supabase project**. No email/password or test-only bypass has been introduced.
+Slice 1 implementation is checkpoint-ready. Rapid persona acceptance will use Dev Test Mode once the server-only Supabase secret key is added to ignored `.env.local`; Google remains available as a real-auth fallback.
 
-Once Google OAuth is enabled using the existing Google ecosystem, run the final headed acceptance:
-1. sign in with a real Driver account;
+Once the local server-only Test Mode key is configured, run final headed Slice 1 persona acceptance:
+1. create a Passenger+Driver test identity with Home Market Gomoh;
 2. verify current Operating Market;
 3. reject a physically wrong Market;
 4. confirm Home Market remains unchanged;
 5. confirm Passenger capability remains present;
-6. confirm choosing a Market does not auto-enrol a Product.
+6. confirm choosing a Market does not auto-enrol a Product;
+7. create Gomoh and Dhanbad Market Admin personas and verify their scope separation.
 
-After that, Slice 2 is Passenger search + join Fixed demand for Gomoh → Dhanbad.
+Then proceed to Slice 2: Passenger search + join Fixed demand for Gomoh → Dhanbad.
