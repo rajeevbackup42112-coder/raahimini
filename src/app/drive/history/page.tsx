@@ -1,8 +1,12 @@
 import Link from "next/link";
 import { getFixedDriverHistory } from "@/server/projections/fixed-driver-history";
+import { getMyDriverPayments } from "@/server/projections/payment-support";
+import { DriverPaymentCard } from "@/features/payment-support/DriverPaymentCard";
+import { ReportIssue } from "@/features/payment-support/ReportIssue";
 
 export default async function DriverHistoryPage() {
-  const projection = await getFixedDriverHistory();
+  const [projection, paymentProjection] = await Promise.all([getFixedDriverHistory(), getMyDriverPayments()]);
+  const payments = paymentProjection.status === "READY" ? new Map(paymentProjection.payments.map((payment) => [payment.ride_id, payment])) : new Map();
   if (projection.status === "UNAUTHENTICATED") {
     return <main className="min-h-screen bg-zinc-100 px-5 py-10"><div className="mx-auto max-w-xl rounded-3xl bg-white p-7 shadow-sm"><h1 className="text-3xl font-semibold">Sign in to see Driver history</h1><Link href="/auth/sign-in?next=/drive/history" className="mt-6 inline-flex rounded-2xl bg-zinc-950 px-5 py-3 text-sm font-semibold text-white">Sign in</Link></div></main>;
   }
@@ -27,6 +31,8 @@ export default async function DriverHistoryPage() {
                   <div className="rounded-2xl bg-zinc-50 p-4"><p className="text-xs text-zinc-500">Passengers</p><p className="mt-1 text-sm font-semibold">{ride.booked_seat_count}/{ride.capacity} seats</p></div>
                 </div>
                 {ride.completion_zone ? <p className="mt-4 text-xs text-zinc-500">Completion verified in {ride.completion_zone}. Exact GPS coordinates are not retained in this history.</p> : null}
+                {payments.get(ride.ride_id) ? <DriverPaymentCard payment={payments.get(ride.ride_id)!} /> : null}
+                <ReportIssue objectType="RIDE" objectId={ride.ride_id} />
               </article>
             ))}
           </div>

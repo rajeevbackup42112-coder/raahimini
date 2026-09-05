@@ -1,7 +1,10 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { CancelFixedRequest } from "@/features/passenger-fixed/CancelFixedRequest";
+import { PassengerPaymentCard } from "@/features/payment-support/PassengerPaymentCard";
+import { ReportIssue } from "@/features/payment-support/ReportIssue";
 import { getMyFixedRequest } from "@/server/projections/passenger-fixed";
+import { getMyFixedPayment } from "@/server/projections/payment-support";
 
 function TrustBadge({ ok, label }: { ok: boolean; label: string }) {
   return <span className={`rounded-full px-3 py-1 text-xs font-semibold ${ok ? "bg-emerald-50 text-emerald-700" : "bg-zinc-100 text-zinc-600"}`}>{label}</span>;
@@ -15,6 +18,8 @@ export default async function FixedRequestPage({ params }: { params: Promise<{ r
   }
   if (projection.status === "NOT_FOUND" || !projection.request) notFound();
   const request = projection.request;
+  const paymentProjection = await getMyFixedPayment(requestId);
+  const payment = paymentProjection.status === "READY" ? paymentProjection.payment : null;
   const forming = request.status === "QUEUED" || request.status === "RESERVED";
   const assigned = request.status === "ASSIGNED" && request.ride_id;
   const completed = assigned && request.ride_status === "COMPLETED";
@@ -41,6 +46,8 @@ export default async function FixedRequestPage({ params }: { params: Promise<{ r
             <p className="mt-4 text-xs leading-5 text-zinc-600">Raahi shows verification status, not private DL/RC documents. Exact pickup/contact details can be revealed only when fulfilment requires them.</p>
           </div>
         ) : null}
+        {request.ride_status === "COMPLETED" && payment ? <PassengerPaymentCard payment={payment} /> : null}
+        {request.ride_id ? <ReportIssue objectType="RIDE" objectId={request.ride_id} /> : null}
         {forming ? <CancelFixedRequest requestId={request.request_id} /> : request.status === "PASSENGER_CANCELLED" ? <Link href="/" className="mt-6 inline-flex rounded-2xl bg-zinc-950 px-5 py-3 text-sm font-semibold text-white">Find another ride</Link> : null}
       </section>
     </div></main>

@@ -234,3 +234,14 @@ Driver queue entry must require verified Driver standing, eligible Vehicle, veri
 - Passenger request UI now reflects linked Ride completion without rewriting request ownership.
 - Real browser/API acceptance: Gomoh completion rejected; Dhanbad completion accepted; Driver and Passenger completed states verified.
 - Repository gate: 83/83 tests, TypeScript, ESLint and production build PASS.
+
+## Slice 7 — complete
+- Direct-payment acknowledgement is separate from Ride completion.
+- Completed Fixed bookings create a DUE payment acknowledgement.
+- Passenger can mark paid; Driver alone can confirm receipt afterward.
+- Payment disputes create an OPEN PAYMENT_PROBLEM Case while Ride remains COMPLETED.
+- Generic support Cases do not mutate Ride or Payment state.
+- Passenger/Driver payment projections are ownership-scoped; client table mutation remains blocked.
+- Real browser acceptance passed for Passenger mark-paid, Driver confirm-received, and support Case creation.
+- Supabase advisor hardening completed for payment dispute Case FK.
+- Full gate: 93/93 tests PASS + TypeScript + ESLint + production build PASS.
