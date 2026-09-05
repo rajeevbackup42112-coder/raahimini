@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import type { DriveContext, SetOperatingMarketInput, SetOperatingMarketResult } from "./types";
 
 type Props = { initialContext: DriveContext };
@@ -18,6 +19,7 @@ function locationErrorMessage(error: GeolocationPositionError) {
 }
 
 export function OperatingMarketCard({ initialContext }: Props) {
+  const router = useRouter();
   const [context, setContext] = useState(initialContext);
   const [selectedMarketId, setSelectedMarketId] = useState(
     initialContext.operating_market?.market_id ?? initialContext.available_markets[0]?.market_id ?? "",
@@ -60,6 +62,7 @@ export function OperatingMarketCard({ initialContext }: Props) {
       setPending(null);
       setStatus("SUCCESS");
       setMessage(`Driving from ${payload.value.market_name}. Location verified.`);
+      router.refresh();
     } catch {
       setStatus("ERROR");
       setMessage("The network did not confirm the change. Retry to safely reuse the same request.");

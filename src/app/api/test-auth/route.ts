@@ -121,6 +121,13 @@ export async function POST(request: NextRequest) {
     });
     if (provisionError) throw provisionError;
 
+    if (body.persona === "DRIVER" || body.persona === "PASSENGER_DRIVER") {
+      const { error: fixtureError } = await admin.rpc("dev_provision_test_driver_fixture", {
+        p_profile_id: user.id,
+      });
+      if (fixtureError) throw fixtureError;
+    }
+
     const { data: linkData, error: linkError } = await admin.auth.admin.generateLink({
       type: "magiclink",
       email: body.email,

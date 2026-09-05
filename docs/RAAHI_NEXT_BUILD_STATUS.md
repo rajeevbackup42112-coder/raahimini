@@ -142,3 +142,33 @@ Then proceed to Slice 2: Passenger search + join Fixed demand for Gomoh → Dhan
 **Slice 3 — Driver sees aggregate demand and explicitly joins Gomoh → Dhanbad Fixed FIFO.**
 
 Driver queue entry must require verified Driver standing, eligible Vehicle, verified Current Operating Market = Product Origin Market, explicit Product preference/availability, no conflicting commitment, and server-owned FIFO time. Passenger identities remain hidden.
+
+## Slice 3 — Driver Fixed availability / FIFO — COMPLETE
+
+### Database / command proof
+- Added `driver_availability` as Product-scoped live supply, separate from persistent Driver Product preference.
+- FIFO `queued_at` is server-owned; duplicate active Driver/Product and Vehicle/Product positions are blocked.
+- Canonical commands: `set_driver_product_preference`, `join_fixed_driver_queue`, `leave_fixed_driver_queue`.
+- FIFO entry requires active Driver standing, verified Current Operating Market = Product Market, explicit Product preference, active eligible Vehicle, required Driver/Vehicle verification, and no overlapping active/reserved mobility commitment.
+- Operating Market changes withdraw incompatible QUEUED availability without touching reserved/assigned work.
+- Disabling a Product preference withdraws that Product's uncommitted QUEUED availability.
+- Database trigger rechecks Product + Market lifecycle on availability insert/update, so paused Markets cannot accept new Fixed supply.
+
+### Driver/browser proof
+- Dev Test Mode provisions synthetic Drivers with a service-role-only eligible Vehicle and verified PHONE, DRIVING_LICENCE, DRIVER_PHOTO, VEHICLE_RC and VEHICLE_PHOTOS fixtures.
+- Driver workspace exposes only aggregate queued request/seat counts; Passenger identity remains hidden pre-match.
+- Headed flow: `Serve this route` → `Make me available` → `Leave FIFO`: PASS.
+- Wrong Vehicle, expired Driver verification, wrong Operating Market and cross-service commitment conflicts were rejected.
+- Real Postgres paused-Market test rejected FIFO insertion with `FIXED_PRODUCT_NOT_AVAILABLE`: PASS.
+
+### Gate
+- Slice 3 contracts: 11 PASS.
+- Total Vitest contracts: **54/54 PASS**.
+- TypeScript: PASS.
+- ESLint: PASS.
+- Production build: PASS.
+- Supabase security advisor: only existing leaked-password-protection Auth warning.
+- Supabase performance advisor: no unindexed foreign-key findings; remaining notices are unused-index INFO on the fresh database.
+
+### Next
+**Slice 4 — Fixed matching + trust reveal.**
