@@ -329,3 +329,19 @@ Passenger, Driver and Admin clients consume relationship/scope-aware projections
 ## D-2026-09-05-Domain-04 — Physical schema mapping precedes migrations
 
 Before target migrations are written, inspect the current schema and map each frozen logical object to Reuse / Extend / New / Legacy-only, including migration/backfill, constraints, permissions, cutover, rollback and contract tests.
+
+## D-2026-09-05-Schema-01 — Physical Schema & Migration Map frozen
+
+`RAAHI_2_0_PHYSICAL_SCHEMA_MIGRATION_MAP_V1.md` records the Reuse / Extend / New / Legacy-only decision for the current Raahi schema after read-only inspection of `Raahi V2 Dev` and the newer marketplace worktree.
+
+## D-2026-09-05-Schema-02 — Reconcile schema drift before DDL
+
+The live Dev database is ahead of the older architecture worktree. Wave 0 must start from a safe integration worktree containing every applied migration, including route-interest and car-request truth migrations, before any new target migration is created.
+
+## D-2026-09-05-Schema-03 — Preserve Outstation agreement truth work
+
+`car_request_agreements` and `car_request_change_proposals` are valuable immutable/versioned Outstation truth and should be reused. The newer round-trip-only Outstation trigger and exclusive-role self-onboarding semantics conflict with the frozen target and will be superseded only through deliberate target cutover.
+
+## D-2026-09-05-Schema-04 — New Fixed engine gets new operational tables
+
+Legacy `driver_queue`, `trips`, `seat_requests`, `trip_seats` and `trip_progress` remain historical/current-engine truth. Target Fixed uses new Driver Availability, Passenger Request, Commitment, Ride, Booking and Event objects instead of mutating those assumptions in place.

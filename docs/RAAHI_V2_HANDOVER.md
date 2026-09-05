@@ -407,3 +407,23 @@ It freezes:
 Inspect the actual current Supabase migration/schema and implementation surfaces, then create the **Raahi 2.0 Physical Schema & Migration Map v1**. For each target object classify Reuse / Extend / New / Legacy-only and specify backfill, constraints/indexes, RLS/RPC, cutover, rollback and required tests.
 
 No target database migration should be written before that map is complete.
+
+## 2026-09-05 Physical Schema & Migration Map handover
+
+Read-only inspection of `Raahi V2 Dev` confirmed the live Dev schema has advanced beyond this older architecture worktree. Applied migrations now include the 2026-09-03 marketplace/self-onboarding work, route-interest radar and 2026-09-05 immutable car-request agreement/revision model. Those newer migration sources exist in the `raahi-demand-refinement` worktree.
+
+The authoritative mapping is `docs/RAAHI_2_0_PHYSICAL_SCHEMA_MIGRATION_MAP_V1.md`.
+
+Key conclusions:
+- preserve current auth/profile IDs, Driver/Vehicle/Verification, Outstation agreement truth, support/audit infrastructure;
+- introduce clean Markets/Corridors/Products, capabilities/scoped admin, Operating Market, cross-service commitments and target Ride objects;
+- keep legacy Fixed queue/trip/seat tables untouched for legacy history/engine;
+- create a new two-sided Fixed engine rather than modifying ACTIVE_COLLECTING in place;
+- current Outstation round-trip-only enforcement conflicts with the frozen target One Way + Round Trip model and is superseded only when target Outstation cutover is ready;
+- current self-onboarding sets exclusive `profiles.role='driver'`; target onboarding must grant DRIVER capability while retaining Passenger capability.
+
+### Single next action
+
+**Wave 0 source reconciliation:** create/use a safe integration worktree based on the newest accepted marketplace source, bring the Architecture/UML/Experience/Domain/Schema documents into that line without overwriting newer code, verify repository migrations exactly cover applied `Raahi V2 Dev` migrations, then design Wave 1 additive foundation migrations/tests.
+
+Do not apply any new target DDL before reconciliation is green. Never touch Raahi School or port 4030.

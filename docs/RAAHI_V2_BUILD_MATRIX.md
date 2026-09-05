@@ -333,3 +333,23 @@ The validated Demo Ready product remains the current implementation baseline. A 
 | Concurrency | Atomic/idempotent command doctrine | FROZEN V1 | SQL contract design |
 
 Next: inspect the actual current migrations/schema and produce `Reuse / Extend / New / Legacy-only` mapping before writing any target migration.
+
+## 2026-09-05 Physical Schema & Migration Map checkpoint
+
+| Area | Decision | Status |
+|---|---|---:|
+| Source reconciliation | Live Dev newer than architecture worktree | REQUIRED WAVE 0 |
+| Identity | profiles reuse + user_capabilities/admin scopes new | FROZEN |
+| Geography | locations extend; Markets/Corridors/Products new | FROZEN |
+| Driver | drivers/vehicles/verification extend; Operating Market new | FROZEN |
+| Fixed legacy | driver_queue/trips/seat_requests/trip_seats preserved legacy-only | FROZEN |
+| Fixed target | availability/request/commitment/ride/booking/event new | FROZEN |
+| Demand | demand_intents legacy; route_interest telemetry; Travel Intent new | FROZEN |
+| Outstation | request/quote extend; agreement/change truth reused strongly | FROZEN |
+| Outstation policy | current round-trip-only rule to be superseded at target cutover | FROZEN |
+| Support/Audit | extend/reuse | FROZEN |
+| Payment/Reliability | new target objects | FROZEN |
+| Offers | promotions extend + Business identity new | FROZEN |
+| GPS/Share | legacy stores preserved; target Ride stores new | FROZEN |
+
+Single next action: Wave 0 safe source reconciliation, then Wave 1 additive foundations + contract/security tests. No target DDL has been applied yet.

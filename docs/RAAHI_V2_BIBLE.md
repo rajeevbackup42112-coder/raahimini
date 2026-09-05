@@ -971,3 +971,11 @@ The experience standard is investor/launch quality, not merely functional UI. Bu
 The contract intentionally does not inherit legacy table names as product truth. Physical schema decisions come next through an explicit Reuse / Extend / New / Legacy-only mapping against the current repository before migrations are written.
 
 Key data doctrine: one common Mobility Commitment protects Driver/Vehicle scheduling across all services; Passenger/Driver/Admin clients consume purpose-built projections; retries are idempotent; concurrency-sensitive commitments are serialized server-side; immutable events preserve how state changed.
+
+## 2026-09-05 Physical Schema / Migration Map freeze
+
+`RAAHI_2_0_PHYSICAL_SCHEMA_MIGRATION_MAP_V1.md` is now the bridge from target domain design to actual Supabase objects.
+
+Read-only Dev inspection confirmed newer marketplace migrations already exist outside the older architecture worktree, including route-interest demand radar and immutable Outstation car-request agreements/revisions. Preserve that work through source reconciliation before new DDL.
+
+The target Fixed engine will not mutate the legacy ACTIVE_COLLECTING/seat-ledger tables into a different business model. New target operational tables will coexist until Product-scoped cutover/acceptance is complete.

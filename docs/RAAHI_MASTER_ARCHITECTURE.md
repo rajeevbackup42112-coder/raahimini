@@ -420,3 +420,7 @@ Where legacy screen behavior conflicts with the frozen target experience, preser
 ## Target domain companion — 2026-09-05
 
 New marketplace implementation must also conform to `RAAHI_2_0_TARGET_DOMAIN_CONTRACT_V1.md`. It is the logical data/command bridge between the target Architecture/UML/Experience freezes and the forthcoming physical Supabase schema plan.
+
+## Physical migration companion — 2026-09-05
+
+Before implementing target marketplace DDL, use `RAAHI_2_0_PHYSICAL_SCHEMA_MIGRATION_MAP_V1.md` to reconcile the target domain with the actual current `Raahi V2 Dev` schema and newer marketplace migrations. Legacy table presence does not imply target reuse.
