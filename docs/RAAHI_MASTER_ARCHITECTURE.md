@@ -398,3 +398,15 @@ Do not redesign Raahi from memory. Read this Master Architecture Sheet first, in
 ---
 
 **Canonical rule:** Code implements this design; this document defines intended design. If they disagree, stop and reconcile before proceeding.
+# Target-Architecture Supersession Notice — 2026-09-05
+
+This Master Architecture remains the canonical description of the **existing legacy Fixed Route engine** and is retained for migration/regression truth.
+
+For new Raahi 2.0 marketplace implementation, target architecture is frozen in:
+- `docs/RAAHI_2_0_ARCHITECTURE_FREEZE_V1.md`
+- `docs/RAAHI_2_0_UML_FREEZE_V1.md`
+- `docs/RAAHI_V2_DECISIONS.md` decisions dated 2026-09-05
+
+Where the target freeze conflicts with this legacy sheet, do not mutate history or pretend the legacy engine already implements the new rule. Build/migrate deliberately and preserve regression evidence until each Product is cut over.
+
+Examples of deliberate target changes include multi-capability identity, Market/Home/Operating-Market separation, two-sided Fixed matching, common cross-service commitments, separate payment acknowledgement, scoped administration and configuration-led Market expansion.

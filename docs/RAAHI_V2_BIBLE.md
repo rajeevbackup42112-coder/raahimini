@@ -935,3 +935,20 @@ Raahi expands as cells of local liquidity. An Outstation service area is indepen
 Launch scope is frozen at Shared Ride, Outstation Areas v2, Driver Verification, Contact Raahi and the existing Admin-managed Local Offers foundation. The self-service Raahi Ads marketplace, QR claims/redemptions, Events and Nearby remain post-launch work and must earn their way into the product without increasing core mobility startup weight.
 
 The accepted application identity is **Raahi**. Legacy product strings such as “Raahi Mini” and “Raahi Carpool” are not launch branding.
+
+# 2026-09-05 Raahi 2.0 Company / Marketplace Architecture Freeze
+
+The product direction has intentionally advanced beyond the launch-candidate Shared Ride model documented in earlier sections of this Bible.
+
+For **new Raahi 2.0 marketplace implementation**, the target authority is now:
+- `docs/RAAHI_2_0_ARCHITECTURE_FREEZE_V1.md`
+- `docs/RAAHI_2_0_UML_FREEZE_V1.md`
+- Decisions `D-2026-09-05-01` through `D-2026-09-05-20`
+
+Earlier sections remain valuable historical/current-engine evidence but no longer govern target design where they conflict with the freeze. Specifically, the target no longer assumes exclusive Passenger/Driver roles, an active collecting car before Passenger booking, permanent numbered-seat selection for Fixed Route, one active collector as the marketplace model, or Home Market as the Driver's only supply geography.
+
+Raahi now targets a network of local Markets, each capable of its own operations, dashboard, products, demand intelligence, Drivers, Local Offers and scoped Admin authority. Drivers retain a Home Market but may set one physically verified Current Operating Market and then explicitly choose eligible origin Products there.
+
+The immediate sequence is: Architecture/UML Freeze → Experience North Star → shared marketplace kernel → one complete Fixed One Way vertical slice → Round Trip → Outstation integration → Carpool → Raahi Trips/Explore → Market intelligence/growth systems.
+
+Do not begin a broad backend refactor from old table shapes before the Experience North Star is frozen against this architecture.

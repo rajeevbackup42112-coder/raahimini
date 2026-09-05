@@ -268,3 +268,26 @@ Candidate base before checkpoint: `39097d70258ce6f4fff0981058d36a54e8503357` on 
 - Port 4030 and Raahi School: untouched.
 
 Supabase advisor snapshot (Raahi V2 Dev, 2026-08-31): project healthy on PostgreSQL 17; 37 performance notices (9 unindexed foreign keys, 8 RLS init-plan optimizations, 14 unused indexes, 6 multiple-permissive-policy notices). Security notices are predominantly expected linter visibility over the guarded `SECURITY DEFINER` RPC boundary; direct tables remain RLS-protected and the important role/ownership/privacy guards have separate contract and live acceptance evidence. Leaked-password protection is disabled and is an owner-controlled Auth hardening item if password authentication is enabled. No advisor-driven schema change was made during release closure.
+
+# 2026-09-05 Raahi 2.0 New Marketplace Program
+
+The validated Demo Ready product remains the current implementation baseline. A new company/platform architecture has now been frozen before the next major implementation wave.
+
+| Program layer | Status | Authority / next gate |
+|---|---:|---|
+| Product Constitution | FROZEN v1 | Problem/actors/ownership/rules/states/privacy/money/safety doctrine |
+| Product surfaces / user flows | PROVISIONALLY FROZEN | Must be reconciled into Experience North Star |
+| Impact analysis vs current build | COMPLETE | Reuse vs replace vs extend vs new is understood |
+| Acceptance architecture | COMPLETE IN PRODUCT REVIEW | Must be committed as implementation slices are designed |
+| Company / Market architecture | FROZEN v1 | `RAAHI_2_0_ARCHITECTURE_FREEZE_V1.md` |
+| UML / domain / state / sequence model | FROZEN v1 | `RAAHI_2_0_UML_FREEZE_V1.md` |
+| Premium Experience North Star | NEXT | Passenger + Driver + Market Admin end-to-end target experience |
+| Shared marketplace kernel | NOT STARTED | Begin only after Experience North Star freeze |
+| Fixed One Way V2 vertical slice | NOT STARTED | First full implementation slice after kernel |
+| Fixed Round Trip V2 | NOT STARTED | After One Way acceptance |
+| Outstation common-kernel integration | NOT STARTED | Preserve existing marketplace strengths; extend deliberately |
+| Carpool | NOT STARTED | New product |
+| Raahi Trips / Explore | NOT STARTED | New product |
+| Market intelligence / expansion system | DESIGNED, NOT BUILT | Travel Intent + emerging corridor + Market dashboards |
+
+**Current rule:** do not interpret `NOT STARTED` as a defect in the accepted Demo Ready baseline. These rows describe the next Raahi company/platform generation.

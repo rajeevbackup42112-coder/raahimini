@@ -325,3 +325,34 @@ Immediate continuation sequence:
 4. Stop for owner approval before GoDaddy DNS, production OAuth, production DB/Auth Hook/Fast2SMS activation or any irreversible production setting.
 
 Never touch Raahi School or port 4030. Preserve `prod-v14-frozen` → `38b7519d615e171c59d537b18a61c1ba303c132f` and keep the old public hostname available as rollback until new-domain acceptance is complete.
+
+# 2026-09-05 Architecture Freeze handover
+
+Raahi 2.0 has intentionally moved from launch-polish thinking into company/platform design before the next implementation wave.
+
+## New target authority
+Read these before planning any new marketplace code:
+1. `docs/RAAHI_2_0_ARCHITECTURE_FREEZE_V1.md`
+2. `docs/RAAHI_2_0_UML_FREEZE_V1.md`
+3. `docs/RAAHI_V2_DECISIONS.md` — decisions dated 2026-09-05
+4. the appended 2026-09-05 section of `docs/RAAHI_V2_BIBLE.md`
+5. `docs/RAAHI_V2_BUILD_MATRIX.md` — New Marketplace Program section
+
+The existing Master Architecture/current migrations remain legacy-engine truth. Do not rewrite that history to look like the new target is already implemented.
+
+## Frozen new doctrines
+- Raahi scales as local Markets connected into a mobility network.
+- Every Driver has Home Market + at most one physically grounded Current Operating Market.
+- Operating Market controls origin-supply eligibility; Product availability remains explicit; FIFO ignores Home Market.
+- Location/Corridor is separate from Service Product.
+- Travel Intent captures unmet demand and can surface emerging corridor opportunities.
+- Target identity is capability-based, not mutually exclusive Passenger/Driver accounts.
+- Migrated Fixed Route uses two-sided Passenger + Driver queues and atomic matching.
+- One cross-service commitment ledger prevents Driver/Vehicle conflicts.
+- Admin becomes permission + geographic scope; Admin is not routine dispatcher.
+- Payment acknowledgement, Ride state and Support Case state remain separate.
+
+## Single next action
+**Freeze the Raahi 2.0 Premium Experience North Star** for Passenger, Driver and Market Admin against the new architecture. Do not start Foundation/kernel migrations before that experience target is complete enough to test the domain against it.
+
+Never touch Raahi School or port 4030.

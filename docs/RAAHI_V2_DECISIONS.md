@@ -236,3 +236,64 @@ The RPC-controlled architecture intentionally uses guarded `SECURITY DEFINER` fu
 ## D-2026-08-31-06 — Owner-only production gates
 
 Netlify preparation and non-destructive hosted checks may proceed. GoDaddy DNS, production OAuth changes, production database migrations, Auth Hook activation, Fast2SMS secrets/traffic and irreversible production settings require explicit owner approval. The rollback ref `prod-v14-frozen` → `38b7519d615e171c59d537b18a61c1ba303c132f` remains sacrosanct.
+
+# Decisions added 2026-09-05 — Raahi 2.0 Architecture Freeze v1.0
+
+These decisions define the **target marketplace architecture**. Existing Demo Ready behavior remains legacy implementation evidence until a Product is deliberately migrated. Where these decisions conflict with older target-design statements, these decisions govern new implementation.
+
+## D-2026-09-05-01 — Raahi is a Market network
+Raahi scales Market-by-Market. Public branding may say Raahi Gomoh / Raahi Dhanbad, but `Market` is an operational boundary, not a permanent municipal-city assumption.
+
+## D-2026-09-05-02 — Origin Market owns a journey
+Every journey has exactly one Origin Market responsible for its marketplace operation, metrics and local exception context.
+
+## D-2026-09-05-03 — Home Market and Current Operating Market are separate
+Every Driver has one Home Market and at most one Current Operating Market. Home Market is organizational identity; Current Operating Market controls where the Driver may offer immediate mobility supply.
+
+## D-2026-09-05-04 — Operating Market requires physical truth
+A Driver cannot remotely claim another Market merely to inspect or enter its opportunities. Product/location rules verify reasonable physical presence when needed.
+## D-2026-09-05-05 — FIFO ignores Home Market
+Once a Driver is eligible for a Product, queue priority is governed by Product FIFO. Home-market and visiting Drivers receive no preferential rank.
+
+## D-2026-09-05-06 — Operating Market does not equal availability
+Selecting a Current Operating Market never auto-enrols the Driver into every route. Driver explicitly chooses Product availability/queue participation.
+
+## D-2026-09-05-07 — Geography and Product are separate
+Location/Corridor describes where travel occurs; Service Product describes how Raahi serves it. Airport/shared/scheduled behavior is Product policy, not city-specific code.
+
+## D-2026-09-05-08 — Travel Intent drives route discovery
+Unsupported searches may create Travel Intent. Aggregated demand may become an Emerging Corridor/Product opportunity, but intent is never a booking or automatic commitment.
+
+## D-2026-09-05-09 — Multi-capability identity supersedes exclusive target roles
+The new platform supports Passenger + Driver capabilities on one User. Mode switching changes UI context only. Server-side capability authorization remains mandatory.
+
+## D-2026-09-05-10 — Fixed Route becomes two-sided matching
+For migrated Fixed Products, Passenger demand exists without an active Driver car; Driver supply exists without Passenger identities. Matching creates the Ride only when explicit clearing rules are met.
+## D-2026-09-05-11 — One cross-service commitment authority
+Fixed, Round Trip, Outstation, Carpool and Raahi Trips must consult one Driver/Vehicle commitment authority so overlapping incompatible work cannot be accepted through separate product paths.
+
+## D-2026-09-05-12 — Fixed Round Trip is a separate Product
+Round Trip has its own supply/demand pool and commits the same Driver, Vehicle and booked return capacity through outbound, wait and return. Origin eligibility follows Current Operating Market.
+
+## D-2026-09-05-13 — Payment is separate from fulfilment
+Direct Passenger→Driver payment acknowledgement is independent of Ride state. Ride may complete while payment remains DUE; Passenger marks paid and Driver confirms received.
+
+## D-2026-09-05-14 — Scoped administration supersedes global-admin target design
+Target Admin authority is Permission + Scope across Market/State/Platform boundaries. Market Admin operates their Market; State/Trust/Platform roles handle broader responsibilities.
+
+## D-2026-09-05-15 — Admin is not dispatcher
+Admin cannot routinely select Fixed Drivers, reorder demand for commercial reasons, alter quote competition, fabricate payment or GPS, or operate the marketplace manually.
+
+## D-2026-09-05-16 — Local Offers never influence mobility
+Paid promotion may use Market/journey context but may never change matching, FIFO, eligibility, quotes, verification, safety or commitment priority.
+## D-2026-09-05-17 — Existing code is optional leverage, not product constraint
+Reuse current Auth, verification, GPS, route versioning, support, audit, Outstation or other foundations only when they help the frozen target without compromising quality, scalability or safety. Legacy design is not preserved merely because it exists.
+
+## D-2026-09-05-18 — Market launch should become configuration-led
+New Markets should ultimately be launched mainly through Market/Location/Corridor/Product/Admin configuration plus supply onboarding and pilot rules, not bespoke application code.
+
+## D-2026-09-05-19 — Experience quality is an architecture requirement
+Raahi must be investor-worthy and consumer-grade: obvious hierarchy, excellent states/language, restrained motion, strong trust presentation, useful discovery and low cognitive friction for Passenger, Driver and Admin.
+
+## D-2026-09-05-20 — Freeze before implementation
+`RAAHI_2_0_ARCHITECTURE_FREEZE_V1.md` and `RAAHI_2_0_UML_FREEZE_V1.md` are the target authority for new marketplace work. Material changes require a dated Decision/ADR and updated acceptance impact; implementation discoveries do not silently redefine the model.
