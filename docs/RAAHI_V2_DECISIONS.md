@@ -313,3 +313,19 @@ Drivers may supply immediate Market products only from their verified Current Op
 ## D-2026-09-05-Experience-04 — One Raahi product, many Market contexts
 
 `Raahi Gomoh`, `Raahi Dhanbad` and future local identities are Market contexts within one Raahi platform, not separate applications or codebases. Passenger search, Driver Operating Market and Admin scope determine which Market context applies.
+
+## D-2026-09-05-Domain-01 — Target Domain/Data Contract frozen
+
+`RAAHI_2_0_TARGET_DOMAIN_CONTRACT_V1.md` is the architecture-to-code authority for the new marketplace kernel. It defines stable logical entities, command boundaries, projections, privacy, events, idempotency and concurrency rules independently of legacy table names.
+
+## D-2026-09-05-Domain-02 — Common Mobility Commitment is mandatory
+
+Every service that commits Driver/Vehicle time must acquire through one cross-service commitment authority. Service-specific screens or tables may not implement independent conflicting calendars.
+
+## D-2026-09-05-Domain-03 — Purpose-built projections, not raw tables
+
+Passenger, Driver and Admin clients consume relationship/scope-aware projections. UI/Realtimes are not authoritative business state and direct raw-table access is not a substitute for canonical commands.
+
+## D-2026-09-05-Domain-04 — Physical schema mapping precedes migrations
+
+Before target migrations are written, inspect the current schema and map each frozen logical object to Reuse / Extend / New / Legacy-only, including migration/backfill, constraints, permissions, cutover, rollback and contract tests.

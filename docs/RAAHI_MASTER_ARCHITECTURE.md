@@ -416,3 +416,7 @@ Examples of deliberate target changes include multi-capability identity, Market/
 The legacy/current-engine architecture above remains useful implementation history. The target Raahi 2.0 experience is now additionally governed by `RAAHI_2_0_EXPERIENCE_NORTH_STAR_V1.md`, which must be read together with the target Architecture and UML freezes before new marketplace implementation.
 
 Where legacy screen behavior conflicts with the frozen target experience, preserve the legacy behavior only for the legacy engine; do not carry it forward by default.
+
+## Target domain companion — 2026-09-05
+
+New marketplace implementation must also conform to `RAAHI_2_0_TARGET_DOMAIN_CONTRACT_V1.md`. It is the logical data/command bridge between the target Architecture/UML/Experience freezes and the forthcoming physical Supabase schema plan.

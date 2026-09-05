@@ -379,3 +379,31 @@ No marketplace implementation code or database change belongs to this experience
 Define the **Raahi 2.0 Target Domain/Data Contract v1**: entities, identifiers, invariants, ownership, command/RPC boundaries, projections, event schema, Market-scoped authorization and cross-service commitment rules. Reconcile it against the frozen UML and acceptance matrix before writing migrations.
 
 Do not jump directly into new UI screens or migrations from legacy table assumptions. The target domain contract is the next architecture-to-code bridge.
+
+## 2026-09-05 Target Domain/Data Contract handover
+
+The target logical marketplace contract is now defined in `docs/RAAHI_2_0_TARGET_DOMAIN_CONTRACT_V1.md`.
+
+It freezes:
+- stable IDs and multi-capability identity;
+- Country/State/Market/Location/Corridor/Product separation;
+- freely selectable Passenger origin vs verified Driver Operating Market;
+- Travel Intent separated from Booking;
+- two-sided Fixed Driver Availability + Passenger Request;
+- atomic compatible FIFO matcher;
+- universal Driver/Vehicle Mobility Commitment;
+- target Ride/Booking/Event model;
+- Outstation quote revision/accept/reopen rules;
+- Carpool and Raahi Trip objects;
+- direct-payment acknowledgement;
+- Reliability/Reason/Case separation;
+- Local Offers isolation;
+- canonical commands/projections;
+- Permission + Scope + relationship authorization;
+- idempotency/concurrency/data-minimization/observability doctrine.
+
+### Single next action
+
+Inspect the actual current Supabase migration/schema and implementation surfaces, then create the **Raahi 2.0 Physical Schema & Migration Map v1**. For each target object classify Reuse / Extend / New / Legacy-only and specify backfill, constraints/indexes, RLS/RPC, cutover, rollback and required tests.
+
+No target database migration should be written before that map is complete.

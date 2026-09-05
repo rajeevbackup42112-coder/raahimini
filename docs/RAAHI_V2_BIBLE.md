@@ -963,3 +963,11 @@ Passenger target navigation: **Home · My Rides · Explore · Offers · Profile*
 Driver target navigation: **Drive · Opportunities · My Trips · History · Profile**.
 
 The experience standard is investor/launch quality, not merely functional UI. Build toward the frozen target rather than preserving legacy screens when they conflict with the intended marketplace experience.
+
+## 2026-09-05 Target Domain/Data Contract freeze
+
+`RAAHI_2_0_TARGET_DOMAIN_CONTRACT_V1.md` now defines the logical marketplace objects and canonical server command/projection boundaries that implementation must follow.
+
+The contract intentionally does not inherit legacy table names as product truth. Physical schema decisions come next through an explicit Reuse / Extend / New / Legacy-only mapping against the current repository before migrations are written.
+
+Key data doctrine: one common Mobility Commitment protects Driver/Vehicle scheduling across all services; Passenger/Driver/Admin clients consume purpose-built projections; retries are idempotent; concurrency-sensitive commitments are serialized server-side; immutable events preserve how state changed.

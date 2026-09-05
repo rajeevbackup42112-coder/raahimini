@@ -315,3 +315,21 @@ The validated Demo Ready product remains the current implementation baseline. A 
 5. Build and accept Fixed One Way as the first premium end-to-end vertical slice.
 6. Extend to Round Trip, Outstation integration, Carpool and Raahi Trips.
 7. Build Market intelligence/operations and controlled Market expansion tooling.
+
+## 2026-09-05 Target Domain/Data Contract checkpoint
+
+| Area | Capability | Status | Next gate |
+|---|---|---:|---|
+| Domain | Identity + multi-capability model | FROZEN V1 | Physical schema map |
+| Domain | Market/Location/Corridor/Product | FROZEN V1 | Physical schema map |
+| Domain | Passenger Travel Intent | FROZEN V1 | Physical schema map |
+| Domain | Driver Operating Market / availability | FROZEN V1 | Physical schema map |
+| Domain | Two-sided Fixed supply/demand | FROZEN V1 | Physical schema + matcher design |
+| Domain | Common Mobility Commitment | FROZEN V1 | DB conflict/locking design |
+| Domain | Ride / Booking / Event | FROZEN V1 | Physical schema map |
+| Domain | Payment acknowledgement | FROZEN V1 | Physical schema map |
+| Domain | Reliability / Cases / Offers | FROZEN V1 | Reuse/extend mapping |
+| Security | Permission + Scope + relationship authorization | FROZEN V1 | RLS/RPC physical design |
+| Concurrency | Atomic/idempotent command doctrine | FROZEN V1 | SQL contract design |
+
+Next: inspect the actual current migrations/schema and produce `Reuse / Extend / New / Legacy-only` mapping before writing any target migration.
