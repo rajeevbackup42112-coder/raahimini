@@ -25,7 +25,8 @@ export default async function DrivePage() {
 
   return (
     <main className="min-h-screen bg-zinc-100 px-5 py-10 text-zinc-950">
-      <div className="mx-auto max-w-2xl">        <p className="text-sm font-medium uppercase tracking-[0.18em] text-zinc-500">Raahi Driver</p>
+      <div className="mx-auto max-w-2xl">
+        <div className="flex items-center justify-between gap-4"><p className="text-sm font-medium uppercase tracking-[0.18em] text-zinc-500">Raahi Driver</p><Link href="/drive/history" className="text-sm font-semibold text-zinc-600">History</Link></div>
         <h1 className="mt-2 text-4xl font-semibold tracking-tight">Drive</h1>
         <p className="mt-3 max-w-xl text-zinc-600">Choose where you are operating, then explicitly choose which mobility products you want to serve.</p>
         {assignmentProjection.status === "READY" ? (

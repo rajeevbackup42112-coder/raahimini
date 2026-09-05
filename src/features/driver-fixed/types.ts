@@ -64,3 +64,16 @@ export type FixedDriverAssignment = {
   capacity: number;
   passenger_groups: FixedDriverAssignmentGroup[];
 };
+export type FixedDriverHistoryItem = {
+  ride_id: string;
+  status: "COMPLETED";
+  origin_name: string;
+  destination_name: string;
+  vehicle_model: string;
+  vehicle_registration: string;
+  departed_at: string;
+  completed_at: string;
+  booked_seat_count: number;
+  capacity: number;
+  completion_zone: string | null;
+};

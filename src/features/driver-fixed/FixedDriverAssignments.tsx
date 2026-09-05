@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import type { FixedDriverAssignment } from "./types";
 
-type Action = "ACKNOWLEDGE" | "BEGIN_APPROACH" | "ARRIVE" | "START_BOARDING" | "BOARDED" | "NO_SHOW";
+type Action = "ACKNOWLEDGE" | "BEGIN_APPROACH" | "ARRIVE" | "START_BOARDING" | "BOARDED" | "NO_SHOW" | "DEPART" | "COMPLETE";
 type ApiResponse = { ok: true; value: unknown } | { ok: false; message: string };
 
 export function FixedDriverAssignments({ assignments }: { assignments: FixedDriverAssignment[] }) {
@@ -42,11 +42,11 @@ export function FixedDriverAssignments({ assignments }: { assignments: FixedDriv
     }
   }
 
-  function arrive(rideId: string) {
-    setMessage("Checking your current location…");
+  function locationAction(action: "ARRIVE" | "COMPLETE", rideId: string) {
+    setMessage(action === "ARRIVE" ? "Checking your current location…" : "Verifying destination arrival…");
     navigator.geolocation.getCurrentPosition(
-      (position) => void send("ARRIVE", rideId, undefined, position),
-      () => setMessage("Location permission and a fresh GPS reading are required to mark arrival."),
+      (position) => void send(action, rideId, undefined, position),
+      () => setMessage("Location permission and a fresh GPS reading are required for this ride step."),
       { enableHighAccuracy: true, maximumAge: 0, timeout: 15000 },
     );
   }
@@ -56,6 +56,8 @@ export function FixedDriverAssignments({ assignments }: { assignments: FixedDriv
     if (ride.status === "DRIVER_ACKNOWLEDGED") return { label: "Start driving to pickup", action: "BEGIN_APPROACH" as const };
     if (ride.status === "DRIVER_EN_ROUTE") return { label: "I've arrived", action: "ARRIVE" as const };
     if (ride.status === "DRIVER_ARRIVED") return { label: "Start boarding", action: "START_BOARDING" as const };
+    if (ride.status === "READY_TO_DEPART") return { label: "Depart", action: "DEPART" as const };
+    if (ride.status === "IN_PROGRESS") return { label: "Complete at destination", action: "COMPLETE" as const };
     return null;
   }
 
@@ -91,7 +93,7 @@ export function FixedDriverAssignments({ assignments }: { assignments: FixedDriv
                 <button
                   type="button"
                   disabled={busy !== null}
-                  onClick={() => primary.action === "ARRIVE" ? arrive(ride.ride_id) : void send(primary.action, ride.ride_id)}
+                  onClick={() => primary.action === "ARRIVE" || primary.action === "COMPLETE" ? locationAction(primary.action, ride.ride_id) : void send(primary.action, ride.ride_id)}
                   className="mt-4 rounded-2xl bg-zinc-950 px-5 py-3 text-sm font-semibold text-white disabled:opacity-50"
                 >
                   {busy === `${primary.action}:${ride.ride_id}` ? "Updating…" : primary.label}

@@ -3,7 +3,7 @@ import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 
 const schema = z.object({
-  action: z.enum(["ACKNOWLEDGE", "BEGIN_APPROACH", "ARRIVE", "START_BOARDING", "BOARDED", "NO_SHOW"]),
+  action: z.enum(["ACKNOWLEDGE", "BEGIN_APPROACH", "ARRIVE", "START_BOARDING", "BOARDED", "NO_SHOW", "DEPART", "COMPLETE"]),
   rideId: z.string().uuid().optional(),
   bookingId: z.string().uuid().optional(),
   latitude: z.number().min(-90).max(90).optional(),
@@ -21,6 +21,7 @@ const errors: Record<string, [number, string]> = {
   BOOKING_TRANSITION_INVALID: [409, "This Passenger booking is already resolved."],
   DRIVER_ACK_DEADLINE_EXPIRED: [409, "The acknowledgement window has expired."],
   ARRIVAL_LOCATION_NOT_VERIFIED: [409, "Raahi could not verify arrival at the boarding area."],
+  COMPLETION_LOCATION_NOT_VERIFIED: [409, "Raahi could not verify that the ride reached its destination area."],
   BOARDING_WAIT_NOT_EXPIRED: [409, "The boarding wait time has not finished yet."],
   IDEMPOTENCY_CONFLICT: [409, "This retry key was already used with different details."],
 };
@@ -48,11 +49,11 @@ export async function POST(request: Request) {
     });
   } else {
     if (!input.rideId) return NextResponse.json({ ok: false, code: "VALIDATION_FAILED", message: "Ride is required.", correlationId }, { status: 400 });
-    if (input.action === "ARRIVE") {
+    if (input.action === "ARRIVE" || input.action === "COMPLETE") {
       if (input.latitude == null || input.longitude == null || input.accuracyMeters == null || !input.capturedAt) {
         return NextResponse.json({ ok: false, code: "VALIDATION_FAILED", message: "Fresh GPS evidence is required.", correlationId }, { status: 400 });
       }
-      result = await supabase.rpc("driver_arrive_fixed_ride", {
+      result = await supabase.rpc(input.action === "ARRIVE" ? "driver_arrive_fixed_ride" : "driver_complete_fixed_ride", {
         p_ride_id: input.rideId,
         p_latitude: input.latitude,
         p_longitude: input.longitude,
@@ -65,7 +66,9 @@ export async function POST(request: Request) {
         ? "driver_acknowledge_fixed_ride"
         : input.action === "BEGIN_APPROACH"
           ? "driver_begin_fixed_approach"
-          : "driver_start_fixed_boarding";
+          : input.action === "DEPART"
+            ? "driver_depart_fixed_ride"
+            : "driver_start_fixed_boarding";
       result = await supabase.rpc(rpc, {
         p_ride_id: input.rideId,
         p_idempotency_key: input.idempotencyKey,

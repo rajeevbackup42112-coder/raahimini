@@ -223,3 +223,14 @@ Driver queue entry must require verified Driver standing, eligible Vehicle, veri
 
 ### Next
 **Slice 6 — Ride execution and completion:** depart → in progress → destination completion → Commitment release → history projection.
+
+## Slice 6 — Fixed execution + completion — PASS
+
+- READY_TO_DEPART → IN_PROGRESS → COMPLETED is server-authoritative and idempotent.
+- Destination completion requires fresh Dhanbad-area GPS evidence; exact coordinates are not retained.
+- Ride completion atomically completes boarded Bookings and the shared Mobility Commitment.
+- Driver Market/FIFO controls unlock only after commitment completion.
+- Driver `/drive/history` shows completed factual journeys through an authenticated projection.
+- Passenger request UI now reflects linked Ride completion without rewriting request ownership.
+- Real browser/API acceptance: Gomoh completion rejected; Dhanbad completion accepted; Driver and Passenger completed states verified.
+- Repository gate: 83/83 tests, TypeScript, ESLint and production build PASS.
