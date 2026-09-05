@@ -323,3 +323,17 @@ This v1.0 freeze may be changed only through an explicit Architecture Decision R
 Implementation discoveries do not silently redefine business rules.
 
 The current legacy Master Architecture remains accurate evidence for the existing engine. For the new marketplace target, this Freeze plus `RAAHI_2_0_UML_FREEZE_V1.md` takes precedence over legacy design statements that conflict with it.
+
+## 14. Passenger origin and location rule — frozen addendum
+
+Passenger location is a journey-planning input, not an operating authorization boundary.
+
+- A Passenger may freely choose any active origin Market/Location while browsing or planning.
+- GPS may offer `Use my current location`, but browsing/search is not locked to physical presence.
+- A Passenger physically in Gomoh may legitimately explore Dhanbad → Ranchi or another future journey.
+- Immediate products may validate pickup feasibility at booking/boarding where operationally necessary.
+- Passenger location choice never changes identity, capability, Home Market, priority, or marketplace standing.
+
+Canonical distinction:
+
+**Passengers can explore mobility from anywhere. Drivers can supply mobility only from where they are genuinely operating.**

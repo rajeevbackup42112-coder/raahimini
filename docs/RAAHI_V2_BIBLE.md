@@ -952,3 +952,14 @@ Raahi now targets a network of local Markets, each capable of its own operations
 The immediate sequence is: Architecture/UML Freeze → Experience North Star → shared marketplace kernel → one complete Fixed One Way vertical slice → Round Trip → Outstation integration → Carpool → Raahi Trips/Explore → Market intelligence/growth systems.
 
 Do not begin a broad backend refactor from old table shapes before the Experience North Star is frozen against this architecture.
+
+## 2026-09-05 Premium Experience North Star freeze
+
+The target Raahi 2.0 experience is frozen in `RAAHI_2_0_EXPERIENCE_NORTH_STAR_V1.md` alongside the Architecture and UML freezes.
+
+Passenger origin is freely selectable for browsing/planning; `Use my current location` is a convenience. Driver supply remains bound to verified Current Operating Market. Raahi Gomoh / Dhanbad / future local identities are Market contexts inside one Raahi product.
+
+Passenger target navigation: **Home · My Rides · Explore · Offers · Profile**.
+Driver target navigation: **Drive · Opportunities · My Trips · History · Profile**.
+
+The experience standard is investor/launch quality, not merely functional UI. Build toward the frozen target rather than preserving legacy screens when they conflict with the intended marketplace experience.

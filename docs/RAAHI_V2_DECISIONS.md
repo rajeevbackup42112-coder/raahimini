@@ -297,3 +297,19 @@ Raahi must be investor-worthy and consumer-grade: obvious hierarchy, excellent s
 
 ## D-2026-09-05-20 — Freeze before implementation
 `RAAHI_2_0_ARCHITECTURE_FREEZE_V1.md` and `RAAHI_2_0_UML_FREEZE_V1.md` are the target authority for new marketplace work. Material changes require a dated Decision/ADR and updated acceptance impact; implementation discoveries do not silently redefine the model.
+
+## D-2026-09-05-Experience-01 — Passenger origin is freely selectable
+
+Passenger origin/location is a journey-planning input, not an operating authorization. A Passenger may search from any active Market/Location regardless of current physical position. GPS is an optional convenience except where a specific fulfilment rule requires location validation.
+
+## D-2026-09-05-Experience-02 — Supply location is stricter than demand location
+
+Drivers may supply immediate Market products only from their verified Current Operating Market. This asymmetry is intentional: Passengers can plan mobility from anywhere; Drivers can supply mobility only from where they are genuinely operating.
+
+## D-2026-09-05-Experience-03 — Premium Experience North Star is frozen
+
+`RAAHI_2_0_EXPERIENCE_NORTH_STAR_V1.md` is now the target user-experience authority alongside the Architecture and UML freezes. Legacy screens may be reused only where they fit this target; existing UI is not a design constraint.
+
+## D-2026-09-05-Experience-04 — One Raahi product, many Market contexts
+
+`Raahi Gomoh`, `Raahi Dhanbad` and future local identities are Market contexts within one Raahi platform, not separate applications or codebases. Passenger search, Driver Operating Market and Admin scope determine which Market context applies.

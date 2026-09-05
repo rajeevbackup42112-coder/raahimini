@@ -291,3 +291,27 @@ The validated Demo Ready product remains the current implementation baseline. A 
 | Market intelligence / expansion system | DESIGNED, NOT BUILT | Travel Intent + emerging corridor + Market dashboards |
 
 **Current rule:** do not interpret `NOT STARTED` as a defect in the accepted Demo Ready baseline. These rows describe the next Raahi company/platform generation.
+
+## 2026-09-05 Premium Experience North Star checkpoint
+
+| Area | Capability | Status | Next gate |
+|---|---|---:|---|
+| Experience | Passenger Home / Ways to Go | FROZEN V1 | Prototype against target domain contracts |
+| Experience | Fixed formation / trust reveal / active ride | FROZEN V1 | First complete vertical slice after kernel |
+| Experience | Round Trip / Outstation / Carpool / Explore | FROZEN V1 | Implement after shared kernel/foundations |
+| Experience | Driver Operating Market + demand workspace | FROZEN V1 | Requires verified Operating Market domain contract |
+| Experience | Driver Opportunities / My Trips / History | FROZEN V1 | Common commitment model first |
+| Experience | Market Admin Dashboard + emerging corridors | FROZEN V1 | Metrics/event model required |
+| Experience | State portfolio operations | FROZEN V1 | Scoped Market architecture required |
+| Experience | One Raahi / multi-Market product context | FROZEN V1 | No separate city codebases |
+| Architecture | Passenger freely selectable origin | FROZEN V1 | Preserve in search/intent APIs |
+
+### Program sequence after experience freeze
+
+1. Architecture/UML/Experience freeze — COMPLETE.
+2. Define target domain/data contracts and authoritative command boundaries.
+3. Define migration/cutover map from current engine to target kernel.
+4. Implement shared kernel foundations with contracts/security first.
+5. Build and accept Fixed One Way as the first premium end-to-end vertical slice.
+6. Extend to Round Trip, Outstation integration, Carpool and Raahi Trips.
+7. Build Market intelligence/operations and controlled Market expansion tooling.

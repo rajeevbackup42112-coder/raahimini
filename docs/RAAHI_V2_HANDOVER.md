@@ -356,3 +356,26 @@ The existing Master Architecture/current migrations remain legacy-engine truth. 
 **Freeze the Raahi 2.0 Premium Experience North Star** for Passenger, Driver and Market Admin against the new architecture. Do not start Foundation/kernel migrations before that experience target is complete enough to test the domain against it.
 
 Never touch Raahi School or port 4030.
+
+## 2026-09-05 Premium Experience North Star handover
+
+After Architecture/UML Freeze commit `d34e6ef`, the Premium Experience North Star has been formalized in `docs/RAAHI_2_0_EXPERIENCE_NORTH_STAR_V1.md`.
+
+Frozen experience rules include:
+- Passenger `From` is freely selectable; current GPS is a convenience, not a browsing lock.
+- Driver supply uses verified Current Operating Market.
+- Raahi Gomoh / Dhanbad / future local labels are Market contexts in one platform.
+- Passenger target navigation: Home · My Rides · Explore · Offers · Profile.
+- Driver target navigation: Drive · Opportunities · My Trips · History · Profile.
+- Fixed pre-match shows liquidity, not Driver identity; trust reveal happens only after assignment.
+- Driver sees aggregate demand and chooses products/services, never individual Fixed passengers.
+- Market Admin is exception/opportunity first; State Operations compares Market health.
+- Experience quality is a release criterion alongside backend invariants.
+
+No marketplace implementation code or database change belongs to this experience checkpoint.
+
+### Single next action
+
+Define the **Raahi 2.0 Target Domain/Data Contract v1**: entities, identifiers, invariants, ownership, command/RPC boundaries, projections, event schema, Market-scoped authorization and cross-service commitment rules. Reconcile it against the frozen UML and acceptance matrix before writing migrations.
+
+Do not jump directly into new UI screens or migrations from legacy table assumptions. The target domain contract is the next architecture-to-code bridge.

@@ -410,3 +410,9 @@ For new Raahi 2.0 marketplace implementation, target architecture is frozen in:
 Where the target freeze conflicts with this legacy sheet, do not mutate history or pretend the legacy engine already implements the new rule. Build/migrate deliberately and preserve regression evidence until each Product is cut over.
 
 Examples of deliberate target changes include multi-capability identity, Market/Home/Operating-Market separation, two-sided Fixed matching, common cross-service commitments, separate payment acknowledgement, scoped administration and configuration-led Market expansion.
+
+## Target experience companion — 2026-09-05
+
+The legacy/current-engine architecture above remains useful implementation history. The target Raahi 2.0 experience is now additionally governed by `RAAHI_2_0_EXPERIENCE_NORTH_STAR_V1.md`, which must be read together with the target Architecture and UML freezes before new marketplace implementation.
+
+Where legacy screen behavior conflicts with the frozen target experience, preserve the legacy behavior only for the legacy engine; do not carry it forward by default.
