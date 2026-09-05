@@ -172,3 +172,35 @@ Driver queue entry must require verified Driver standing, eligible Vehicle, veri
 
 ### Next
 **Slice 4 — Fixed matching + trust reveal.**
+
+## Slice 4 — Fixed matching + trust reveal — COMPLETE
+
+### Database / matching proof
+- Added authoritative `rides`, `ride_bookings`, and immutable `ride_events`; browser roles have no direct table mutation path.
+- Canonical system matcher is `match_fixed_product`, callable only by `service_role`; automatic queue triggers delegate to the same matcher.
+- Product-level advisory lock, row locks, Driver/Vehicle commitment exclusion, and command idempotency prevent duplicate assignment.
+- Matcher rechecks Driver standing, Operating Market, Product preference, active eligible Vehicle, verification, Market/Product lifecycle and commitment conflicts at match time.
+- V1 `FULL_CAPACITY` policy is enforced from versioned Product rules; groups remain atomic.
+- Exact 3-seat + 2-seat + 1-seat / 4-seat Vehicle test selected 3+1, left 2 queued, and incremented skip protection for the bypassed request.
+- 3/4-seat demand correctly produced no Ride.
+- Repeated matcher invocation produced one Ride and one Commitment only.
+
+### Trust / browser proof
+- Passenger projection remains private before assignment and reveals Driver name, Vehicle model/registration and verification statuses only after assignment.
+- Raw DL/RC documents are never exposed to Passenger projections.
+- Driver assignment projection shows matched Passenger groups only after assignment and has no commercial accept/reject step.
+- Two isolated headed browser sessions proved automatic Passenger+Driver matching and post-match trust reveal.
+- Passenger cancellation after assignment returns `409 FIXED_REQUEST_NOT_CANCELLABLE`.
+- Driver Operating Market and new FIFO controls are locked in the UI while an active assignment exists, matching server-side commitment rules.
+### Gate
+- Slice 4 contracts: 12 PASS.
+- Total Vitest contracts: **66/66 PASS**.
+- TypeScript: PASS.
+- ESLint: PASS.
+- Production build: PASS.
+- Supabase performance advisor: no unindexed foreign-key findings; remaining notices are expected unused-index INFO on the fresh database.
+- Supabase security advisor: only existing Dev Auth leaked-password-protection warning.
+- Synthetic Slice 4 browser Ride/Commitment/request/assigned availability cleaned after acceptance; reusable test identities remain.
+
+### Next
+**Slice 5 — Driver acknowledgement, approach, verified arrival, boarding, no-show/refill, and ready-to-depart.**

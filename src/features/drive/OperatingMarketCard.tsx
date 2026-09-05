@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { DriveContext, SetOperatingMarketInput, SetOperatingMarketResult } from "./types";
 
-type Props = { initialContext: DriveContext };
+type Props = { initialContext: DriveContext; lockedByCommitment?: boolean };
 
 type PendingAttempt = SetOperatingMarketInput & { marketName: string };
 
@@ -18,7 +18,7 @@ function locationErrorMessage(error: GeolocationPositionError) {
   return "We could not read your current location. Please try again.";
 }
 
-export function OperatingMarketCard({ initialContext }: Props) {
+export function OperatingMarketCard({ initialContext, lockedByCommitment = false }: Props) {
   const router = useRouter();
   const [context, setContext] = useState(initialContext);
   const [selectedMarketId, setSelectedMarketId] = useState(
@@ -95,7 +95,7 @@ export function OperatingMarketCard({ initialContext }: Props) {
     );
   }
 
-  const busy = status === "LOCATING" || status === "SAVING";
+  const busy = status === "LOCATING" || status === "SAVING" || lockedByCommitment;
 
   return (
     <section className="rounded-3xl border border-zinc-200 bg-white p-6 shadow-sm">
@@ -165,6 +165,7 @@ export function OperatingMarketCard({ initialContext }: Props) {
         </p>
       ) : null}
 
+      {lockedByCommitment ? <p className="mt-4 text-sm font-medium text-amber-700">Your current ride keeps this driving Market locked until the commitment is resolved.</p> : null}
       <div className="mt-6 rounded-2xl bg-zinc-50 p-4 text-sm leading-6 text-zinc-600">
         Raahi checks your current GPS only to verify this Market. Exact coordinates are not kept in your Operating Market record.
         Choosing a Market does not make you available for any route or trip automatically.

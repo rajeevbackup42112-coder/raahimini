@@ -1,7 +1,9 @@
 import Link from "next/link";
 import { OperatingMarketCard } from "@/features/drive/OperatingMarketCard";
+import { FixedDriverAssignments } from "@/features/driver-fixed/FixedDriverAssignments";
 import { FixedDriverOpportunities } from "@/features/driver-fixed/FixedDriverOpportunities";
 import { getDriveContext } from "@/server/projections/drive-context";
+import { getFixedDriverAssignments } from "@/server/projections/fixed-driver-assignments";
 import { getFixedDriverWorkspace } from "@/server/projections/fixed-driver-workspace";
 
 export default async function DrivePage() {
@@ -13,16 +15,34 @@ export default async function DrivePage() {
     return <main className="min-h-screen bg-zinc-100 px-5 py-10 text-zinc-950"><div className="mx-auto max-w-xl rounded-3xl bg-white p-8 shadow-sm"><p className="text-sm font-medium text-zinc-500">Driver</p><h1 className="mt-2 text-3xl font-semibold">Driver setup is required</h1><p className="mt-3 text-zinc-600">This account does not yet have an active Driver profile. Passenger access is unaffected.</p></div></main>;
   }
 
-  const fixedProjection = await getFixedDriverWorkspace();
+  const [fixedProjection, assignmentProjection] = await Promise.all([
+    getFixedDriverWorkspace(),
+    getFixedDriverAssignments(),
+  ]);
+
+  const activeAssignments = assignmentProjection.status === "READY" ? assignmentProjection.assignments : [];
+  const hasActiveAssignment = activeAssignments.length > 0;
+
   return (
     <main className="min-h-screen bg-zinc-100 px-5 py-10 text-zinc-950">
-      <div className="mx-auto max-w-2xl">
-        <p className="text-sm font-medium uppercase tracking-[0.18em] text-zinc-500">Raahi Driver</p>
+      <div className="mx-auto max-w-2xl">        <p className="text-sm font-medium uppercase tracking-[0.18em] text-zinc-500">Raahi Driver</p>
         <h1 className="mt-2 text-4xl font-semibold tracking-tight">Drive</h1>
         <p className="mt-3 max-w-xl text-zinc-600">Choose where you are operating, then explicitly choose which mobility products you want to serve.</p>
-        <div className="mt-8"><OperatingMarketCard initialContext={projection.context} /></div>
+        {assignmentProjection.status === "READY" ? (
+          <div className="mt-8"><FixedDriverAssignments assignments={activeAssignments} /></div>
+        ) : null}
+        <div className="mt-8"><OperatingMarketCard initialContext={projection.context} lockedByCommitment={hasActiveAssignment} /></div>
         <div className="mt-6">
-          {fixedProjection.status === "READY" ? <FixedDriverOpportunities initialWorkspace={fixedProjection.workspace} /> : <section className="rounded-3xl bg-white p-6 shadow-sm"><p className="text-sm text-zinc-600">Fixed opportunities are temporarily unavailable.</p></section>}
+          {hasActiveAssignment ? (
+            <section className="rounded-3xl bg-white p-6 shadow-sm"><p className="text-sm font-medium text-zinc-900">Finish your assigned ride before joining another Fixed FIFO.</p></section>
+          ) : fixedProjection.status === "READY" ? (
+            <FixedDriverOpportunities
+              key={`${fixedProjection.workspace.operating_market_id ?? "none"}:${fixedProjection.workspace.products.map((product) => `${product.product_id}:${product.preference_enabled}:${product.availability_status ?? "none"}`).join("|")}`}
+              initialWorkspace={fixedProjection.workspace}
+            />
+          ) : (
+            <section className="rounded-3xl bg-white p-6 shadow-sm"><p className="text-sm text-zinc-600">Fixed opportunities are temporarily unavailable.</p></section>
+          )}
         </div>
       </div>
     </main>

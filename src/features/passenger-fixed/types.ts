@@ -22,6 +22,11 @@ export type FixedProductOption = {
   rules_version: number;
 };
 
+export type FixedTrustProjection = {
+  driver_verified: boolean;
+  vehicle_rc_verified: boolean;
+  vehicle_photos_verified: boolean;
+};
 export type FixedRequestProjection = {
   request_id: string;
   product_id: string;
@@ -35,6 +40,13 @@ export type FixedRequestProjection = {
   destination_name: string;
   product_name: string;
   rules_version: number;
+  ride_id: string | null;
+  ride_status: string | null;
+  matched_at: string | null;
+  driver_name: string | null;
+  vehicle_model: string | null;
+  vehicle_registration: string | null;
+  trust: FixedTrustProjection | null;
 };
 
 export type JoinFixedResult = {

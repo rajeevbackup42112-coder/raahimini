@@ -42,3 +42,21 @@ export type PreferenceApiResponse =
 export type AvailabilityApiResponse =
   | { ok: true; value: DriverAvailabilityResult; correlationId: string }
   | ApiFailure;
+export type FixedDriverAssignmentGroup = {
+  display_name: string;
+  seat_count: number;
+};
+
+export type FixedDriverAssignment = {
+  ride_id: string;
+  status: string;
+  matched_at: string;
+  driver_ack_deadline: string;
+  origin_name: string;
+  destination_name: string;
+  vehicle_model: string;
+  vehicle_registration: string;
+  booked_seat_count: number;
+  capacity: number;
+  passenger_groups: FixedDriverAssignmentGroup[];
+};

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import type {
   AvailabilityApiResponse,
   FixedDriverWorkspace,
@@ -10,6 +11,7 @@ import type {
 type Props = { initialWorkspace: FixedDriverWorkspace };
 
 export function FixedDriverOpportunities({ initialWorkspace }: Props) {
+  const router = useRouter();
   const [workspace, setWorkspace] = useState(initialWorkspace);
   const [busy, setBusy] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
@@ -74,7 +76,8 @@ export function FixedDriverOpportunities({ initialWorkspace }: Props) {
         availability_status: payload.value.status,
         availability_queued_at: payload.value.queued_at ?? null,
       });
-      setMessage("You are now waiting in FIFO for this route.");
+      setMessage("Availability saved. Raahi is checking for a valid match.");
+      router.refresh();
     } catch {
       setMessage("The network did not confirm FIFO entry. Try again.");
     } finally {
@@ -102,6 +105,7 @@ export function FixedDriverOpportunities({ initialWorkspace }: Props) {
         availability_queued_at: null,
       });
       setMessage("You left this FIFO. Your route preference is still saved.");
+      router.refresh();
     } catch {
       setMessage("The network did not confirm leaving FIFO. Try again.");
     } finally {
