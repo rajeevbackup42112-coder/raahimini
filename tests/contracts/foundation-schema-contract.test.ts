@@ -4,15 +4,15 @@ import { describe, expect, it } from "vitest";
 
 const migrations = join(process.cwd(), "supabase", "migrations");
 const identity = readFileSync(
-  join(migrations, "20260905091543_foundation_identity_markets_products.sql"),
+  join(migrations, "20260905103622_foundation_identity_markets_products.sql"),
   "utf8",
 );
 const supply = readFileSync(
-  join(migrations, "20260905091829_foundation_driver_supply_context.sql"),
+  join(migrations, "20260905103649_foundation_driver_supply_context.sql"),
   "utf8",
 );
 const commitments = readFileSync(
-  join(migrations, "20260905092058_foundation_admin_commitments.sql"),
+  join(migrations, "20260905103716_foundation_admin_commitments.sql"),
   "utf8",
 );
 const seed = readFileSync(join(process.cwd(), "supabase", "seed.sql"), "utf8");
@@ -23,7 +23,7 @@ describe("Raahi Next clean-schema contract", () => {
     expect(identity).not.toMatch(/profiles[\s\S]{0,500}\brole\b/i);
   });
 
-  it("models Market → Location → Corridor → Service Product", () => {
+  it("models Market â†’ Location â†’ Corridor â†’ Service Product", () => {
     expect(identity).toContain("create table public.markets");
     expect(identity).toContain("create table public.locations");
     expect(identity).toContain("create table public.corridors");

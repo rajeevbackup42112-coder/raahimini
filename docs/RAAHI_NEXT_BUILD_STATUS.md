@@ -1,61 +1,61 @@
 # Raahi Next — Build Status
 
 **Checkpoint date:** 2026-09-05
-**Stage:** Foundation 1 bootstrap
+**Stage:** Gate 0 complete; Slice 1 starting
 
-## PASS
+## Gate 0 — GREEN
 
-- Clean Next.js 16.3.3 / React 19.2.8 application created.
-- Runtime isolated on port 4029.
-- Frozen Architecture, UML, Experience and Target Domain documents copied as authority.
-- Build Blueprint v1 written.
-- Capability-based identity domain contract created.
-- Market / Location / Corridor / Service Product migration drafted.
-- Driver / Vehicle / Verification / Home + Operating Market migration drafted.
-- Permission + Scope Admin and shared Commitment migration drafted.
-- Deterministic Gomoh + Dhanbad seed created.
-- Static schema contracts created.
-- pgTAP Foundation security contract created.
+Raahi Next now has a dedicated clean application, Git branch and Supabase database.
+
+### Preserved legacy/reference state
+- Existing Raahi code remains untouched for reference.
+- GitHub reference branch: `raahi-v2-reference-2026-09-05` at `f592e29`.
+- Existing `Raahi V2 Dev` Supabase project was paused, not deleted, to free the Free-plan project slot.
+- `SchoolTransportOS Dev` was not touched.
+
+### Raahi Next resources
+- Workspace: `C:\Users\Dipti\AppData\Local\Temp\raahi-next`.
+- Runtime port: `4029`.
+- GitHub repository: `rajeevbackup42112-coder/raahimini`.
+- GitHub branch: `raahi-next-clean`.
+- Supabase project: `Raahi Next Dev` (`dfgxtooftvtecfcogeiv`, `ap-southeast-2`).
+- Supabase project cost at creation: `$0/month` under the current Free plan.
+
+### Foundation migrations replayed successfully
+1. `20260905103622_foundation_identity_markets_products`
+2. `20260905103649_foundation_driver_supply_context`
+3. `20260905103716_foundation_admin_commitments`
+4. `20260905103738_foundation_command_integrity`
+5. `20260905104010_foundation_advisor_hardening`
+
+### Real database acceptance evidence
+- Clean migrations applied to a fresh project and deterministic Gomoh/Dhanbad seed loaded.
+- Anonymous catalog RLS exposes Gomoh + `GOMOH_DHANBAD_FIXED_OW` only; Dhanbad PREPARING/draft Product remains hidden.
+- Authenticated self-RLS proved one user can read only their own Profile/Capabilities; new user receives Passenger capability.
+- Same-Driver overlapping commitment: blocked by Postgres exclusion constraint.
+- Same-Vehicle overlapping commitment: blocked by Postgres exclusion constraint.
+- Duplicate idempotency identity: blocked.
+- Historical Product-rule mutation: blocked.
+- Selecting a Vehicle without Driver access: blocked.
+- Revoking access to the currently selected Vehicle: blocked.
+- Supabase security advisor: **0 findings**.
+- Performance advisor: no unindexed-FK findings; only expected unused-index INFO on the new empty database.
+
+### Application gate
+- Next.js 16.3.3 / React 19.2.x / strict TypeScript.
+- Supabase SSR browser/server clients added with Next.js 16 `proxy.ts` session refresh.
+- App is connected locally to `Raahi Next Dev` via publishable client credentials only.
+- No service-role/server secret is stored in the app environment.
 - TypeScript: PASS.
 - ESLint: PASS.
-- Vitest: 12/12 PASS.
-- Next.js production build: PASS.
+- Vitest: 18/18 PASS.
+- Production build: PASS.
 
-## BLOCKED — not waived
+### Non-blocking housekeeping
+- Local Supabase CLI has no authenticated access token, so generated database types have not yet been written to the repository. The connected Supabase service can generate them; this will be completed once CLI/project auth is configured, and does not alter product behavior.
+- Google OAuth will reuse the existing Google ecosystem where appropriate, but provider secrets/redirect configuration will be handled during the authentication integration slice rather than copied manually.
 
-Real Postgres migration replay is not yet proven because Dipti currently has neither Docker nor Podman available to Supabase CLI.
-A clean Raahi Next cloud Supabase project also has not been created because project creation requires explicit organization/cost confirmation.
+## Next executable stage
+**Slice 1 — Driver chooses and verifies Current Operating Market.**
 
-Until database replay, pgTAP, RLS behavior, concurrency checks and Supabase advisors pass, Foundation 1 is **not** marked complete.
-
-## Next executable gate
-
-1. Create/connect the dedicated Raahi Next Dev Supabase project.
-2. Replay all clean migrations + seed from zero.
-3. Run pgTAP security tests.
-4. Add command-level tests for Operating Market verification and commitment conflicts.
-5. Run security + performance advisors.
-6. Only then begin Fixed One Way supply/demand tables and matcher.
-
-## Gate 0 local hardening — 2026-09-05
-
-Completed without touching any legacy Raahi environment:
-- First clean Git checkpoint created: `cfa9aca foundation: bootstrap raahi next architecture`.
-- Added command idempotency persistence contract.
-- Replaced mutable Product rules with immutable Product rule versions + current version pointer.
-- Added active Vehicle → Driver Vehicle access FK and revocation guards.
-- Documented `profiles.phone` as a non-authoritative convenience copy; verified phone truth remains trusted Auth/verification state.
-- Added canonical server command envelope/result types.
-- Updated pgTAP Foundation security contract for final schema shape.
-- Added CI app gate using Node 24 + `npm ci` + `npm run check`.
-- Local application gate after hardening: TypeScript PASS, ESLint PASS, Vitest 18/18 PASS, production build PASS.
-
-Still blocked, not waived:
-- real Postgres migration replay;
-- pgTAP execution against Postgres;
-- RLS behavior tests with real actors;
-- commitment concurrency tests against Postgres;
-- generated database types;
-- Supabase advisors.
-
-Those require a runnable Postgres/Supabase environment. Dipti still has no Docker/Podman, so the next practical Gate 0 step is a dedicated Raahi Next Dev Supabase project.
+The command must prove: physical presence, Driver capability/standing, one Operating Market, commitment conflict protection, event history, idempotency, and no automatic Product enrolment.
