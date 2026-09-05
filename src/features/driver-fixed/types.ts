@@ -43,15 +43,19 @@ export type AvailabilityApiResponse =
   | { ok: true; value: DriverAvailabilityResult; correlationId: string }
   | ApiFailure;
 export type FixedDriverAssignmentGroup = {
+  booking_id: string;
   display_name: string;
   seat_count: number;
+  status: "ASSIGNED" | "BOARDED" | "NO_SHOW" | "CANCELLED" | "COMPLETED";
 };
 
 export type FixedDriverAssignment = {
   ride_id: string;
-  status: string;
+  status: "MATCHED" | "DRIVER_ACKNOWLEDGED" | "DRIVER_EN_ROUTE" | "DRIVER_ARRIVED" | "BOARDING" | "READY_TO_DEPART" | "IN_PROGRESS";
   matched_at: string;
   driver_ack_deadline: string;
+  boarding_deadline: string | null;
+  refill_deadline: string | null;
   origin_name: string;
   destination_name: string;
   vehicle_model: string;

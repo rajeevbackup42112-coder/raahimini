@@ -204,3 +204,22 @@ Driver queue entry must require verified Driver standing, eligible Vehicle, veri
 
 ### Next
 **Slice 5 — Driver acknowledgement, approach, verified arrival, boarding, no-show/refill, and ready-to-depart.**
+
+## Slice 5 — Approach, arrival and boarding — COMPLETE
+
+- Canonical Driver transitions: acknowledge → approach → GPS arrival → boarding.
+- Arrival requires fresh, accurate GPS inside Product-configured boarding zone; exact coordinates are not retained on the Ride.
+- Boarding wait starts only after verified arrival.
+- Passenger boarding/no-show are immutable Ride events.
+- No-show is server-gated by boarding deadline; client time cannot override it.
+- Bounded refill reuses the same Ride before ordinary matching.
+- Full no-show recovery supports temporary 0 booked seats without violating capacity integrity.
+- Driver workspace exposes actionable booking IDs/status only after assignment.
+- Real Dev ride reached READY_TO_DEPART with 4/4 boarded seats.
+- Rollback-only no-show test: 4-seat group → 0 seats → refill window → compatible Passenger assigned into same Ride; no extra Ride created.
+- Slice 5 contracts: 8 PASS; total contracts: 74/74 PASS.
+- TypeScript, ESLint and production build: PASS.
+- Supabase: no actionable performance findings; only expected unused-index INFO. Known Dev Auth leaked-password warning remains pre-production configuration.
+
+### Next
+**Slice 6 — Ride execution and completion:** depart → in progress → destination completion → Commitment release → history projection.
