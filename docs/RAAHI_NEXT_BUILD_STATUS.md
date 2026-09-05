@@ -245,3 +245,22 @@ Driver queue entry must require verified Driver standing, eligible Vehicle, veri
 - Real browser acceptance passed for Passenger mark-paid, Driver confirm-received, and support Case creation.
 - Supabase advisor hardening completed for payment dispute Case FK.
 - Full gate: 93/93 tests PASS + TypeScript + ESLint + production build PASS.
+
+## Slice 8 — Fixed Round Trip — COMPLETE
+
+- Added Gomoh → Dhanbad Fixed Round Trip as a Service Product on the existing Fixed corridor/kernel; no second marketplace engine.
+- Passenger demand, Driver preference/FIFO, exact-fill batching, trust reveal, Ride, Booking and shared Commitment all reuse the proven Fixed authority.
+- Same Driver + Vehicle Commitment remains active through outbound, destination wait, return boarding and return fulfilment.
+- Round Trip lifecycle: READY_TO_DEPART → OUTBOUND_IN_PROGRESS → WAITING_FOR_RETURN → RETURN_BOARDING → RETURN_IN_PROGRESS → COMPLETED.
+- Outbound completion requires Dhanbad proof; return completion requires Gomoh proof. Exact coordinates are not retained.
+- Return attendance is tracked separately on the same Booking; unresolved return manifest blocks departure.
+- Payment becomes DUE only after final return completion, not after outbound arrival.
+- Real two-session browser/API acceptance completed a 4-seat ₹1,200 Round Trip end-to-end. Early return start and wrong-location return completion were both rejected with 409.
+- Final database truth: Ride/Booking/Commitment COMPLETED, return BOARDED, Payment DUE ₹1,200.
+- Passenger and Driver History visibly distinguish Gomoh → Dhanbad → Gomoh from One Way.
+- Slice 8 contracts: 15 PASS; total contracts: **108/108 PASS**.
+- TypeScript, ESLint and production build: PASS.
+- Supabase: no actionable Slice 8 advisor findings; performance notices are unused-index INFO. Existing Dev Auth leaked-password warning remains pre-production configuration.
+
+### Next
+**Slice 9 — Outstation:** Passenger request → eligible Driver audience → private versioned quotes → exact atomic selection → shared Commitment → common fulfilment/payment/support.

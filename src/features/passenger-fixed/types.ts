@@ -9,7 +9,7 @@ export type SearchLocation = {
 export type FixedProductOption = {
   product_id: string;
   product_code: string;
-  service_type: "FIXED_ONE_WAY";
+  service_type: "FIXED_ONE_WAY" | "FIXED_ROUND_TRIP";
   display_name: string;
   public_summary: string | null;
   origin_location_id: string;
@@ -30,6 +30,7 @@ export type FixedTrustProjection = {
 export type FixedRequestProjection = {
   request_id: string;
   product_id: string;
+  service_type: "FIXED_ONE_WAY" | "FIXED_ROUND_TRIP";
   status: "QUEUED" | "RESERVED" | "ASSIGNED" | "PASSENGER_CANCELLED" | "SUPERSEDED";
   seat_count: number;
   fare_per_seat_inr: number;
@@ -43,6 +44,10 @@ export type FixedRequestProjection = {
   ride_id: string | null;
   ride_status: string | null;
   matched_at: string | null;
+  return_wait_minutes: number | null;
+  return_not_before: string | null;
+  return_boarding_deadline: string | null;
+  return_status: "NOT_APPLICABLE" | "PENDING" | "BOARDED" | "NO_SHOW" | null;
   driver_name: string | null;
   vehicle_model: string | null;
   vehicle_registration: string | null;

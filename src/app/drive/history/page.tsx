@@ -23,7 +23,7 @@ export default async function DriverHistoryPage() {
             {projection.rides.map((ride) => (
               <article key={ride.ride_id} className="rounded-3xl bg-white p-6 shadow-sm">
                 <div className="flex flex-wrap items-start justify-between gap-4">
-                  <div><p className="text-sm font-semibold text-zinc-500">{ride.origin_name} → {ride.destination_name}</p><h2 className="mt-1 text-xl font-semibold">{ride.vehicle_model} · {ride.vehicle_registration}</h2></div>
+                  <div><p className="text-sm font-semibold text-zinc-500">{ride.service_type === "FIXED_ROUND_TRIP" ? `${ride.origin_name} → ${ride.destination_name} → ${ride.origin_name}` : `${ride.origin_name} → ${ride.destination_name}`}</p><h2 className="mt-1 text-xl font-semibold">{ride.vehicle_model} · {ride.vehicle_registration}</h2></div>
                   <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">Completed</span>
                 </div>
                 <div className="mt-5 grid gap-3 sm:grid-cols-2">

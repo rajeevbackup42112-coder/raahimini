@@ -1,6 +1,7 @@
 export type FixedDriverProduct = {
   product_id: string;
   product_code: string;
+  service_type: "FIXED_ONE_WAY" | "FIXED_ROUND_TRIP";
   display_name: string;
   origin_name: string;
   destination_name: string;
@@ -47,15 +48,19 @@ export type FixedDriverAssignmentGroup = {
   display_name: string;
   seat_count: number;
   status: "ASSIGNED" | "BOARDED" | "NO_SHOW" | "CANCELLED" | "COMPLETED";
+  return_status: "NOT_APPLICABLE" | "PENDING" | "BOARDED" | "NO_SHOW";
 };
 
 export type FixedDriverAssignment = {
   ride_id: string;
-  status: "MATCHED" | "DRIVER_ACKNOWLEDGED" | "DRIVER_EN_ROUTE" | "DRIVER_ARRIVED" | "BOARDING" | "READY_TO_DEPART" | "IN_PROGRESS";
+  service_type: "FIXED_ONE_WAY" | "FIXED_ROUND_TRIP";
+  status: "MATCHED" | "DRIVER_ACKNOWLEDGED" | "DRIVER_EN_ROUTE" | "DRIVER_ARRIVED" | "BOARDING" | "READY_TO_DEPART" | "IN_PROGRESS" | "OUTBOUND_IN_PROGRESS" | "WAITING_FOR_RETURN" | "RETURN_BOARDING" | "RETURN_IN_PROGRESS";
   matched_at: string;
   driver_ack_deadline: string;
   boarding_deadline: string | null;
   refill_deadline: string | null;
+  return_not_before: string | null;
+  return_boarding_deadline: string | null;
   origin_name: string;
   destination_name: string;
   vehicle_model: string;
@@ -66,6 +71,7 @@ export type FixedDriverAssignment = {
 };
 export type FixedDriverHistoryItem = {
   ride_id: string;
+  service_type: "FIXED_ONE_WAY" | "FIXED_ROUND_TRIP";
   status: "COMPLETED";
   origin_name: string;
   destination_name: string;
@@ -76,4 +82,5 @@ export type FixedDriverHistoryItem = {
   booked_seat_count: number;
   capacity: number;
   completion_zone: string | null;
+  outbound_completion_zone: string | null;
 };

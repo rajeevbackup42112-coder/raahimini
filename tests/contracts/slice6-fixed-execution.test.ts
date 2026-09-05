@@ -59,7 +59,7 @@ describe("Slice 6 — Fixed execution, completion and history", () => {
 
   it("uses fresh location for completion and never mutates Ride tables from UI", () => {
     expect(driverUi).toContain('label: "Complete at destination"');
-    expect(driverUi).toContain('locationAction(primary.action, ride.ride_id)');
+    expect(driverUi).toContain('locationAction(primary.action as LocationAction, ride.ride_id)');
     expect(driverUi).not.toContain(".from(\"rides\")");
   });
 
