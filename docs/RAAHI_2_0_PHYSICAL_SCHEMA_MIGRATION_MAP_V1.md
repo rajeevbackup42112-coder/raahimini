@@ -701,3 +701,18 @@ Security:
 This map authorizes **planning**, not database change. No target DDL has been applied by this architecture work.
 
 The next implementation action is Wave 0: reconcile the newest marketplace source/migrations with these frozen design documents in a safe integration worktree, then build Wave 1 migrations and tests there.
+
+## 19. Wave 0 source-control reconciliation discovery — 2026-09-05
+
+Current worktree evidence:
+- clean `raahi-marketplace-integration` is at `b8dafea` and contains the 2026-09-03 self-onboarding/driver-photo migrations;
+- `raahi-demand-refinement` is also based at `b8dafea` but has substantial uncommitted product/UI/docs/test work;
+- that dirty worktree contains uncommitted `20260903153000_raahi_route_interest_demand_radar.sql`, `20260903172000_raahi_car_request_agreement.sql`, and `20260905093000_raahi_car_request_truth_model.sql`;
+- `Raahi V2 Dev` already shows the corresponding route-interest and car-request truth migrations as applied, including three separately recorded 2026-09-05 truth migration entries.
+
+Therefore the repository source and applied Dev migration history are not yet cleanly reconciled.
+
+Hard gate:
+**Do not start Wave 1 migrations from the clean `b8dafea` worktree and do not copy/commit the dirty worktree wholesale. First preserve/checkpoint the active demand-refinement work or deliberately extract/reconcile the exact applied migration source with its tests.**
+
+This is source-integrity protection, not a product blocker. No live schema change is required to resolve it.

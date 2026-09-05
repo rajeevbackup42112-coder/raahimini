@@ -427,3 +427,9 @@ Key conclusions:
 **Wave 0 source reconciliation:** create/use a safe integration worktree based on the newest accepted marketplace source, bring the Architecture/UML/Experience/Domain/Schema documents into that line without overwriting newer code, verify repository migrations exactly cover applied `Raahi V2 Dev` migrations, then design Wave 1 additive foundation migrations/tests.
 
 Do not apply any new target DDL before reconciliation is green. Never touch Raahi School or port 4030.
+
+### Wave 0 reconciliation gate discovered
+
+Do not start target Wave 1 yet. The clean `raahi-marketplace-integration` worktree is `b8dafea`, while `raahi-demand-refinement` has substantial uncommitted active work plus migration sources already represented in the live `Raahi V2 Dev` migration history.
+
+Preserve the dirty worktree. Do not clean/reset it and do not cherry-pick/copy it wholesale into the architecture branch. The next safe engineering action is to checkpoint/reconcile that active marketplace line first, then create the target integration worktree from the reconciled source and bring these frozen design commits forward.
