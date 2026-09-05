@@ -67,6 +67,6 @@ describe("Raahi Dev Test Mode", () => {
 
   it("renders the manual persona form only through the server-side host gate", () => {
     expect(page).toContain("isTestModeAllowed");
-    expect(page).toContain("<TestModeSignIn configured={testModeServerConfigured()} />");
+    expect(page).toContain("<TestModeSignIn configured={testModeServerConfigured()} nextPath={nextPath} />");
   });
 });

@@ -17,7 +17,7 @@ const personaOptions: Array<{ value: Persona; label: string }> = [
   { value: "PLATFORM_ADMIN", label: "Platform Admin" },
 ];
 
-export function TestModeSignIn({ configured }: { configured: boolean }) {
+export function TestModeSignIn({ configured, nextPath }: { configured: boolean; nextPath: string }) {
   const [displayName, setDisplayName] = useState("Naresh Test");
   const [email, setEmail] = useState("naresh@raahi.test");
   const [persona, setPersona] = useState<Persona>("PASSENGER_DRIVER");
@@ -56,7 +56,7 @@ export function TestModeSignIn({ configured }: { configured: boolean }) {
         }
         return;
       }
-      window.location.assign(result.redirectTo ?? "/");
+      window.location.assign(nextPath);
     } catch {
       setMessage("Could not reach Raahi Test Mode.");
     } finally {

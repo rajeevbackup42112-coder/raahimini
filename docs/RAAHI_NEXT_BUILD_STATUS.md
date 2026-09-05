@@ -109,3 +109,36 @@ Once the local server-only Test Mode key is configured, run final headed Slice 1
 7. create Gomoh and Dhanbad Market Admin personas and verify their scope separation.
 
 Then proceed to Slice 2: Passenger search + join Fixed demand for Gomoh → Dhanbad.
+
+## Slice 2 — Passenger Fixed demand — COMPLETE
+
+### Database / command proof
+- Added `fixed_passenger_requests` independent of Ride/Driver creation.
+- Fare, Product rule version and seat limit are snapshotted server-side at queue entry.
+- FIFO `queued_at` is server-owned; Passenger cannot supply queue priority.
+- Active duplicate demand is blocked per Passenger + Product.
+- Same idempotency key returns the original result; changed input with the same key fails.
+- Invalid seat count and anonymous command execution are rejected.
+- Owner cancellation is idempotent and serialized; non-owner cancellation returns not found.
+- Browser has no direct table privilege; explicit deny-all RLS policy is present.
+
+### Passenger/browser proof
+- Home supports free origin/destination selection without GPS gating.
+- Gomoh → Dhanbad discovery exposes the PILOT Fixed One Way Product at ₹150/seat, max 4 seats.
+- Dhanbad → Gomoh remains hidden because its Product is still DRAFT.
+- Rajeev2 browser flow: 2 seats → ₹300 → `RIDE FORMING` → cancel → `REQUEST CANCELLED`: PASS.
+- Pre-match state reveals no Driver identity.
+- Dev Test Mode now returns users to their requested page after sign-in: PASS.
+### Gate
+- Slice 2 contract suite: 8 PASS.
+- Total Vitest contracts: **43/43 PASS**.
+- TypeScript: PASS.
+- ESLint: PASS.
+- Production build: PASS.
+- Supabase RLS-without-policy finding resolved.
+- Remaining Supabase Auth warning: leaked-password protection disabled. This is a pre-production Auth setting; Dev Test Mode uses server-generated random credentials and production login is Google.
+
+### Next
+**Slice 3 — Driver sees aggregate demand and explicitly joins Gomoh → Dhanbad Fixed FIFO.**
+
+Driver queue entry must require verified Driver standing, eligible Vehicle, verified Current Operating Market = Product Origin Market, explicit Product preference/availability, no conflicting commitment, and server-owned FIFO time. Passenger identities remain hidden.

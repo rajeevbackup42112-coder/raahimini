@@ -26,7 +26,7 @@ export default async function SignInPage({
         <p className="mt-3 text-sm leading-6 text-zinc-600">Use one identity across Passenger and Driver capabilities. Signing in never changes your operational permissions by itself.</p>
         {testMode ? (
           <div className="mt-7">
-            <TestModeSignIn configured={testModeServerConfigured()} />
+            <TestModeSignIn configured={testModeServerConfigured()} nextPath={nextPath} />
           </div>
         ) : null}
 
