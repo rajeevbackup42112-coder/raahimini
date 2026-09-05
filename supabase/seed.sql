@@ -66,19 +66,19 @@ from public.markets m, public.corridors c
 where m.code = 'DHANBAD' and c.code = 'DHANBAD_GOMOH'
 on conflict (code) do update set status = excluded.status, display_name = excluded.display_name;
 
-insert into public.service_product_rules(product_id, rules, rules_version)
-select p.id,
+insert into public.service_product_rule_versions(product_id, version_no, rules)
+select p.id, 1,
   jsonb_build_object(
     'capacity_policy', 'FULL_CAPACITY',
     'fare_per_seat_inr', 150,
     'driver_ack_seconds', 120,
     'boarding_wait_minutes', 10,
     'refill_window_minutes', 5
-  ),
-  1
+  )
 from public.service_products p
 where p.code = 'GOMOH_DHANBAD_FIXED_OW'
-on conflict (product_id) do update set
-  rules = excluded.rules,
-  rules_version = excluded.rules_version,
-  updated_at = now();
+on conflict (product_id, version_no) do nothing;
+
+update public.service_products
+set current_rules_version = 1
+where code = 'GOMOH_DHANBAD_FIXED_OW';

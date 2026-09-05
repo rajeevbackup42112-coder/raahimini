@@ -36,3 +36,26 @@ Until database replay, pgTAP, RLS behavior, concurrency checks and Supabase advi
 4. Add command-level tests for Operating Market verification and commitment conflicts.
 5. Run security + performance advisors.
 6. Only then begin Fixed One Way supply/demand tables and matcher.
+
+## Gate 0 local hardening — 2026-09-05
+
+Completed without touching any legacy Raahi environment:
+- First clean Git checkpoint created: `cfa9aca foundation: bootstrap raahi next architecture`.
+- Added command idempotency persistence contract.
+- Replaced mutable Product rules with immutable Product rule versions + current version pointer.
+- Added active Vehicle → Driver Vehicle access FK and revocation guards.
+- Documented `profiles.phone` as a non-authoritative convenience copy; verified phone truth remains trusted Auth/verification state.
+- Added canonical server command envelope/result types.
+- Updated pgTAP Foundation security contract for final schema shape.
+- Added CI app gate using Node 24 + `npm ci` + `npm run check`.
+- Local application gate after hardening: TypeScript PASS, ESLint PASS, Vitest 18/18 PASS, production build PASS.
+
+Still blocked, not waived:
+- real Postgres migration replay;
+- pgTAP execution against Postgres;
+- RLS behavior tests with real actors;
+- commitment concurrency tests against Postgres;
+- generated database types;
+- Supabase advisors.
+
+Those require a runnable Postgres/Supabase environment. Dipti still has no Docker/Podman, so the next practical Gate 0 step is a dedicated Raahi Next Dev Supabase project.
