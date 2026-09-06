@@ -1,0 +1,3 @@
+create index if not exists idx_carpool_change_proposals_destination on public.carpool_change_proposals(proposed_destination_location_id);
+create index if not exists idx_carpool_journeys_origin_market on public.carpool_journeys(origin_market_id);
+create index if not exists idx_carpool_journeys_product_rules on public.carpool_journeys(product_id,product_rules_version);

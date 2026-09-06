@@ -1,7 +1,7 @@
 # Raahi Next — Build Status
 
-**Checkpoint date:** 2026-09-05
-**Stage:** Gate 0 complete; Slice 1 implemented; Dev Test Mode server key pending
+**Checkpoint date:** 2026-09-07
+**Stage:** Wave 5 / Slice 10 Carpool complete; next Wave 6 Raahi Trips / Explore
 
 ## Gate 0 — GREEN
 
@@ -296,3 +296,37 @@ Driver queue entry must require verified Driver standing, eligible Vehicle, veri
 
 ### Next
 **Slice 10 — Carpool:** Driver publishes a genuine independent journey with spare seats and contribution; eligible Passenger booking is atomic and instant in V1; shared commitment/capacity/payment/support are reused; material changes after booking require Passenger re-consent or penalty-free exit.
+
+
+## Slice 10 — Carpool — COMPLETE
+
+- Added Driver-owned Carpool Journey supply separate from Passenger demand. Publishing spare seats creates no Ride/Commitment until the first Passenger booking.
+- Passenger booking is instant in V1 and atomically serialized; no Driver approval/cherry-picking path exists.
+- First booking creates one shared CARPOOL Mobility Commitment + Ride; later bookings reuse them. Cross-service Driver/Vehicle commitment exclusion is enforced.
+- Booked terms lock after the first booking. Material destination/time changes require per-booking Passenger re-consent; rejection cancels that Passenger penalty-free.
+- Common fulfilment, direct-payment acknowledgement and support Case authority are reused from the shared Ride kernel.
+- Driver cancellation remains Carpool: pre-start cancellation releases the Commitment and cancels the shared Ride; after fulfilment starts it returns `CARPOOL_ALREADY_IN_FULFILMENT`.
+- Passenger/Driver projections expose verification booleans and operational contact only; raw DL/RC document paths remain private.
+- Three runtime defects found during real acceptance were fixed forward-only: generated fare ownership, exact in-fulfilment cancellation code, and projection wrapper permissions.
+- All eight Slice 10 migration files match cloud history byte-for-byte; no live migration was replayed.
+
+### Real acceptance proof
+- Main Journey `d80017dd-d357-4d36-8993-99da7ea3a93e` / Ride `26d41170-defb-402e-aa39-741236de26f5`.
+- Last-seat concurrency: Passenger C won; Passenger B received `CARPOOL_CAPACITY_UNAVAILABLE`; final truth remained one Ride/Commitment and exact capacity.
+- Material change proposal `6bcd35b8-e85d-4fb3-ae80-3e409758d608`: Passenger A accepted, Passenger C rejected/left penalty-free, proposal applied only after both responses.
+- Real fulfilment: verified Gomoh arrival → boarding → Passenger A boarded → depart → verified Dhanbad completion.
+- Final main truth: Journey/Ride/Passenger A booking/Commitment COMPLETED; Passenger C booking CANCELLED.
+- Payment `1847750e-7a68-49a2-b50d-2761f16b9dfa`: ₹180 DUE → Passenger marked paid → Driver confirmed receipt.
+- Support Case `a903627f-c218-4335-87ed-006531266b3b` opened after completion without changing Ride truth.
+- Separate Driver-cancellation fixture ended Journey/booking DRIVER_CANCELLED, Ride CANCELLED, Commitment RELEASED, source still CARPOOL and no payment.
+
+### Gate
+- Slice 10 contracts: **22/22 PASS**; full suite **146/146 PASS** across 15 files.
+- TypeScript PASS; ESLint PASS; production Next.js build PASS.
+- Final headed Chrome run: `HEADED_OK true` for Passenger and Driver; no hydration/runtime overlay.
+- Evidence archived under `docs/archive/evidence/slice10/` and full acceptance record in `docs/archive/RAAHI_NEXT_SLICE_10_ACCEPTANCE_2026-09-06.md`.
+- Supabase security advisor: only existing project-level leaked-password-protection warning.
+- Supabase performance advisor: no unindexed-FK finding; remaining notices are unused-index INFO on Dev.
+
+### Next
+**Wave 6 — Raahi Trips / Explore:** published leisure journey, threshold confirmation, booking, two-leg fulfilment and discovery surfaces.
