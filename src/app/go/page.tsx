@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { getMobilityOptions, getSearchLocations } from "@/server/projections/passenger-fixed";
+import { getOutstationProductForOrigin } from "@/server/projections/outstation";
 
 export default async function GoPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const params = await searchParams;
@@ -9,6 +10,7 @@ export default async function GoPage({ searchParams }: { searchParams: Promise<R
   const originName = locations.find((l) => l.location_id === origin)?.name;
   const destinationName = locations.find((l) => l.location_id === destination)?.name;
   const options = origin && destination && origin !== destination ? await getMobilityOptions(origin, destination) : [];
+  const outstation = origin ? await getOutstationProductForOrigin(origin) : null;
   return (
     <main className="min-h-screen bg-zinc-100 px-5 py-10 text-zinc-950"><div className="mx-auto max-w-2xl">
       <Link href="/" className="text-sm font-semibold text-zinc-600">← Change journey</Link>
@@ -19,7 +21,13 @@ export default async function GoPage({ searchParams }: { searchParams: Promise<R
           <div className="flex items-start justify-between gap-4"><div><p className="text-sm font-semibold text-zinc-500">{option.service_type === "FIXED_ROUND_TRIP" ? "Shared round trip" : "Shared one way"}</p><h2 className="mt-1 text-xl font-semibold">{option.display_name}</h2></div><p className="text-lg font-semibold">₹{option.fare_per_seat_inr}<span className="text-sm font-normal text-zinc-500"> / seat</span></p></div>
           <p className="mt-3 text-sm leading-6 text-zinc-600">{option.public_summary}</p><p className="mt-4 text-sm font-semibold">Up to {option.max_seats_per_request} seats in one request →</p>
         </Link>)}
-        {options.length === 0 ? <div className="rounded-3xl bg-white p-6 shadow-sm"><h2 className="text-xl font-semibold">No live Raahi option for this journey yet.</h2><p className="mt-2 text-sm text-zinc-600">Try another origin or destination. Raahi will add more ways to travel as each Market grows.</p></div> : null}
+        {outstation && origin && destination ? <Link href={`/outstation?origin=${origin}&destination=${destination}`} className="block rounded-3xl bg-white p-6 shadow-sm">
+          <p className="text-sm font-semibold text-zinc-500">Private car · Driver quotes</p>
+          <h2 className="mt-1 text-xl font-semibold">{outstation.display_name}</h2>
+          <p className="mt-3 text-sm leading-6 text-zinc-600">{outstation.public_summary}</p>
+          <p className="mt-4 text-sm font-semibold">Request private quotes for this journey →</p>
+        </Link> : null}
+        {options.length === 0 && !outstation ? <div className="rounded-3xl bg-white p-6 shadow-sm"><h2 className="text-xl font-semibold">No live Raahi option for this journey yet.</h2><p className="mt-2 text-sm text-zinc-600">Try another origin or destination. Raahi will add more ways to travel as each Market grows.</p></div> : null}
       </div>
     </div></main>
   );

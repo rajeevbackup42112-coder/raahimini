@@ -264,3 +264,35 @@ Driver queue entry must require verified Driver standing, eligible Vehicle, veri
 
 ### Next
 **Slice 9 — Outstation:** Passenger request → eligible Driver audience → private versioned quotes → exact atomic selection → shared Commitment → common fulfilment/payment/support.
+
+## Slice 9 — Outstation — COMPLETE
+
+- Passenger Outstation demand, Driver private quoting and exact-revision Passenger selection are separate authoritative objects.
+- Quote revisions are immutable; only the current unexpired revision can win. Acceptance is serialized and creates exactly one Agreement, shared Mobility Commitment, Ride and Booking.
+- Driver eligibility is rechecked from standing, Product preference, Vehicle eligibility/verification, current or planned origin-Market presence and cross-service commitment conflicts.
+- Passenger sees current competing quotes; each Driver sees only their own quote and never competitor prices before selection.
+- Accepted trust reveal exposes Driver/Vehicle identity plus verification status only; raw DL/RC documents remain private.
+- Driver cancellation can reopen demand only while the accepted Ride is still UPCOMING. Once fulfilment starts, cancellation is rejected and exceptions go to Support.
+- One Way and Round Trip both reuse the shared Ride/Booking/Commitment, direct-payment acknowledgement and Case authority.
+- Round Trip keeps the same Driver/Vehicle commitment ACTIVE through the destination wait and creates payment only after final return completion.
+- Projection hardening restored committed contact/trust after later projection replacement and scopes Outstation payment independently of Fixed-route joins.
+- Slice 9 foreign-key advisor gaps were resolved by forward-only index hardening; no already-live migration was replayed.
+
+### Acceptance proof
+- Fresh two-Driver One Way: request retry idempotent; changed payload conflict rejected; immutable ₹5,000 → ₹4,800 revision history; competing ₹4,600 quote; competitor-price privacy PASS; stale revision rejected; one exact winner; retry returned the same Agreement/Ride/Booking/Commitment; second winner rejected.
+- One Way fulfilment: approach → verified Gomoh arrival → boarding → boarded → depart → destination completion. Driver cancellation after approach rejected with `OUTSTATION_ALREADY_IN_FULFILMENT`.
+- One Way final truth: Ride/Booking/Agreement/Request COMPLETED; payment DUE ₹4,600 → PASSENGER_MARKED_PAID → DRIVER_CONFIRMED_RECEIVED; separate OPEN Support Case left Ride state unchanged.
+- Fresh Round Trip: approach → verified origin arrival → boarding → outbound → WAITING_FOR_RETURN; early return start rejected with `RETURN_WAIT_NOT_FINISHED`, commitment remained ACTIVE and no payment existed.
+- After that timing rule was proven, the synthetic Dev Ride's derived `return_not_before` was advanced only to avoid a real-time wait; all subsequent return transitions still ran through canonical authenticated APIs.
+- Round Trip final truth: return boarded → return departed → verified Gomoh completion; Ride/Booking/Agreement/Request/Commitment COMPLETED; payment became DUE ₹6,200 only after final return.
+- Headed Chrome acceptance: Passenger completed Outstation/trust/payment/support screen PASS; Driver completed Round Trip/timeline/payment screen PASS; hydration mismatch found and fixed with explicit `en-IN` / `Asia/Kolkata` date formatting; final headed run reports no hydration issue.
+### Gate
+- Slice 9 contracts: 16 PASS; total contracts: **124/124 PASS**.
+- TypeScript: PASS.
+- ESLint: PASS.
+- Production Next.js build: PASS.
+- Supabase performance advisor: no unindexed-FK findings; remaining notices are expected unused-index INFO on Dev.
+- Supabase security advisor: only the existing project-level leaked-password-protection Auth warning.
+
+### Next
+**Slice 10 — Carpool:** Driver publishes a genuine independent journey with spare seats and contribution; eligible Passenger booking is atomic and instant in V1; shared commitment/capacity/payment/support are reused; material changes after booking require Passenger re-consent or penalty-free exit.
