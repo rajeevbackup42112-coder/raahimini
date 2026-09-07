@@ -1,0 +1,35 @@
+import { describe, expect, it } from "vitest";
+import { readFileSync } from "node:fs";
+const root=process.cwd();const read=(p:string)=>readFileSync(`${root}/${p}`,"utf8");
+const schema=read("supabase/migrations/20260907044832_slice12_travel_intent_market_signals.sql");
+const projectionFix=read("supabase/migrations/20260907045301_slice12_market_opportunity_projection_fix.sql");
+const fkHardening=read("supabase/migrations/20260907051630_slice12_fk_index_hardening.sql");
+const routes=["src/app/api/travel-intents/create/route.ts","src/app/api/travel-intents/cancel/route.ts","src/app/api/travel-intents/notification/route.ts","src/app/api/admin/market-intelligence/review/route.ts"].map(read).join("\n");
+const go=read("src/app/go/page.tsx");const card=read("src/features/travel-intent/TravelIntentCard.tsx");const interests=read("src/app/interests/page.tsx");const admin=read("src/app/admin/page.tsx");
+
+describe("Slice 12 — Travel Intent + Emerging Corridor Intelligence",()=>{
+ it("models Travel Intent separately from a booking",()=>{expect(schema).toContain("create table public.travel_intents");expect(schema).toContain("creates_booking',false");expect(schema).not.toContain("travel_intents(id uuid primary key references public.ride_bookings");});
+ it("stores only configured journey-demand facts",()=>{for(const field of ["origin_location_id","destination_location_id","desired_departure_at","seat_count","acceptable_service_type","notification_interest"])expect(schema).toContain(field);});
+ it("supports active, cancelled and resolved intent lifecycle",()=>{expect(schema).toContain("status in ('ACTIVE','CANCELLED','RESOLVED')");expect(schema).toContain("resolved_product_id");});
+ it("prevents same-origin destination intent",()=>{expect(schema).toContain("origin_location_id <> destination_location_id");});
+ it("deduplicates an exact active Passenger intent",()=>{expect(schema).toContain("uq_travel_intents_active_exact");expect(schema).toContain("'deduplicated',true");});
+ it("rate limits creation from Market configuration",()=>{expect(schema).toContain("max_intents_per_user_24h");expect(schema).toContain("TRAVEL_INTENT_RATE_LIMITED");});
+ it("requires Passenger capability for Passenger commands",()=>{expect(schema).toContain("PASSENGER_CAPABILITY_REQUIRED");});
+ it("keeps canonical Passenger mutations idempotent",()=>{expect(schema).toContain("claim_user_command('create_travel_intent'");expect(schema).toContain("claim_user_command('cancel_travel_intent'");expect(schema).toContain("claim_user_command('update_intent_notification_preference'");});
+ it("denies direct client access to Travel Intent and opportunity tables",()=>{expect(schema).toContain("travel_intents_no_direct_client_access");expect(schema).toContain("emerging_corridor_no_direct_client_access");expect(schema).toContain("using(false) with check(false)");});
+ it("creates an emerging signal without creating mobility authority",()=>{expect(schema).toContain("ensure_emerging_corridor_signal");const createBody=schema.slice(schema.indexOf("private.create_travel_intent"),schema.indexOf("private.cancel_travel_intent"));expect(createBody).not.toContain("insert into public.rides");expect(createBody).not.toContain("insert into public.ride_bookings");expect(createBody).not.toContain("insert into public.mobility_commitments");});
+ it("starts opportunity governance at DEMAND_SIGNALLED",()=>{expect(schema).toContain("default 'DEMAND_SIGNALLED'");expect(schema).toContain("'UNDER_EVALUATION'");expect(schema).toContain("'PILOT_APPROVED'");});
+ it("requires scoped human Admin review",()=>{expect(schema).toContain("admin_begin_emerging_corridor_review");expect(schema).toContain("has_admin_permission('MARKET_OPERATIONS'");expect(schema).toContain("has_admin_permission('STATE_OPERATIONS'");expect(schema).toContain("ADMIN_SCOPE_REQUIRED");});
+ it("audits the human review transition",()=>{expect(schema).toContain("EMERGING_CORRIDOR_REVIEW_STARTED");expect(schema).toContain("insert into public.audit_events");});
+ it("does not let review create a Corridor or Product",()=>{const review=schema.slice(schema.indexOf("private.admin_begin_emerging_corridor_review"));expect(review).not.toContain("insert into public.corridors");expect(review).not.toContain("insert into public.service_products");});
+ it("exposes aggregate opportunity metrics rather than Passenger identity",()=>{expect(projectionFix).toContain("'intent_count',q.intent_count");expect(projectionFix).toContain("'seat_demand',q.seat_demand");expect(projectionFix).toContain("'notification_interest_count',q.notification_interest_count");expect(projectionFix).not.toContain("'passenger_profile_id'");});
+ it("keeps 30-day demand as an aggregate count",()=>{expect(projectionFix).toContain("'desired_next_30d',q.desired_next_30d");expect(projectionFix).toContain("::int desired_next_30d");});
+ it("covers Slice 12 foreign keys used by origin lookups",()=>{expect(fkHardening).toContain("idx_travel_intents_origin_location");expect(fkHardening).toContain("idx_emerging_corridor_origin_location");});
+ it("keeps all Slice 12 material API writes behind RPCs",()=>{expect(routes).toContain("create_travel_intent");expect(routes).toContain("cancel_travel_intent");expect(routes).toContain("update_intent_notification_preference");expect(routes).toContain("admin_begin_emerging_corridor_review");expect(routes).not.toContain(".from(");});
+ it("turns a shared-mobility gap into a Travel Intent action",()=>{expect(go).toContain("TravelIntentCard");expect(card).toContain("Can&apos;t find the right ride? Tell Raahi you want to go.");expect(card).toContain("does not book a ride, hold a seat or create a Driver commitment");});
+ it("keeps availability notifications an explicit opt-in",()=>{expect(card).toContain('useState(false)');expect(card).toContain("This preference is separate from operational ride notifications");});
+ it("lets Passengers manage their own interests",()=>{expect(interests).toContain("Your travel interests");expect(interests).toContain("These are not bookings and do not hold seats");expect(read("src/features/travel-intent/TravelIntentActions.tsx")).toContain("/api/travel-intents/cancel");});
+ it("gives scoped Admins an opportunity evidence surface",()=>{expect(admin).toContain("Where should this Market grow next?");expect(admin).toContain("Travel intents");expect(admin).toContain("Seats wanted");expect(read("src/features/travel-intent/MarketOpportunityReviewButton.tsx")).toContain("Review opportunity");});
+ it("states that Admin review is not launch authority",()=>{expect(admin).toContain("does not create a Corridor, Product, booking or Driver commitment");});
+ it("keeps Passenger identity out of the Admin experience",()=>{expect(admin).toContain("Passenger identity, phone and journey history are not exposed here");expect(admin).not.toContain("passenger_profile_id");});
+});

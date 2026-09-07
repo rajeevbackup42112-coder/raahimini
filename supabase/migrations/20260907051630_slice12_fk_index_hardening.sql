@@ -1,0 +1,2 @@
+create index if not exists idx_travel_intents_origin_location on public.travel_intents(origin_location_id);
+create index if not exists idx_emerging_corridor_origin_location on public.emerging_corridor_opportunities(origin_location_id);

@@ -1,7 +1,7 @@
 # Raahi Next — Build Status
 
 **Checkpoint date:** 2026-09-07
-**Stage:** Wave 6 / Slice 11 Raahi Trips / Explore complete; next Wave 7 Local Offers + Market Intelligence
+**Stage:** Wave 7 / Slice 12 Travel Intent + Emerging Corridor Intelligence complete; next Slice 13 Local Offers
 
 ## Gate 0 — GREEN
 
@@ -371,3 +371,36 @@ Driver queue entry must require verified Driver standing, eligible Vehicle, veri
 
 ### Next
 **Wave 7 — Local Offers + Market Intelligence:** contextual sponsored services, Travel Intent aggregation, emerging corridor review, Market dashboards and state portfolio operations.
+
+## Slice 12 — Travel Intent + Emerging Corridor Intelligence — COMPLETE
+
+- Added Passenger-owned `Travel Intent` as demand evidence independent of Booking, Ride, seat hold and Driver/Vehicle commitment.
+- Unsupported/shared-gap journeys on `/go` can now become explicit Travel Intents instead of dead ends.
+- Passenger controls date/window, seat demand, acceptable service type and optional future-availability notification interest.
+- Exact active duplicate intent is deduplicated; command retries are idempotent and creation is Market-policy rate limited.
+- `/interests` lets Passengers inspect, cancel and change notification preference on their own intents.
+- Each first qualifying Market-origin intent creates/updates an `Emerging Corridor Opportunity` fact at `DEMAND_SIGNALLED` without creating mobility supply.
+- `/admin` exposes aggregate-only Market evidence: intent count, seats wanted, next-7-day demand, next-30-day demand and notification-interest count.
+- Passenger identity, phone and journey history are excluded from the opportunity projection and Admin experience.
+- Authorized Market/State review can move evidence to `UNDER_EVALUATION` with an audit event; review does not create a Corridor, Product, Booking, Ride or Commitment.
+- All Passenger/Admin material writes use canonical RPCs; direct client table access remains denied.
+
+### Acceptance proof
+- Rollback proof: three equivalent create attempts yielded one active intent + one opportunity and no change to Ride/Commitment counts.
+- Aggregate Gomoh → Birsa Munda Airport, Ranchi proof: 2 intents / 5 seats / 1 notification-interest / 1 next-7-day / 2 next-30-day.
+- Dhanbad Market Admin querying Gomoh evidence was rejected with `ADMIN_SCOPE_REQUIRED`.
+- Real HTTP Passenger flow: create intent `8bcf9820-42fa-4fc7-a3e5-ed53592f9f14` with `creates_booking=false` → My Interests → notification opt-in → cancel.
+- Headed Chrome: Passenger create/cancel, Gomoh Admin review and Dhanbad cross-Market isolation PASS; no page/hydration error. Only unrelated `/favicon.ico` 404 console noise.
+- Synthetic Slice 12 intent/opportunity rows were deleted after acceptance; Dev retained no fake Market opportunity.
+- Runtime projection defect (`desired_next_30d`) and two FK-index advisor gaps were corrected forward-only in separate migrations.
+
+### Gate
+- Slice 12 contracts: **24/24 PASS**; full suite **198/198 PASS across 17 files**.
+- TypeScript PASS; ESLint PASS; production Next.js build PASS.
+- All 3 Slice 12 migrations are reconciled against Raahi Next Dev cloud history.
+- Supabase security advisor: only existing leaked-password-protection Auth warning.
+- Supabase performance advisor: no unindexed-FK findings; remaining notices are unused-index INFO.
+- Acceptance record: `docs/archive/RAAHI_NEXT_SLICE_12_ACCEPTANCE_2026-09-07.md`.
+
+### Next
+**Slice 13 — Local Offers:** contextual sponsored visibility with merchant/admin ownership, location/travel-context eligibility, aggregate merchant analytics, explicit sponsorship labeling and zero influence on mobility ranking or Passenger identity disclosure.

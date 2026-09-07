@@ -25,7 +25,9 @@ const requestSchema = z.object({
 type RequestBody = z.infer<typeof requestSchema>;
 
 function redirectForPersona(persona: RequestBody["persona"]) {
-  return persona === "DRIVER" || persona === "PASSENGER_DRIVER" ? "/drive" : "/";
+  if (persona === "DRIVER" || persona === "PASSENGER_DRIVER") return "/drive";
+  if (persona === "MARKET_ADMIN" || persona === "PLATFORM_ADMIN") return "/admin";
+  return "/";
 }
 function adminClient() {
   const secret = process.env.SUPABASE_SECRET_KEY;
