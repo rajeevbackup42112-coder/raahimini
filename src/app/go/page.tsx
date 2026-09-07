@@ -20,6 +20,7 @@ export default async function GoPage({ searchParams }: { searchParams: Promise<R
       <Link href="/" className="text-sm font-semibold text-zinc-600">← Change journey</Link>
       <p className="mt-8 text-sm font-medium uppercase tracking-[0.18em] text-zinc-500">Ways to go</p>
       <h1 className="mt-2 text-3xl font-semibold">{originName && destinationName ? `${originName} → ${destinationName}` : "Choose a valid journey"}</h1>
+      <Link href="/explore" className="mt-4 inline-flex rounded-2xl border border-zinc-300 bg-white px-4 py-2.5 text-sm font-semibold">Explore day trips · Where could I go?</Link>
       <div className="mt-7 space-y-4">
         {options.map((option) => <Link key={option.product_id} href={`/fixed/${option.product_id}`} className="block rounded-3xl bg-white p-6 shadow-sm">
           <div className="flex items-start justify-between gap-4"><div><p className="text-sm font-semibold text-zinc-500">{option.service_type === "FIXED_ROUND_TRIP" ? "Shared round trip" : "Shared one way"}</p><h2 className="mt-1 text-xl font-semibold">{option.display_name}</h2></div><p className="text-lg font-semibold">₹{option.fare_per_seat_inr}<span className="text-sm font-normal text-zinc-500"> / seat</span></p></div>

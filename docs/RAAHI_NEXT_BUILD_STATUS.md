@@ -1,7 +1,7 @@
 # Raahi Next — Build Status
 
 **Checkpoint date:** 2026-09-07
-**Stage:** Wave 5 / Slice 10 Carpool complete; next Wave 6 Raahi Trips / Explore
+**Stage:** Wave 6 / Slice 11 Raahi Trips / Explore complete; next Wave 7 Local Offers + Market Intelligence
 
 ## Gate 0 — GREEN
 
@@ -330,3 +330,44 @@ Driver queue entry must require verified Driver standing, eligible Vehicle, veri
 
 ### Next
 **Wave 6 — Raahi Trips / Explore:** published leisure journey, threshold confirmation, booking, two-leg fulfilment and discovery surfaces.
+
+## Slice 11 — Raahi Trips / Explore — COMPLETE
+
+- Added Driver-created shared day Trips as mobility: transport, destination wait and return, not bundled hotels, guides, meals or tickets.
+- Driver deliberately creates a DRAFT, then publishes. Publication creates no Ride or Mobility Commitment.
+- Passenger bookings below threshold remain explicitly FILLING and tentative. The first-ever Passenger booking permanently locks Trip terms and price.
+- Threshold confirmation is atomic: one shared `RAAHI_TRIP` Mobility Commitment, one Ride, confirmed Ride Bookings and one SYSTEM confirmation fact.
+- Confirmed Trips never revert to Filling after later Passenger cancellation.
+- Capacity booking serializes on the Trip offering; self-booking and over-capacity races are rejected.
+- Explore is the destination-discovery surface; `/go` links to it without replacing Fixed, Carpool or Outstation mobility.
+- Driver projections show aggregate Filling demand only; Passenger identity is revealed only after confirmation. Passenger projections expose trust status, never raw DL/RC evidence.
+- Two-leg fulfilment reuses the common Ride/Booking/Commitment kernel: Gomoh boarding → Dhanbad outbound completion → destination wait → return boarding → Gomoh completion.
+- Direct-payment acknowledgement and Support Case authority are reused unchanged after final completion.
+- Missed threshold expires to `NOT_CONFIRMED` penalty-free with no Ride/Commitment; pre-fulfilment Driver cancellation remains a Trip cancellation.
+- All 13 Slice 11 migrations match Raahi Next Dev cloud history byte-for-byte. Acceptance also retained forward fixes for Test Mode Driver Operating Market provisioning and FK-safe confirmed Trip/Ride Booking bridge order.
+
+### Real acceptance proof
+- Main offering `fcd7a103-03cc-43d0-8d49-10cca5129813`; shared Ride `5a49a35c-9a71-4425-997b-d105de4de1dc`; Commitment `e3ba7d5c-cae2-4598-9911-6873c92ddf4c`.
+- Publish truth: FILLING, 0 booked seats, 0 Ride rows, 0 Commitment rows.
+- Passenger A first booking: FILLING, `trip_confirmed=false`, no Ride; Driver edit then rejected with `TRIP_ALREADY_BOOKED`.
+- Passenger B crossed the threshold: Trip CONFIRMED and one shared Ride/Commitment created; exactly one SYSTEM `RAAHI_TRIP_CONFIRMED` event.
+- Last-seat concurrency: Passenger D won a 2-seat booking; Passenger C received `TRIP_CAPACITY_UNAVAILABLE`; final capacity remained exactly 4/4 on one Ride.
+- Passenger B then cancelled: Trip stayed CONFIRMED; Ride/Trip booked seats reduced consistently from 4 to 3.
+- Full fulfilment: verified Gomoh arrival → outbound boarding → A + D boarded → outbound depart → verified Dhanbad completion → return wait → return boarding → A + D return boarded → return depart → verified Gomoh completion.
+- Final truth: Trip/Ride/Commitment COMPLETED; A and D completed, B cancelled.
+- Payments: A ₹275 and D ₹550 DUE → PASSENGER_MARKED_PAID → DRIVER_CONFIRMED_RECEIVED.
+- Support Case `421844b2-690f-471b-b2cb-85cfdd3459fe` opened after completion; Ride remained COMPLETED.
+- Missed-threshold fixture `f1c43e96-ca3b-41da-91ba-68bfe7c8c04f` → `NOT_CONFIRMED`, `penalty_free=true`, booking released, 0 Ride/Commitment.
+- Driver-cancel fixture `01402704-478b-4b90-9fa6-fdf4d437464a` → `DRIVER_CANCELLED` before Passenger demand/fulfilment.
+- Privacy fixture `eb69fffe-97b3-4b4e-add6-2b6c01352d5d`: Driver rendered aggregate Filling demand with Passenger C identity absent; Passenger detail showed threshold risk and trust badges with no raw document/storage paths.
+
+### Gate
+- Slice 11 contracts: **28/28 PASS**; full suite **174/174 PASS** across 16 files.
+- TypeScript PASS; ESLint PASS; production Next.js build PASS.
+- Headed Chrome: Explore, Trip detail and Driver Trips all rendered without captured console errors or Next hydration/runtime overlay.
+- Supabase security advisor: only existing leaked-password-protection Auth warning.
+- Supabase performance advisor: INFO-level unused-index notices only; no blocking missing-RLS or unindexed-FK finding.
+- Acceptance record: `docs/archive/RAAHI_NEXT_SLICE_11_ACCEPTANCE_2026-09-07.md`.
+
+### Next
+**Wave 7 — Local Offers + Market Intelligence:** contextual sponsored services, Travel Intent aggregation, emerging corridor review, Market dashboards and state portfolio operations.
