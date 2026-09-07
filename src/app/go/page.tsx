@@ -4,13 +4,16 @@ import { getOutstationProductForOrigin } from "@/server/projections/outstation";
 import { getCarpoolDiscovery } from "@/server/projections/carpool";
 import { formatCarpoolDateTime } from "@/features/carpool/format";
 import { TravelIntentCard } from "@/features/travel-intent/TravelIntentCard";
+import { getContextualLocalOffers } from "@/server/projections/local-offers";
+import { SponsoredOfferCard } from "@/features/local-offers/SponsoredOfferCard";
 
 export default async function GoPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
  const params=await searchParams;const origin=Array.isArray(params.origin)?params.origin[0]:params.origin;const destination=Array.isArray(params.destination)?params.destination[0]:params.destination;
- const locations=await getSearchLocations();const originName=locations.find(l=>l.location_id===origin)?.name;const destinationName=locations.find(l=>l.location_id===destination)?.name;
+ const locations=await getSearchLocations();const originLocation=locations.find(l=>l.location_id===origin);const destinationLocation=locations.find(l=>l.location_id===destination);const originName=originLocation?.name;const destinationName=destinationLocation?.name;
  const options=origin&&destination&&origin!==destination?await getMobilityOptions(origin,destination):[];const outstation=origin?await getOutstationProductForOrigin(origin):null;
  const carpoolProjection=origin&&destination?await getCarpoolDiscovery(origin,destination):{status:"READY" as const,journeys:[]};const carpool=carpoolProjection.status==="READY"?carpoolProjection.journeys:[];
  const showIntent=Boolean(origin&&destination&&originName&&destinationName&&origin!==destination&&options.length===0&&carpool.length===0);
+ const offerMarketId=originLocation?.market_id??destinationLocation?.market_id??null;const sponsoredOffers=origin&&destination?await getContextualLocalOffers({marketId:offerMarketId,originId:origin,destinationId:destination,limit:3}):[];
  return <main className="min-h-screen bg-zinc-100 px-5 py-10 text-zinc-950"><div className="mx-auto max-w-2xl">
   <Link href="/" className="text-sm font-semibold text-zinc-600">← Change journey</Link><p className="mt-8 text-sm font-medium uppercase tracking-[0.18em] text-zinc-500">Ways to go</p>
   <h1 className="mt-2 text-3xl font-semibold">{originName&&destinationName?`${originName} → ${destinationName}`:"Choose a valid journey"}</h1>
@@ -22,5 +25,6 @@ export default async function GoPage({ searchParams }: { searchParams: Promise<R
    {showIntent&&origin&&destination&&originName&&destinationName?<TravelIntentCard originLocationId={origin} destinationLocationId={destination} originName={originName} destinationName={destinationName}/>:null}
    {options.length===0&&carpool.length===0&&!outstation&&!showIntent?<div className="rounded-3xl bg-white p-6 shadow-sm"><h2 className="text-xl font-semibold">No live Raahi option for this journey yet.</h2><p className="mt-2 text-sm text-zinc-600">Try another origin or destination. Raahi will add more ways to travel as each Market grows.</p></div>:null}
   </div>
- </div></main>;
+  {sponsoredOffers.length>0?<section className="mt-10 border-t border-zinc-300 pt-7"><div className="flex items-end justify-between gap-4"><div><p className="text-xs font-semibold uppercase tracking-[0.14em] text-amber-700">Useful around this journey · Sponsored</p><h2 className="mt-1 text-xl font-semibold">Local services that may help</h2></div><Link href={offerMarketId?`/offers?market=${offerMarketId}&origin=${origin}&destination=${destination}`:"/offers"} className="text-sm font-semibold text-zinc-700">See Offers -&gt;</Link></div><div className="mt-4 space-y-4">{sponsoredOffers.map(o=><SponsoredOfferCard key={o.offer_id} offer={o} surface="WAYS_TO_GO"/>)}</div><p className="mt-3 text-xs text-zinc-500">Sponsored Offers are separate from Ways to Go and never change Raahi ride ranking or allocation.</p></section>:null}
+ </div></main>
 }

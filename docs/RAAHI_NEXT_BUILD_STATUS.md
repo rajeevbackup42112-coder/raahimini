@@ -404,3 +404,27 @@ Driver queue entry must require verified Driver standing, eligible Vehicle, veri
 
 ### Next
 **Slice 13 — Local Offers:** contextual sponsored visibility with merchant/admin ownership, location/travel-context eligibility, aggregate merchant analytics, explicit sponsorship labeling and zero influence on mobility ranking or Passenger identity disclosure.
+
+## Slice 13 — Local Offers — COMPLETE
+
+- Added Market-scoped Business + Local Offer commerce with moderated lifecycle, sponsorship state, journey/locality context and time eligibility.
+- Passenger sponsored Offers are rendered separately from Ways to Go and explicitly cannot influence mobility ranking/allocation.
+- `/offers` is the dedicated browse surface; journey-targeted Offers remain context-bound rather than leaking into generic Market browse.
+- `/admin/businesses` provides `LOCAL_COMMERCE`-scoped Business/Offer administration and aggregate impression/engagement analytics only.
+- Merchant/Admin projections expose no Passenger identity, phone or private journey history.
+- Direct client table access remains denied; all material writes use canonical idempotent RPCs and privileged actions emit immutable Offer/audit facts.
+- Real Gomoh Commerce acceptance proved create → sponsorship → submit → review → approve → pause → resume → remove; Dhanbad cross-Market action was rejected with `LOCAL_COMMERCE_SCOPE_REQUIRED`.
+- Contextual Passenger acceptance proved correct-route display, wrong/generic context filtering and aggregate metric recording while mobility stayed unchanged at 12 Rides / 17 Ride Bookings / 12 Commitments.
+- Synthetic merchant fixtures and temporary Test Mode Commerce scopes were deleted after acceptance.
+- All 3 Slice 13 migrations match Raahi Next Dev cloud history byte-for-byte.
+
+### Gate
+- Slice 13 contracts: **20/20 PASS**; full suite **218/218 PASS across 18 files**.
+- TypeScript PASS; ESLint PASS; production Next.js build PASS.
+- Headed Chrome `/go`, context-aware `/offers` and `/admin/businesses` PASS with no page error or Next runtime/hydration dialog. Only `/favicon.ico` cosmetic console noise remains.
+- Supabase security advisor: only existing leaked-password-protection Auth warning.
+- Supabase performance advisor: no unindexed-FK finding; remaining notices are unused-index INFO.
+- Acceptance record: `docs/archive/RAAHI_NEXT_SLICE_13_ACCEPTANCE_2026-09-07.md`.
+
+### Next
+**Staging Readiness / Release Candidate hardening:** consolidate all products, Market feature switches, role/scope/security review, staging deployment/auth, clean staging data, observability, cross-service regression, responsive/manual acceptance and rollback/runbook readiness. No new product slice is planned before staging readiness.

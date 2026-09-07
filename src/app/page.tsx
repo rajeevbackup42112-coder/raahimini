@@ -8,7 +8,7 @@ export default async function Home() {
       <div className="mx-auto max-w-2xl">
         <div className="flex items-center justify-between gap-4">
           <p className="text-sm font-semibold uppercase tracking-[0.18em] text-zinc-500">Raahi</p>
-          <Link href="/drive" className="text-sm font-semibold text-zinc-700">Drive with Raahi</Link>
+          <div className="flex items-center gap-4"><Link href="/offers" className="text-sm font-semibold text-amber-800">Offers</Link><Link href="/drive" className="text-sm font-semibold text-zinc-700">Drive with Raahi</Link></div>
         </div>
         <section className="mt-10 rounded-3xl bg-white p-7 shadow-sm">
           <p className="text-sm font-medium text-zinc-500">Where are you going?</p>
