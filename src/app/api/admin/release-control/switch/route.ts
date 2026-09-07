@@ -1,0 +1,33 @@
+import { NextResponse } from "next/server";
+import { z } from "zod";
+import { createClient } from "@/lib/supabase/server";
+import { mapReleaseControlError } from "@/lib/release-control-api";
+
+const schema = z.object({
+  productId: z.string().uuid(),
+  enabled: z.boolean(),
+  reason: z.string().trim().min(4).max(240),
+  idempotencyKey: z.string().min(8).max(200),
+});
+
+export async function POST(request: Request) {
+  const correlationId = crypto.randomUUID();
+  const parsed = schema.safeParse(await request.json().catch(() => null));
+  if (!parsed.success) return NextResponse.json({ ok: false, code: "VALIDATION_FAILED", message: "Release-control details are invalid.", correlationId }, { status: 400 });
+  const supabase = await createClient();
+  const { data: claims } = await supabase.auth.getClaims();
+  if (!claims?.claims?.sub) return NextResponse.json({ ok: false, code: "UNAUTHENTICATED", message: "Sign in with an authorized Admin account.", correlationId }, { status: 401 });
+  const { data, error } = await supabase.rpc("admin_set_product_feature_switch", {
+    p_product_id: parsed.data.productId,
+    p_enabled: parsed.data.enabled,
+    p_reason: parsed.data.reason,
+    p_idempotency_key: parsed.data.idempotencyKey,
+  });
+  if (error) {
+    const hit = mapReleaseControlError(error.message);
+    if (hit) return NextResponse.json({ ok: false, code: hit[0], message: hit[2], correlationId }, { status: hit[1] });
+    console.error("admin_set_product_feature_switch failed", { correlationId, code: error.code });
+    return NextResponse.json({ ok: false, code: "COMMAND_FAILED", message: "Raahi could not change this Product release switch.", correlationId }, { status: 500 });
+  }
+  return NextResponse.json({ ok: true, value: data, correlationId });
+}

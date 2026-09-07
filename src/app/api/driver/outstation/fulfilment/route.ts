@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
+import { recordRejectedGpsObservation } from "@/server/operational-observability";
 
 const schema = z.object({
   action: z.enum([
@@ -110,6 +111,10 @@ export async function POST(request: Request) {
   if (result.error) {
     const hit = Object.entries(errors).find(([code]) => result.error!.message.includes(code));
     if (hit) {
+      if (["ARRIVAL_LOCATION_NOT_VERIFIED","ROUND_TRIP_LOCATION_NOT_VERIFIED"].includes(hit[0]) && input.rideId && input.accuracyMeters != null && input.capturedAt) {
+        const observation = await recordRejectedGpsObservation({ actorProfileId: String(claims.claims.sub), rideId: input.rideId, action: input.action, rejectionCode: hit[0], accuracyMeters: input.accuracyMeters, capturedAt: input.capturedAt, correlationId });
+        if (!observation.ok) console.error("rejected GPS observation failed", { correlationId, code: observation.code });
+      }
       return NextResponse.json(
         { ok: false, code: hit[0], message: hit[1][1], correlationId },
         { status: hit[1][0] },

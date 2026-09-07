@@ -1,0 +1,30 @@
+import Link from "next/link";
+import { getOperationalHealthWorkspace } from "@/server/projections/operational-health";
+import type { OperationalMarketHealth } from "@/features/operational-health/types";
+
+export default async function OperationalHealthPage(){
+ const result=await getOperationalHealthWorkspace();
+ if(result.status==="UNAUTHENTICATED")return <Shell title="Operational health"><p>Sign in with an authorized Admin account.</p><Link className="mt-4 inline-flex rounded-xl bg-zinc-950 px-4 py-2 text-white" href="/auth/sign-in">Sign in</Link></Shell>;
+ if(result.status==="NOT_ADMIN")return <Shell title="Admin access required"><p>This health view is available only to authorized Raahi operations.</p></Shell>;
+ if(result.status!=="READY"||!result.workspace)return <Shell title="Operational health unavailable"><p>Raahi could not load authoritative health facts right now.</p></Shell>;
+ const w=result.workspace;
+ return <main className="min-h-screen bg-zinc-100 px-5 py-10 text-zinc-950"><div className="mx-auto max-w-6xl">
+  <p className="text-sm font-semibold uppercase tracking-[0.18em] text-zinc-500">Release candidate operations</p><h1 className="mt-2 text-3xl font-semibold">Operational health</h1>
+  <p className="mt-3 max-w-3xl text-zinc-600">Authoritative marketplace facts only. This page does not change Ride, Booking, payment, FIFO or support state.</p>
+  <div className="mt-5 flex flex-wrap gap-2"><Link href="/admin" className="rounded-xl border border-zinc-300 bg-white px-4 py-2 text-sm font-semibold">Market intelligence</Link><Link href="/admin/release-control" className="rounded-xl border border-zinc-300 bg-white px-4 py-2 text-sm font-semibold">Release control</Link></div>
+  {w.global?<section className="mt-7 grid gap-3 sm:grid-cols-3"><Metric label="Commands · 24h" value={w.global.commands_24h}/><Metric label={`Stuck > ${w.thresholds.stuck_command_minutes}m`} value={w.global.stuck_commands_over_5m}/><Metric label="Failed commands · 24h" value={w.global.failed_commands_24h}/></section>:null}
+  <section className="mt-7"><h2 className="text-xl font-semibold">Telemetry coverage</h2><div className="mt-3 grid gap-3 md:grid-cols-2">{w.telemetry_coverage.map(t=><article key={t.key} className="rounded-2xl bg-white p-4 shadow-sm"><p className={`text-xs font-semibold uppercase tracking-[0.12em] ${t.status==="GAP"?"text-amber-700":"text-emerald-700"}`}>{t.status}</p><h3 className="mt-1 font-semibold">{t.key.replaceAll("_"," ")}</h3><p className="mt-2 text-sm text-zinc-600">{t.detail}</p></article>)}</div></section>
+  <section className="mt-8 space-y-4"><h2 className="text-xl font-semibold">Markets</h2>{w.markets.map(m=><MarketCard key={m.market_id} market={m} dueHours={w.thresholds.due_payment_hours}/>)}</section>
+ </div></main>;
+}function MarketCard({market:m,dueHours}:{market:OperationalMarketHealth;dueHours:number}){
+ const critical=m.exception_rides+m.overdue_commitments+m.escalated_cases+m.payment_disputes;
+ const warning=m.overdue_rides+m.unresolved_cases+m.due_over_24h+m.marked_paid_over_12h+m.fixed_skipped_requests;
+ const state=critical>0?"Needs action":warning>0?"Review":"Clear";
+ return <article className="rounded-3xl bg-white p-6 shadow-sm"><div className="flex flex-wrap items-start justify-between gap-3"><div><p className="text-xs font-semibold uppercase tracking-[0.12em] text-zinc-500">{m.market_code} · {m.market_status}</p><h3 className="mt-1 text-xl font-semibold">{m.market_name}</h3></div><span className={`rounded-full px-3 py-1 text-sm font-semibold ${critical>0?"bg-red-50 text-red-700":warning>0?"bg-amber-50 text-amber-800":"bg-emerald-50 text-emerald-700"}`}>{state}</span></div>
+ <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4"><Metric label="Products enabled" value={`${m.enabled_product_count}/${m.product_count}`}/><Metric label="Live rides" value={m.live_rides}/><Metric label="Overdue commitments" value={m.overdue_commitments}/><Metric label="Unresolved cases" value={m.unresolved_cases}/><Metric label="Queued Fixed" value={m.fixed_queued_requests}/><Metric label="FIFO skips" value={m.fixed_skipped_requests}/><Metric label="Payment disputes" value={m.payment_disputes}/><Metric label={`DUE > ${dueHours}h`} value={m.due_over_24h}/></div>
+ <div className="mt-4 rounded-2xl bg-zinc-50 p-4 text-sm text-zinc-600"><p>Accepted GPS samples · 24h: <strong className="text-zinc-900">{m.accepted_gps_samples_24h}</strong>{m.worst_accepted_gps_accuracy_meters_24h!=null?` · worst accepted accuracy ${m.worst_accepted_gps_accuracy_meters_24h}m`:""}</p><p className="mt-1">Rejected GPS attempts · 24h: <strong className="text-zinc-900">{m.rejected_gps_attempts_24h}</strong>{m.worst_rejected_gps_accuracy_meters_24h!=null?` · worst reported accuracy ${m.worst_rejected_gps_accuracy_meters_24h}m`:""} · latest {fmt(m.latest_rejected_gps_at)}</p><p className="mt-1">Latest Ride event: {fmt(m.latest_ride_event_at)} · latest Fixed matcher command: {fmt(m.latest_fixed_match_command_at)}</p>{m.oldest_fixed_queued_at?<p className="mt-1">Oldest queued Fixed demand: {fmt(m.oldest_fixed_queued_at)}</p>:null}</div>
+ </article>;
+}
+function Metric({label,value}:{label:string;value:number|string}){return <div className="rounded-2xl bg-zinc-50 p-4"><p className="text-xs font-medium uppercase tracking-[0.1em] text-zinc-500">{label}</p><p className="mt-1 text-2xl font-semibold">{value}</p></div>;}
+function Shell({title,children}:{title:string;children:React.ReactNode}){return <main className="min-h-screen bg-zinc-100 px-5 py-10"><div className="mx-auto max-w-3xl rounded-3xl bg-white p-7 shadow-sm"><h1 className="text-2xl font-semibold">{title}</h1><div className="mt-3 text-zinc-600">{children}</div></div></main>;}
+function fmt(value:string|null){if(!value)return "No recorded event";return new Intl.DateTimeFormat("en-IN",{dateStyle:"medium",timeStyle:"short",timeZone:"Asia/Kolkata"}).format(new Date(value));}

@@ -1,7 +1,7 @@
 # Raahi Next — Build Status
 
 **Checkpoint date:** 2026-09-07
-**Stage:** Wave 7 / Slice 12 Travel Intent + Emerging Corridor Intelligence complete; next Slice 13 Local Offers
+**Stage:** STAGING RELEASE CANDIDATE READY - all frozen product waves complete; current Raahi Next Supabase designated STAGING
 
 ## Gate 0 — GREEN
 
@@ -428,3 +428,41 @@ Driver queue entry must require verified Driver standing, eligible Vehicle, veri
 
 ### Next
 **Staging Readiness / Release Candidate hardening:** consolidate all products, Market feature switches, role/scope/security review, staging deployment/auth, clean staging data, observability, cross-service regression, responsive/manual acceptance and rollback/runbook readiness. No new product slice is planned before staging readiness.
+
+## Staging Readiness / Release Candidate - READY
+
+- Current Supabase `Raahi Next Dev` (`dfgxtooftvtecfcogeiv`) is now the designated **STAGING** database by explicit project decision.
+- Production will use a fresh Supabase project initialized from migration history and explicit production configuration seed; staging data will never be cloned into production.
+- Product/Market canary switches are operational and separate from Product lifecycle. Platform Admin owns enable/disable; scoped Market Admins can inspect but cannot change release state.
+- Disabling a Product gates new participation/discovery only and does not rewrite or interrupt existing queues, requests, bookings, Rides or Mobility Commitments.
+- `/admin/release-control` and `/admin/health` provide scoped release controls and authoritative operational health.
+- Operational Health reports command, FIFO, Ride, commitment, support, payment, accepted-GPS and rejected-GPS facts. Notification delivery remains explicitly `GAP` until an external provider is integrated.
+- Rejected GPS attempts are persisted as privacy-minimized operational observations with Ride/action/error/accuracy/timestamps/correlation ID and **no latitude/longitude**; the write boundary is service-role-only and validates the actual assigned Driver.
+- Test Mode remains default-off, allowlist-only and hard-blocked on `ride.myraahi.co.in` and `www.ride.myraahi.co.in`.
+
+### RC acceptance proof
+- Live switch proof: Gomoh Fixed One Way disabled while Fixed Round Trip remained available; new One Way join rejected `FIXED_PRODUCT_NOT_AVAILABLE`; Ride/Booking/Commitment counts stayed 12/17/12; switch restored through the same audited command.
+- Gomoh Market Admin release state was read-only and cross-scope mutation rejected `PLATFORM_ADMIN_REQUIRED`; Platform Admin had management authority.
+- Platform health returned both Markets plus global command health; Gomoh Market Admin returned Gomoh only with `global:null`.
+- Rejected-GPS live HTTP proof used disposable Fixed Ride `4384a5e9-2575-4a96-85c5-e74365948882`; invalid arrival GPS was rejected, one server-side observation was recorded, direct Driver RPC access was denied, and the synthetic fixture was cleaned back to zero rows.
+- Responsive headed Chrome: Passenger, Driver, Gomoh Market Admin and Platform Admin across 1440x900 and 390x844 showed no horizontal overflow, page errors or Next runtime/hydration dialogs. Corrected harness assumptions confirmed `/go`, `/explore` and Fixed Driver `/drive` at HTTP 200.
+- Known current staging warnings are traceable synthetic acceptance history (including one overdue Outstation acceptance Ride, five acceptance Cases and old DUE payment acknowledgements); they are not eligible for production migration.
+
+### RC gate
+- Staging-readiness contracts: **24/24 PASS**; full suite: **242/242 PASS across 19 files**.
+- TypeScript PASS; ESLint PASS; production Next.js build PASS.
+- Supabase security advisor: only existing leaked-password-protection Auth warning.
+- Supabase performance advisor: INFO-level unused-index notices only; no missing-RLS or unindexed-FK blocker.
+- Four RC migrations are reconciled with staging cloud history; final staged-blob verification is required at checkpoint.
+- Acceptance record: `docs/archive/RAAHI_NEXT_STAGING_RC_ACCEPTANCE_2026-09-07.md`.
+- Promotion/rollback runbook: `docs/RAAHI_NEXT_STAGING_TO_PRODUCTION_RUNBOOK_V1.md`.
+
+### Production gates still intentionally open
+- Create a fresh Production Supabase project; replay the exact approved migration history; seed only canonical production configuration and Platform Admin.
+- Configure production Google OAuth/callbacks and production environment variables.
+- Keep all production Product switches OFF initially; enable Market/Product canaries deliberately and observe Operational Health before expansion.
+- Integrate and accept external notification delivery (for example Fast2SMS) before relying on notification-delivery monitoring in production.
+- Never enable Test Mode on the public production host.
+
+### Next
+**UI review and structured staging acceptance.** Review Passenger, Driver and Admin UI together, freeze agreed UI changes, then run the manual staging test matrix. Do not deploy to Netlify, Vercel or another hosted environment until explicit project approval after that review/testing.

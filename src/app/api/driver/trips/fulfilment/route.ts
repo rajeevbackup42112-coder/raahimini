@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
+import { recordRejectedGpsObservation } from "@/server/operational-observability";
 import { mapTripError } from "@/lib/trip-api";
 
 const schema=z.object({action:z.enum(["BEGIN_APPROACH","ARRIVE","START_BOARDING","BOARDED","NO_SHOW","DEPART_OUTBOUND","COMPLETE_OUTBOUND","START_RETURN_BOARDING","RETURN_BOARDED","RETURN_NO_SHOW","DEPART_RETURN","COMPLETE_RETURN"]),rideId:z.string().uuid().optional(),bookingId:z.string().uuid().optional(),latitude:z.number().min(-90).max(90).optional(),longitude:z.number().min(-180).max(180).optional(),accuracyMeters:z.number().positive().optional(),capturedAt:z.string().datetime().optional(),idempotencyKey:z.string().min(8).max(200)});
@@ -24,6 +25,6 @@ export async function POST(request:Request){
    result=await supabase.rpc(rpc,{p_ride_id:i.rideId,p_idempotency_key:i.idempotencyKey});
   }
  }
- if(result.error){const hit=mapTripError(result.error.message);if(hit)return NextResponse.json({ok:false,code:hit[0],message:hit[2],correlationId},{status:hit[1]});console.error("trip fulfilment failed",{correlationId,code:result.error.code});return NextResponse.json({ok:false,code:"COMMAND_FAILED",message:"Raahi could not update this Trip step.",correlationId},{status:500});}
+ if(result.error){const hit=mapTripError(result.error.message);if(hit){if(hit[0]==="TRIP_LOCATION_NOT_VERIFIED"&&i.rideId&&i.accuracyMeters!=null&&i.capturedAt){const observation=await recordRejectedGpsObservation({actorProfileId:String(claims.claims.sub),rideId:i.rideId,action:i.action,rejectionCode:hit[0],accuracyMeters:i.accuracyMeters,capturedAt:i.capturedAt,correlationId});if(!observation.ok)console.error("rejected GPS observation failed",{correlationId,code:observation.code});}return NextResponse.json({ok:false,code:hit[0],message:hit[2],correlationId},{status:hit[1]});}console.error("trip fulfilment failed",{correlationId,code:result.error.code});return NextResponse.json({ok:false,code:"COMMAND_FAILED",message:"Raahi could not update this Trip step.",correlationId},{status:500});}
  return NextResponse.json({ok:true,value:result.data,correlationId});
 }
