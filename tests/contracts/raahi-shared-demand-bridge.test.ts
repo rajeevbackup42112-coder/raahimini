@@ -4,10 +4,17 @@ import { readFileSync } from "node:fs";
 const root = process.cwd();
 const read = (path: string) => readFileSync(`${root}/${path}`, "utf8");
 const schema = read("supabase/migrations/20260910120000_raahi_shared_demand_bridge_schema.sql");
+const lockOrder = read("supabase/migrations/20260910120050_raahi_shared_demand_lock_order.sql");
+const rematch = read("supabase/migrations/20260910120060_raahi_shared_expired_hold_rematch.sql");
 const commands = read("supabase/migrations/20260910120100_raahi_shared_demand_bridge_commands.sql");
 const projections = read("supabase/migrations/20260910120200_raahi_shared_demand_bridge_projections.sql");
+const heldProjections = read("supabase/migrations/20260910120250_raahi_shared_held_capacity_projections.sql");
 const design = read("docs/RAAHI_SHARED_DEMAND_BRIDGE_DESIGN_V1.md");
-const routes = ["src/app/api/shared/start/route.ts", "src/app/api/shared/match/route.ts"].map(read).join("\n");
+const routes = [
+  "src/app/api/shared/start/route.ts",
+  "src/app/api/shared/match/route.ts",
+  "src/app/api/shared/refresh/route.ts",
+].map(read).join("\n");
 const errors = read("src/lib/shared-api.ts");
 
 describe("Raahi Shared — Passenger-originated demand bridge", () => {
@@ -32,6 +39,8 @@ describe("Raahi Shared — Passenger-originated demand bridge", () => {
     expect(schema).toContain("active_booked_seats + held_seats <= offered_seats");
     expect(schema).toContain("set held_seats=held_seats+v_i.seat_count");
     expect(commands).toContain("v_o.active_booked_seats+v_o.held_seats+p_seat_count>v_o.offered_seats");
+    expect(heldProjections).toContain("t.offered_seats-t.active_booked_seats-t.held_seats");
+    expect(heldProjections).toContain("'protected_seats',t.held_seats");
   });
 
   it("makes Shared match rows browser-inaccessible canonical state", () => {
@@ -60,6 +69,15 @@ describe("Raahi Shared — Passenger-originated demand bridge", () => {
     expect(schema).toContain("where id=p_offering_id for update");
     expect(schema).toContain("set held_seats=held_seats-v_match.seat_count");
     expect(schema).toContain("status='EXPIRED'");
+    expect(rematch).toContain("sm.expires_at<=now()");
+    expect(rematch).toContain("release_expired_shared_trip_holds(v_expired_offering)");
+  });
+
+  it("uses Offering then Match as the cancellation lock order", () => {
+    const offeringLock = lockOrder.indexOf("where id=v_candidate.offering_id for update");
+    const matchLock = lockOrder.indexOf("where id=v_candidate.id and status='OFFERED' for update");
+    expect(offeringLock).toBeGreaterThan(-1);
+    expect(matchLock).toBeGreaterThan(offeringLock);
   });
 
   it("releases live holds when either the request or trip closes", () => {
@@ -107,6 +125,12 @@ describe("Raahi Shared — Passenger-originated demand bridge", () => {
     expect(passenger).not.toContain("driver_phone");
   });
 
+  it("adds aggregate Shared demand to the Driver workspace without pre-confirmation identities", () => {
+    expect(heldProjections).toContain("'shared_demand',private.get_driver_shared_demand()");
+    const fillingPrivacy = heldProjections.indexOf("t.status not in ('DRAFT','FILLING','NOT_CONFIRMED','EXPIRED')");
+    expect(fillingPrivacy).toBeGreaterThan(-1);
+  });
+
   it("blocks Product-OFF Shared discovery and new Passenger commitments", () => {
     expect(schema).toContain("private.product_feature_enabled(v_o.product_id)");
     expect(commands).toContain("private.product_feature_enabled(p.id)");
@@ -119,9 +143,11 @@ describe("Raahi Shared — Passenger-originated demand bridge", () => {
     expect(commands).toContain("claim_user_command('start_shared_ride'");
     expect(commands).toContain("claim_user_command('accept_shared_trip_match'");
     expect(commands).toContain("claim_user_command('decline_shared_trip_match'");
+    expect(rematch).toContain("claim_user_command('refresh_shared_ride'");
     expect(routes).toContain('supabase.rpc("start_shared_ride"');
     expect(routes).toContain('"accept_shared_trip_match"');
     expect(routes).toContain('"decline_shared_trip_match"');
+    expect(routes).toContain('supabase.rpc("refresh_shared_ride"');
     expect(routes).not.toContain(".from(");
   });
 
