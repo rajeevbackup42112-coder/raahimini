@@ -15,7 +15,7 @@ as $$
 $$;
 revoke all on function private.live_shared_held_seats(uuid) from public,anon,authenticated;
 
-a create or replace function private.decorate_trip_live_capacity(p_item jsonb)
+create or replace function private.decorate_trip_live_capacity(p_item jsonb)
 returns jsonb language plpgsql stable security definer set search_path=''
 as $$
 declare
