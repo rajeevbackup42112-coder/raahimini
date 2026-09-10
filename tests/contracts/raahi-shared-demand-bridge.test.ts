@@ -4,9 +4,9 @@ import { readFileSync } from "node:fs";
 const root = process.cwd();
 const read = (path: string) => readFileSync(`${root}/${path}`, "utf8");
 const schema = read("supabase/migrations/20260910120000_raahi_shared_demand_bridge_schema.sql");
-const lockOrder = read("supabase/migrations/20260910120050_raahi_shared_demand_lock_order.sql");
 const rematch = read("supabase/migrations/20260910120060_raahi_shared_expired_hold_rematch.sql");
 const commands = read("supabase/migrations/20260910120100_raahi_shared_demand_bridge_commands.sql");
+const concurrency = read("supabase/migrations/20260910120150_raahi_shared_concurrency_hardening.sql");
 const projections = read("supabase/migrations/20260910120200_raahi_shared_demand_bridge_projections.sql");
 const heldProjections = read("supabase/migrations/20260910120250_raahi_shared_held_capacity_projections.sql");
 const design = read("docs/RAAHI_SHARED_DEMAND_BRIDGE_DESIGN_V1.md");
@@ -16,6 +16,7 @@ const routes = [
   "src/app/api/shared/refresh/route.ts",
 ].map(read).join("\n");
 const errors = read("src/lib/shared-api.ts");
+const travelErrors = read("src/lib/travel-intent-api.ts");
 
 describe("Raahi Shared — Passenger-originated demand bridge", () => {
   it("keeps explicit Shared requests distinct from ordinary Travel Interests", () => {
@@ -27,7 +28,7 @@ describe("Raahi Shared — Passenger-originated demand bridge", () => {
   });
 
   it("does not create a booking merely by starting a shared ride", () => {
-    const start = commands.slice(commands.indexOf("private.start_shared_ride"), commands.indexOf("private.accept_shared_trip_match"));
+    const start = concurrency.slice(concurrency.indexOf("private.start_shared_ride"), concurrency.indexOf("private.decline_shared_trip_match"));
     expect(start).toContain("insert into public.travel_intents");
     expect(start).not.toContain("insert into public.trip_bookings");
     expect(start).not.toContain("insert into public.rides");
@@ -73,17 +74,55 @@ describe("Raahi Shared — Passenger-originated demand bridge", () => {
     expect(rematch).toContain("release_expired_shared_trip_holds(v_expired_offering)");
   });
 
-  it("uses Offering then Match as the cancellation lock order", () => {
-    const offeringLock = lockOrder.indexOf("where id=v_candidate.offering_id for update");
-    const matchLock = lockOrder.indexOf("where id=v_candidate.id and status='OFFERED' for update");
-    expect(offeringLock).toBeGreaterThan(-1);
-    expect(matchLock).toBeGreaterThan(offeringLock);
+  it("does not keep the unsafe Intent-close trigger as final cancellation authority", () => {
+    expect(concurrency).toContain("drop trigger if exists release_shared_holds_on_intent_close");
+    const matcher = concurrency.slice(
+      concurrency.indexOf("private.match_shared_request"),
+      concurrency.indexOf("private.refresh_shared_ride"),
+    );
+    expect(matcher).not.toContain("where t.id=p_intent_id for update");
+    expect(concurrency).toContain("Read-only ownership check");
   });
 
-  it("releases live holds when either the request or trip closes", () => {
-    expect(schema).toContain("release_shared_holds_on_intent_close");
+  it("cancels a live Shared hold in Offering -> Match -> Intent order", () => {
+    const cancel = concurrency.slice(concurrency.indexOf("private.cancel_travel_intent"));
+    const offeringLock = cancel.indexOf("where id=v_offering_id for update");
+    const matchLock = cancel.indexOf("where travel_intent_id=v_i.id and offering_id=v_offering_id and status='OFFERED'");
+    const intentLock = cancel.indexOf("where id=p_intent_id and passenger_profile_id=v_profile for update", matchLock);
+    expect(offeringLock).toBeGreaterThan(-1);
+    expect(matchLock).toBeGreaterThan(offeringLock);
+    expect(intentLock).toBeGreaterThan(matchLock);
+    expect(cancel).toContain("raise exception 'SHARED_CANCEL_RETRY' using errcode='40001'");
+    expect(cancel).toContain("Subtransaction rollback releases the Intent row lock before retrying");
+  });
+
+  it("releases request holds canonically while retaining trip-close hold cleanup", () => {
+    const cancel = concurrency.slice(concurrency.indexOf("private.cancel_travel_intent"));
+    expect(cancel).toContain("set held_seats=held_seats-v_m.seat_count");
+    expect(cancel).toContain("set status='CANCELLED',cancelled_at=now()");
     expect(schema).toContain("release_shared_holds_on_trip_close");
     expect(schema).toContain("'NOT_CONFIRMED','DRIVER_CANCELLED','EXPIRED','IN_FULFILMENT','COMPLETED'");
+  });
+
+  it("declines one Driver offer without locking a second offering in the same transaction", () => {
+    const decline = concurrency.slice(
+      concurrency.indexOf("private.decline_shared_trip_match"),
+      concurrency.indexOf("private.cancel_travel_intent"),
+    );
+    expect(decline).toContain("'refresh_required',true");
+    expect(decline).not.toContain("private.match_shared_request");
+    expect(decline).toContain("Passenger refresh performs rematching in a new transaction");
+  });
+
+  it("rate limits new Shared requests while concurrent duplicates stay deduplicated", () => {
+    const start = concurrency.slice(
+      concurrency.indexOf("private.start_shared_ride"),
+      concurrency.indexOf("private.decline_shared_trip_match"),
+    );
+    expect(start).toContain("max_intents_per_user_24h");
+    expect(start).toContain("TRAVEL_INTENT_RATE_LIMITED");
+    expect(start).toContain("on conflict do nothing");
+    expect(start).toContain("get diagnostics v_inserted = row_count");
   });
 
   it("acceptance consumes the hold into the existing Trip booking kernel", () => {
@@ -140,10 +179,10 @@ describe("Raahi Shared — Passenger-originated demand bridge", () => {
   });
 
   it("keeps Shared mutations idempotent and behind RPC APIs", () => {
-    expect(commands).toContain("claim_user_command('start_shared_ride'");
+    expect(concurrency).toContain("claim_user_command('start_shared_ride'");
     expect(commands).toContain("claim_user_command('accept_shared_trip_match'");
-    expect(commands).toContain("claim_user_command('decline_shared_trip_match'");
-    expect(rematch).toContain("claim_user_command('refresh_shared_ride'");
+    expect(concurrency).toContain("claim_user_command('decline_shared_trip_match'");
+    expect(concurrency).toContain("claim_user_command('refresh_shared_ride'");
     expect(routes).toContain('supabase.rpc("start_shared_ride"');
     expect(routes).toContain('"accept_shared_trip_match"');
     expect(routes).toContain('"decline_shared_trip_match"');
@@ -154,6 +193,8 @@ describe("Raahi Shared — Passenger-originated demand bridge", () => {
   it("keeps customer-facing API errors in Raahi Shared language", () => {
     expect(errors).toContain("Raahi Shared is not available");
     expect(errors).toContain("Driver offer");
+    expect(errors).toContain("several travel requests recently");
+    expect(travelErrors).toContain("SHARED_REQUEST_BUSY_RETRY");
     expect(errors).not.toContain("threshold");
     expect(errors).not.toContain("CARPOOL");
   });
