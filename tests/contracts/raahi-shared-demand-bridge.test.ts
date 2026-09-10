@@ -70,8 +70,9 @@ describe("Raahi Shared — Passenger-originated demand bridge", () => {
   });
 
   it("does not strand a request behind an expired offer from another Driver trip", () => {
+    expect(liveness).toContain("drop index if exists public.uq_shared_trip_matches_live_intent");
+    expect(liveness).toContain("sm.status='OFFERED'");
     expect(liveness).toContain("sm.expires_at>now()");
-    expect(liveness).toContain("A stale OFFERED row from a different offering must not strand this Passenger request");
     const requestMatcher = liveness.slice(liveness.indexOf("private.match_shared_request"));
     expect(requestMatcher).not.toContain("release_expired_shared_trip_holds(v_expired_offering)");
   });
