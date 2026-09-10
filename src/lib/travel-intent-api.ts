@@ -10,6 +10,7 @@ export const travelIntentMessages: Record<string, [number, string]> = {
   TRAVEL_INTENT_NOT_FOUND: [404, "Travel interest not found."],
   TRAVEL_INTENT_NOT_CANCELLABLE: [409, "This travel interest can no longer be cancelled."],
   TRAVEL_INTENT_NOT_ACTIVE: [409, "This travel interest is no longer active."],
+  SHARED_REQUEST_BUSY_RETRY: [409, "This shared-ride request is changing right now. Please try again."],
   ADMIN_CAPABILITY_REQUIRED: [403, "Admin access is required."],
   ADMIN_SCOPE_REQUIRED: [403, "You do not have access to this Market."],
   EMERGING_CORRIDOR_NOT_FOUND: [404, "Opportunity not found."],
