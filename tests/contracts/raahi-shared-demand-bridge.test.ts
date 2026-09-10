@@ -7,8 +7,10 @@ const schema = read("supabase/migrations/20260910120000_raahi_shared_demand_brid
 const rematch = read("supabase/migrations/20260910120060_raahi_shared_expired_hold_rematch.sql");
 const commands = read("supabase/migrations/20260910120100_raahi_shared_demand_bridge_commands.sql");
 const concurrency = read("supabase/migrations/20260910120150_raahi_shared_concurrency_hardening.sql");
+const liveness = read("supabase/migrations/20260910120160_raahi_shared_expired_offer_liveness.sql");
 const projections = read("supabase/migrations/20260910120200_raahi_shared_demand_bridge_projections.sql");
 const heldProjections = read("supabase/migrations/20260910120250_raahi_shared_held_capacity_projections.sql");
+const liveProjections = read("supabase/migrations/20260910120260_raahi_shared_live_hold_projections.sql");
 const design = read("docs/RAAHI_SHARED_DEMAND_BRIDGE_DESIGN_V1.md");
 const routes = [
   "src/app/api/shared/start/route.ts",
@@ -41,7 +43,6 @@ describe("Raahi Shared — Passenger-originated demand bridge", () => {
     expect(schema).toContain("set held_seats=held_seats+v_i.seat_count");
     expect(commands).toContain("v_o.active_booked_seats+v_o.held_seats+p_seat_count>v_o.offered_seats");
     expect(heldProjections).toContain("t.offered_seats-t.active_booked_seats-t.held_seats");
-    expect(heldProjections).toContain("'protected_seats',t.held_seats");
   });
 
   it("makes Shared match rows browser-inaccessible canonical state", () => {
@@ -52,17 +53,27 @@ describe("Raahi Shared — Passenger-originated demand bridge", () => {
   });
 
   it("matches exact route and requested time-window demand FIFO", () => {
-    expect(schema).toContain("t.origin_location_id=v_o.origin_location_id");
-    expect(schema).toContain("t.destination_location_id=v_o.destination_location_id");
-    expect(schema).toContain("v_o.departure_at between t.desired_departure_at and t.desired_window_end_at");
-    expect(schema).toContain("order by t.created_at,t.id");
-    expect(schema).toContain("for update of t skip locked");
+    expect(liveness).toContain("t.origin_location_id=v_o.origin_location_id");
+    expect(liveness).toContain("t.destination_location_id=v_o.destination_location_id");
+    expect(liveness).toContain("v_o.departure_at between t.desired_departure_at and t.desired_window_end_at");
+    expect(liveness).toContain("order by t.created_at,t.id");
+    expect(liveness).toContain("for update of t skip locked");
   });
 
-  it("uses one live Driver-ready offer per Passenger Shared request", () => {
+  it("serializes live Driver offers by locking the Passenger request instead of a time-blind unique index", () => {
     expect(schema).toContain("uq_shared_trip_matches_live_intent");
-    expect(schema).toContain("where status='OFFERED'");
+    expect(liveness).toContain("drop index if exists public.uq_shared_trip_matches_live_intent");
+    expect(liveness).toContain("sm.status='OFFERED'");
+    expect(liveness).toContain("sm.expires_at>now()");
+    expect(liveness).toContain("for update of t skip locked");
     expect(schema).toContain("unique(travel_intent_id,offering_id)");
+  });
+
+  it("does not strand a request behind an expired offer from another Driver trip", () => {
+    expect(liveness).toContain("sm.expires_at>now()");
+    expect(liveness).toContain("A stale OFFERED row from a different offering must not strand this Passenger request");
+    const requestMatcher = liveness.slice(liveness.indexOf("private.match_shared_request"));
+    expect(requestMatcher).not.toContain("release_expired_shared_trip_holds(v_expired_offering)");
   });
 
   it("expires and releases protected seats through a canonical locked helper", () => {
@@ -71,16 +82,19 @@ describe("Raahi Shared — Passenger-originated demand bridge", () => {
     expect(schema).toContain("set held_seats=held_seats-v_match.seat_count");
     expect(schema).toContain("status='EXPIRED'");
     expect(rematch).toContain("sm.expires_at<=now()");
-    expect(rematch).toContain("release_expired_shared_trip_holds(v_expired_offering)");
+  });
+
+  it("shows availability from unexpired holds even when persisted cleanup is lazy", () => {
+    expect(liveProjections).toContain("private.live_shared_held_seats");
+    expect(liveProjections).toContain("m.expires_at>now()");
+    expect(liveProjections).toContain("'seats_left',greatest(v_offered-v_booked-v_live_held,0)");
+    expect(liveProjections).toContain("'protected_seats'");
+    expect(liveProjections).toContain("decorate_driver_trip_workspace_live_capacity");
   });
 
   it("does not keep the unsafe Intent-close trigger as final cancellation authority", () => {
     expect(concurrency).toContain("drop trigger if exists release_shared_holds_on_intent_close");
-    const matcher = concurrency.slice(
-      concurrency.indexOf("private.match_shared_request"),
-      concurrency.indexOf("private.refresh_shared_ride"),
-    );
-    expect(matcher).not.toContain("where t.id=p_intent_id for update");
+    expect(liveness).not.toContain("where t.id=p_intent_id for update");
     expect(concurrency).toContain("Read-only ownership check");
   });
 
@@ -171,8 +185,8 @@ describe("Raahi Shared — Passenger-originated demand bridge", () => {
   });
 
   it("blocks Product-OFF Shared discovery and new Passenger commitments", () => {
-    expect(schema).toContain("private.product_feature_enabled(v_o.product_id)");
-    expect(commands).toContain("private.product_feature_enabled(p.id)");
+    expect(liveness).toContain("private.product_feature_enabled(v_o.product_id)");
+    expect(concurrency).toContain("private.product_feature_enabled(p.id)");
     expect(commands).toContain("private.product_feature_enabled(v_o.product_id)");
     expect(projections).toContain("filter_enabled_trip_discovery");
     expect(design).toContain("OFF means no new discovery");
