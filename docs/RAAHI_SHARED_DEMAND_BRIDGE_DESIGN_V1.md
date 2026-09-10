@@ -22,12 +22,13 @@ Customer-facing name: **Raahi Shared**. Internal implementation terms may remain
 4. Held seats do not count toward minimum confirmation until Passenger acceptance.
 5. `active_booked_seats + held_seats <= offered_seats` always holds.
 6. Ordinary Trip bookings may use only unheld capacity.
-7. Expired holds release exactly once through canonical commands.
+7. Expired holds release exactly once through canonical commands and never block a new eligible Driver-ready offer merely because lazy cleanup has not yet rewritten the old row.
 8. Match acceptance consumes the hold and creates the canonical `trip_booking`.
 9. Existing threshold confirmation remains the only path that creates the shared Ride and Driver/vehicle commitment.
 10. Product OFF blocks new requests, matches and bookings but never destroys an already confirmed/in-fulfilment Ride.
 11. Compatible demand is matched FIFO subject to capacity.
 12. Every mutation is idempotent and remains behind RPC boundaries.
+13. Shared hold mutations use a single lock direction: Offering → Match → Intent. Request-side refresh/start never locks Intent before entering offering-side matching.
 
 ## Data changes
 
@@ -43,11 +44,25 @@ A Shared request can match a Trip offering only when request kind is `SHARED_REQ
 
 The same private matcher runs when a Shared request is created and when a Driver publishes a Trip offering. It locks the offering and Passenger intents, allocates FIFO, and increments `held_seats` atomically with match creation. Hold duration comes from product rule `shared_match_hold_minutes` with a conservative default.
 
+Only `OFFERED` matches whose `expires_at` is still in the future are live offers. An expired offer from one Driver trip does not strand the Passenger request behind a status-only uniqueness rule; another eligible trip may be offered after expiry. The same request/offering pair remains unique so the Passenger is not churned back to a Driver trip already declined or allowed to expire.
+
+## Lock order and concurrency
+
+Offer-side matching owns the ordering **Offering → Intent**. Acceptance and Shared cancellation extend that to **Offering → Match → Intent**. A Passenger start/refresh operation performs only a read-only ownership/status check before entering the offering-side matcher. Declining a Driver offer releases that offer but does not acquire a second offering in the same transaction; the Passenger refreshes in a fresh transaction for another match.
+
+Cancellation that initially sees no live offer locks the Intent only inside a retryable subtransaction and rechecks for a concurrently created match. If a match appeared, the subtransaction rolls back so the Intent lock is released before retrying from the Offering side. This prevents Intent → Offering inversion against Driver publish/match operations.
+
 ## Passenger acceptance
 
 `accept_shared_trip_match(match_id, idempotency_key)` verifies ownership, locks match/offering, releases expired holds, rechecks Product and Driver/vehicle eligibility, consumes held capacity into an ordinary `trip_booking`, resolves the originating intent, and invokes `confirm_trip_threshold_locked` if the existing confirmation threshold is now met.
 
-Passenger decline releases a live hold but leaves the Shared request active. Cancelling the Shared request cancels live matches and releases holds. Driver cancellation must invalidate outstanding offers and release holds.
+Passenger decline releases a live hold but leaves the Shared request active. Cancelling the Shared request cancels live matches and releases holds. Driver cancellation invalidates outstanding offers and releases holds.
+
+## Expiry and visible capacity
+
+`trip_offerings.held_seats` is the persisted concurrency counter and is released under the owning offering lock. Because cleanup is intentionally lazy, the stored counter can briefly include an expired Driver offer. Customer-visible availability therefore derives protected seats from `shared_trip_matches` where the match is `OFFERED` and `expires_at > now()`.
+
+This keeps discovery and Driver workspace seat availability live after an offer expires, while canonical write paths still clean the persisted counter safely when that offering is next touched. A stale expired offer cannot make a different eligible Driver trip appear unavailable to the Passenger.
 
 ## Role projections
 
@@ -61,7 +76,7 @@ OFF means no new discovery, Shared request, match offer, match acceptance or ord
 
 ## Acceptance criteria
 
-Existing Slice 11/12 contracts remain true; historical intents default to INTEREST; Shared requests remain non-booking demand until acceptance; matching is route/time compatible and FIFO; Driver demand projection exposes no Passenger identity; holds protect capacity; expiry/decline/cancel release exactly once; acceptance creates exactly one canonical Trip booking; threshold confirmation still creates one Ride/Commitment; retries are idempotent; Product OFF blocks only new commitments; direct table access remains denied.
+Existing Slice 11/12 contracts remain true; historical intents default to INTEREST; Shared requests remain non-booking demand until acceptance; matching is route/time compatible and FIFO; Driver demand projection exposes no Passenger identity; holds protect capacity; expiry/decline/cancel release exactly once; expired offers do not strand requests; visible capacity counts only unexpired holds; acceptance creates exactly one canonical Trip booking; threshold confirmation still creates one Ride/Commitment; retries are idempotent; Product OFF blocks only new commitments; direct table access remains denied.
 
 ## Non-goals
 
